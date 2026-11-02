@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionThankDriver
+  name: Thank Driver
+  description: Show the driver you enjoy being a passenger
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Objects/Vehicles/clowncar.rsi
+    layers:
+    - state: clowncar
+  - type: Action
+    itemIconStyle: NoItem
+    useDelay: 60
+  - type: InstantAction
+    event: !type:ThankRiderActionEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionQuietBackThere
+  name: Quiet back there
+  description: Tell the passengers to be quiet
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Objects/Vehicles/clowncar.rsi
+    layers:
+    - state: clowncar
+  - type: Action
+    itemIconStyle: NoItem
+    useDelay: 30
+  - type: InstantAction
+    event: !type:QuietBackThereActionEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionDrivingWithStyle
+  name: JukeBox
+  description: Drive with music
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/jukebox.rsi
+    layers:
+    - state: on
+  - type: Action
+    itemIconStyle: NoItem
+    useDelay: 1
+  - type: InstantAction
+    event: !type:DrivingWithStyleActionEvent

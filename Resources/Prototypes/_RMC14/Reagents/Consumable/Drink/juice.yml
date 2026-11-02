@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reagent ##RMC14
+  id: JuiceMango
+  name: reagent-name-juice-mango
+  parent: BaseJuice
+  desc: reagent-desc-juice-mango
+  physicalDesc: reagent-physical-desc-citric
+  flavor: mango
+  color: "#FFBF34"
+  metamorphicSprite:
+    sprite: Objects/Consumable/Drinks/orangejuiceglass.rsi
+    state: icon_empty
+  metamorphicMaxFillLevels: 5
+  metamorphicFillBaseName: fill-
+  metamorphicChangeColor: false

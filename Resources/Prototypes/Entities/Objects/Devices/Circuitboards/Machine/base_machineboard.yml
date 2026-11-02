@@ -1,0 +1,35 @@
+- type: entity
+  id: BaseMachineCircuitboard
+  parent: BaseItem
+  name: machine board
+  abstract: true
+  suffix: Machine Board
+  components:
+    # <Trauma>
+    - type: Extractable
+      grindableSolutionName: processor
+    - type: Solution
+      id: processor
+      solution:
+        reagents:
+        - ReagentId: NanoProcessor
+          Quantity: 15
+    # </Trauma>
+    - type: MachineBoard
+    - type: Sprite
+      sprite: Objects/Misc/module.rsi
+      state: generic
+    - type: Item
+      storedRotation: -90
+    - type: Tag
+      tags:
+        - DroneUsable # Goobstation
+    - type: StaticPrice
+      price: 100
+    - type: PhysicalComposition
+      materialComposition:
+        Glass: 125 # Trauma - was 230
+        Steel: 25 # Trauma
+      chemicalComposition:
+        Silicon: 20
+    - type: Circuitboard

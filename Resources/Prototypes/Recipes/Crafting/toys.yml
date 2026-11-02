@@ -1,0 +1,29 @@
+- type: construction
+  parent: BaseItemMisc
+  id: PlushieGhostRevenant
+  graph: PlushieGhostRevenant
+  targetNode: plushie
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    TailoringKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseClothing
+  id: ClothingOuterSuitIan
+  graph: ClothingOuterSuitIan
+  targetNode: suit
+
+- type: construction
+  parent: BaseItemMisc
+  id: MoproachShoes
+  graph: MoproachShoes
+  targetNode: shoes
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    TailoringKnowledge: 1
+  # </Trauma>

@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: ClothingOuterBaseLarge
+  id: ChangelingClothingOuterArmor
+  name: chitinous armor
+  description: An all-consuming chitinous mass of armor.
+  suffix: Unremoveable
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Changeling/ling_armor.rsi
+  - type: Clothing
+    sprite: _Goobstation/Changeling/ling_armor.rsi
+    equippedPrefix: transform
+  - type: ChangePrefixAfterDelay
+    delay: 1
+  - type: TemperatureProtection
+    coefficient: 0.35 # solid protection, resists WEAKER fires
+  - type: Armor
+    traumaDeductions:
+      Dismemberment: 1
+      OrganDamage: 0.3
+      BoneDamage: 0.5
+      VeinsDamage: 0
+    coverage:
+    - Torso
+    - Arm
+    - Hand
+    - Leg
+    - Foot
+    - Tail
+    - Wings
+    modifiers:
+      coefficients:
+        Blunt: 0.45
+        Slash: 0.45
+        Piercing: 0.45
+        Ballistic: 0.45
+        Heat: 0.65
+        Caustic: 0.55
+  - type: FireProtection
+    reduction: -0.25 # Ling armor should be counterable given you get this for eating two tiders
+  - type: ClothingSpeedModifier
+    walkModifier: 1
+    sprintModifier: 1
+  - type: HeldSpeedModifier
+  - type: ExplosionResistance
+    damageCoefficient: 0.9
+  - type: GroupExamine
+  - type: Unremoveable
+  - type: ModifyDelayedKnockdown
+    cancel: true
+  - type: StaminaResistance
+    damageCoefficient: 0.4
+  - type: HideClothingLayerClothing
+    hiddenSlots:
+    - jumpsuit
+    - neck
+    - gloves
+    - shoes
+    - back
+    - belt

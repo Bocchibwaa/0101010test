@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reagent
+  parent: Blood
+  id: BlackBlood
+  name: reagent-name-black-blood
+  group: Biological
+  desc: reagent-desc-black-blood
+  flavor: metallic
+  color: "#1c1624"
+  recognizable: true
+  standsout: true
+  physicalDesc: reagent-physical-desc-inky

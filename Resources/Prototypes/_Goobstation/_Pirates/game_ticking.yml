@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseGameRule
+  id: SpacePirates
+  components:
+  - type: StationEvent
+    weight: 5
+    duration: null
+    earliestStart: 20
+    reoccurrenceDelay: 60
+    minimumPlayers: 30
+  - type: PendingPirateRule
+    ransomPrototype: BikeHornRansom
+
+- type: entity
+  parent: BaseAntagGhostRoleRule
+  id: PiratesSpawn
+  components:
+  - type: GameRule
+    minPlayers: 10
+  - type: ActivePirateRule
+  - type: RuleGrids
+  - type: LoadMapRule
+    mapPath: /Maps/_Goobstation/Shuttles/pirates_irs.yml
+  - type: AntagLoadProfileRule
+    speciesOverride: Human
+    alwaysUseSpeciesOverride: true
+  - type: AntagSelection
+    antags:
+    - !type:FixedAntagCount
+      proto: PirateCaptain
+      count: 5
+
+- type: entity
+  parent: BikeHorn
+  id: BikeHornRansom
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Ransom

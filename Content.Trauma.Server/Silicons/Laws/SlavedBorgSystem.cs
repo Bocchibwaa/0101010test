@@ -1,0 +1,67 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Server.Silicons.Laws;
+using Content.Shared.Silicons.Laws;
+using Content.Shared.Silicons.Laws.Components;
+using Content.Trauma.Common.Silicon;
+using Content.Trauma.Shared.Silicons.Laws;
+
+namespace Content.Trauma.Server.Silicons.Laws;
+
+/// <summary>
+/// Handles adding the slave law for the first time.
+/// Borg chassis switches preserve this on its own.
+/// </summary>
+public sealed partial class SlavedBorgSystem : SharedSlavedBorgSystem
+{
+    [Dependency] private EntityQuery<SiliconLawProviderComponent> _lawQuery = default!;
+
+    // need to run after so it doesnt get overriden by the actual lawset
+    [SubscribeLocalEvent(after: [typeof(SiliconLawSystem)])]
+    private void OnGetSiliconLaws(Entity<SlavedBorgComponent> ent, ref GetSiliconLawsEvent args)
+    {
+        if (ent.Comp.Added || !_lawQuery.TryComp(ent, out var provider))
+            return;
+
+        if (provider.Lawset is { } lawset)
+            AddLaw(lawset, ent.Comp.Law);
+        ent.Comp.Added = true; // prevent opening the ui adding more law 0's
+    }
+
+    [SubscribeLocalEvent]
+    private void OnRemove(Entity<SlavedBorgComponent> ent, ref ComponentRemove args)
+    {
+        if (!ent.Comp.Added || !_lawQuery.TryComp(ent, out var provider))
+            return;
+
+        if (provider.Lawset is { } lawset)
+            RemoveLaw(lawset, ent.Comp.Law);
+    }
+
+    [SubscribeLocalEvent]
+    public void OnLawsetChanged(Entity<SlavedBorgComponent> ent, ref SiliconLawsetChangedEvent args)
+    {
+        if (!_lawQuery.TryComp(ent, out var provider))
+            return;
+
+        if (provider.Lawset is { } lawset)
+            AddLaw(lawset, ent.Comp.Law);
+    }
+
+    /// <summary>
+    /// Adds the slave law to a lawset without checking if it was added already.
+    /// </summary>
+    public void AddLaw(SiliconLawset lawset, ProtoId<SiliconLawPrototype> law)
+    {
+        lawset.Laws.Insert(0, ProtoMan.Index(law).ShallowClone());
+    }
+
+    /// <summary>
+    /// Removes the slave law from a lawset.
+    /// </summary>
+    public void RemoveLaw(SiliconLawset lawset, ProtoId<SiliconLawPrototype> law)
+    {
+        var target = ProtoMan.Index(law).LawString;
+        lawset.Laws.RemoveAll(law => law.LawString == target);
+    }
+}

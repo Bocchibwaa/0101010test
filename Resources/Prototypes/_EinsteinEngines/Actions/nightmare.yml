@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionLightEater
+  name: Light Eater
+  description: Ash or disable every light that you hit with your arm blade.
+  components:
+  - type: Sprite
+    sprite: _EinsteinEngines/Nightmare/nightmare_abilities.rsi
+    layers:
+    - state: light_eater
+  - type: Action
+    useDelay: 2
+    itemIconStyle: NoItem
+  - type: InstantAction
+    event: !type:ToggleLightEaterEvent

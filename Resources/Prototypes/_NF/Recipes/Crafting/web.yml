@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: construction
+  id: WebCocoon
+  graph: WebCocoon
+  startNode: start
+  targetNode: end
+  category: construction-category-tools
+  objectType: Item
+  theory:
+    SpiderCraftKnowledge: 2
+  practical:
+    TailoringKnowledge: 3
+
+- type: construction
+  id: ClothingNeckClassicPonchoWeb
+  graph: ClothingNeckClassicPonchoWeb
+  startNode: start
+  targetNode: end
+  category: construction-category-clothing
+  objectType: Item
+  theory:
+    SpiderCraftKnowledge: 2
+  practical:
+    TailoringKnowledge: 4
+
+- type: construction
+  id: ClothingNeckPonchoWeb
+  graph: ClothingNeckPonchoWeb
+  startNode: start
+  targetNode: end
+  category: construction-category-clothing
+  objectType: Item
+  theory:
+    SpiderCraftKnowledge: 2
+  practical:
+    TailoringKnowledge: 4
+
+- type: construction
+  id: ClothingNeckCloakWeb
+  graph: ClothingNeckCloakWeb
+  startNode: start
+  targetNode: end
+  category: construction-category-clothing
+  objectType: Item
+  theory:
+    SpiderCraftKnowledge: 2
+  practical:
+    TailoringKnowledge: 4

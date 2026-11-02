@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Xenomorph
+
+- type: statusIcon
+  abstract: true
+  id: BaseXenoInfection
+  priority: 0
+  locationPreference: Right
+  isShaded: true
+  visibleToOwner: false
+  showTo:
+    components:
+    - Xenomorph
+    - LarvaInfestationVision
+
+- type: statusIcon
+  parent: BaseXenoInfection
+  id: XenomorphInfectionIconStageZero
+  icon:
+    sprite: &sprite /Textures/_White/Interface/Misc/infection_icons.rsi
+    state: xenomorph_0
+
+- type: statusIcon
+  parent: BaseXenoInfection
+  id: XenomorphInfectionIconStageOne
+  icon:
+    sprite: *sprite
+    state: xenomorph_1
+
+- type: statusIcon
+  parent: BaseXenoInfection
+  id: XenomorphInfectionIconStageTwo
+  icon:
+    sprite: *sprite
+    state: xenomorph_2
+
+- type: statusIcon
+  parent: BaseXenoInfection
+  id: XenomorphInfectionIconStageThree
+  icon:
+    sprite: *sprite
+    state: xenomorph_3
+
+- type: statusIcon
+  parent: BaseXenoInfection
+  id: XenomorphInfectionIconStageFour
+  icon:
+    sprite: *sprite
+    state: xenomorph_4
+
+- type: statusIcon
+  parent: BaseXenoInfection
+  id: XenomorphInfectionIconStageFive
+  icon:
+    sprite: *sprite
+    state: xenomorph_5
+
+- type: statusIcon
+  parent: BaseXenoInfection
+  id: XenomorphInfectionIconStageSix
+  icon:
+    sprite: *sprite
+    state: xenomorph_6

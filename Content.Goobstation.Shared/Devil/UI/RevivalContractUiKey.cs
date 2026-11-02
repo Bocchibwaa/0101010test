@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+namespace Content.Goobstation.Shared.Devil.UI;
+
+[Serializable, NetSerializable]
+public enum RevivalContractUiKey
+{
+    Key,
+}

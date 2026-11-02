@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseFoodCondimentPacket
+  id: FoodCondimentPacketProtein
+  name: protein powder packet
+  description: Contains 8.333333mL of powdered protein. Mix with 8.333333mL of water.
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Protein
+        Quantity: 0.9
+      - ReagentId: Fentanyl
+        Quantity: 0.1
+  - type: Icon
+    state: packet-greygoo
+  - type: Appearance
+  - type: SolutionContainerVisuals
+    maxFillLevels: 2
+    fillBaseName: packet-solid-
+  - type: StaticPrice
+    price: 15
+
+- type: entity
+  parent: [ FoodBakingBase, BaseSlicingRefinable ]
+  id: FoodFreedomCheeseBlock
+  name: block of freedom cheese
+  description: A solid block of artery-clogging cheese based on an questionable old world recipe. Slice it for your buddies.. or just eat the entire block for yourself, you weirdo.
+  components:
+  - type: FlavorProfile
+    flavors:
+    - creamy
+    - cheesy
+    ignoreReagents:
+    - Nutriment
+    - GastroToxin
+  - type: Sprite
+    sprite: _Goobstation/Objects/Consumable/Food/freedom_cheese.rsi
+    state: cheese_block
+  - type: Solution
+    solution:
+      maxVol: 28
+      reagents:
+      - ReagentId: Nutriment
+        Quantity: 16
+      - ReagentId: GastroToxin
+        Quantity: 4
+  - type: ToolRefinable
+    refineResult:
+    - id: FoodFreedomCheeseSlice
+      amount: 4
+
+- type: entity
+  parent: FoodBakingBase
+  id: FoodFreedomCheeseSlice
+  name: freedom cheese slice
+  description: Highly questionable amalgamation of cheddar, fillers and the spirit of freedom. NanoTrasen's healthcare does not cover incidents regarding the consumption of this item.
+  components:
+  - type: FlavorProfile
+    flavors:
+    - creamy
+    - cheesy
+    ignoreReagents:
+    - Nutriment
+    - GastroToxin
+  - type: Sprite
+    sprite: _Goobstation/Objects/Consumable/Food/freedom_cheese.rsi
+    state: cheese_slice
+  - type: Solution
+    solution:
+      maxVol: 7
+      reagents:
+      - ReagentId: Nutriment
+        Quantity: 4
+      - ReagentId: GastroToxin
+        Quantity: 1
+  - type: Tag
+    tags:
+    - Slice
+  - type: FoodSequenceElement
+    entries:
+      Burger: FreedomCheese
+
+- type: foodSequenceElement
+  id: FreedomCheese
+  name: food-sequence-content-cheese
+  sprites:
+  - sprite: _Goobstation/Objects/Consumable/Food/freedom_cheese.rsi
+    state: cheese_slice_burger
+  tags:
+  - Cheese

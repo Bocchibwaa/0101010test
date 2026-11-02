@@ -1,0 +1,107 @@
+// <Trauma>
+using Content.Shared.Mobs.Systems;
+using Content.Lavaland.Common.Weapons.Marker;
+using Content.Medical.Common.Damage;
+using Content.Medical.Common.Targeting;
+// </Trauma>
+using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Projectiles;
+using Content.Shared.Weapons.Melee.Events;
+using Content.Shared.Whitelist;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Network;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Timing;
+
+namespace Content.Shared.Weapons.Marker;
+
+public abstract partial class SharedDamageMarkerSystem : EntitySystem
+{
+    [Dependency] private MobStateSystem _mobState = default!; // Trauma
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<DamageMarkerOnCollideComponent, StartCollideEvent>(OnMarkerCollide);
+        SubscribeLocalEvent<DamageMarkerComponent, AttackedEvent>(OnMarkerAttacked);
+    }
+
+    private void OnMarkerAttacked(EntityUid uid, DamageMarkerComponent component, AttackedEvent args)
+    {
+        if (component.Marker != args.Used)
+            return;
+
+        args.BonusDamage += component.Damage;
+        RemCompDeferred<DamageMarkerComponent>(uid);
+        _audio.PlayPredicted(component.Sound, uid, args.User);
+
+        if (TryComp<LeechOnMarkerComponent>(args.Used, out var leech) && !_mobState.IsDead(uid)) // Trauma - added mobState check
+        {
+            _damageable.TryChangeDamage(args.User, leech.Leech, true, false, origin: args.Used, targetPart: TargetBodyPart.All, splitDamage: SplitDamageBehavior.SplitEnsureAll); // Shitmed Change
+        }
+
+        // <Lavaland>
+        var ev = new ApplyMarkerBonusEvent(uid, args.User);
+        RaiseLocalEvent(args.Used, ref ev);
+        // </Lavaland>
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var query = EntityQueryEnumerator<DamageMarkerComponent>();
+
+        while (query.MoveNext(out var uid, out var comp))
+        {
+            if (comp.EndTime > _timing.CurTime)
+                continue;
+
+            RemCompDeferred<DamageMarkerComponent>(uid);
+        }
+    }
+
+    private void OnMarkerCollide(EntityUid uid, DamageMarkerOnCollideComponent component, ref StartCollideEvent args)
+    {
+        if (!args.OtherFixture.Hard ||
+            args.OurFixtureId != SharedProjectileSystem.ProjectileFixture ||
+            component.Amount <= 0 ||
+            _whitelistSystem.IsWhitelistFail(component.Whitelist, args.OtherEntity) ||
+            !TryComp<ProjectileComponent>(uid, out var projectile) ||
+            projectile.Weapon == null)
+        {
+            return;
+        }
+
+        // Markers are exclusive, deal with it.
+        var marker = EnsureComp<DamageMarkerComponent>(args.OtherEntity);
+        marker.Damage = new DamageSpecifier(component.Damage);
+        marker.Marker = projectile.Weapon.Value;
+        marker.EndTime = _timing.CurTime + component.Duration;
+        // <Lavaland> - copy them from the projectile
+        marker.Effect = component.Effect;
+        marker.Sound = component.Sound;
+        // </Lavaland>
+        component.Amount--;
+
+        Dirty(args.OtherEntity, marker);
+
+        if (_netManager.IsServer)
+        {
+            if (component.Amount <= 0)
+            {
+                QueueDel(uid);
+            }
+            else
+            {
+                Dirty(uid, component);
+            }
+        }
+    }
+}

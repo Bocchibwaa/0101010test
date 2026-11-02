@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  id: CartridgeMagnumNeurotoxin
+  name: shell (.45 subsonic neurotoxin)
+  parent: BaseCartridgeMagnum
+  components:
+  - type: Sprite
+    layers:
+    - state: base
+      map: [ "enum.AmmoVisualLayers.Base" ]
+    - state: tip
+      map: [ "enum.AmmoVisualLayers.Tip" ]
+      color: "#00FF00"
+  - type: CartridgeAmmo
+    proto: BulletMagnumNeurotoxin
+  - type: ChemicalAmmo
+  - type: Solution
+    id: ammo
+    solution:
+      reagents:
+      - ReagentId: Amatoxin
+        Quantity: 9
+      - ReagentId: Impedrezene
+        Quantity: 5
+  - type: SolutionTransfer
+    maxTransferAmount: 9

@@ -1,0 +1,35 @@
+- type: construction
+  parent: BaseItemMisc
+  id: PowerCellPotato
+  graph: PowerCellPotato
+  targetNode: potatobattery
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseItemMisc
+  id: PotatoAI
+  graph: PotatoAI
+  targetNode: potatoai
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  parent: BaseItemMisc
+  id: PotatoAIChip
+  graph: PotatoAIChip
+  targetNode: potatoaichip
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 3
+  # </Trauma>

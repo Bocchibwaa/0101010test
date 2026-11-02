@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+
+namespace Content.Goobstation.Shared.Wraith.Components;
+
+[RegisterComponent, NetworkedComponent]
+public sealed partial class WraithComponent : Component
+{
+    [DataField(required: true)]
+    public EntProtoId Abilities;
+
+    [DataField]
+    public EntProtoId WraithWeakenedEffect = "StatusEffectWeakenedWraith";
+
+    [DataField]
+    public EntProtoId WraithDeathEffect = "WraithDeathEffect";
+}

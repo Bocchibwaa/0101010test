@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.StatusEffect;
+using Content.Shared.Whitelist;
+using Robust.Shared.Physics.Events;
+
+namespace Content.Goobstation.Shared.Wraith.Collisions;
+
+public abstract partial class SharedStatusEffectOnCollideGhostSystem : EntitySystem
+{
+    [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
+    [Dependency] private EntityWhitelistSystem _entityWhitelist = default!;
+    /// <inheritdoc/>
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<StatusEffectOnCollideGhostComponent, StartCollideEvent>(OnCollide);
+    }
+
+    private void OnCollide(Entity<StatusEffectOnCollideGhostComponent> ent, ref StartCollideEvent args)
+    {
+        if (ent.Comp.Whitelist is {} whitelist
+            && !_entityWhitelist.IsValid(whitelist, args.OtherEntity))
+            return;
+
+        if (_statusEffectsSystem.HasStatusEffect(args.OtherEntity, ent.Comp.StatusEffect))
+            return;
+
+        _statusEffectsSystem.TryAddStatusEffect(
+            args.OtherEntity,
+            ent.Comp.StatusEffect,
+            ent.Comp.Duration,
+            ent.Comp.Refresh,
+            ent.Comp.Component);
+
+        var ev = new StatusEffectOnCollideEvent(ent.Comp.Duration);
+        RaiseLocalEvent(args.OtherEntity, ref ev);
+    }
+}

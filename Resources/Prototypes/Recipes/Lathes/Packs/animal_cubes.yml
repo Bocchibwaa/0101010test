@@ -1,0 +1,22 @@
+## Static
+
+- type: latheRecipePack
+  id: FriendlyCubesStatic
+  recipes:
+  - MonkeyCube
+  - KoboldCube
+  - CowCube
+  - GoatCube
+  - MothroachCube
+  - MouseCube
+  - CockroachCube
+
+- type: latheRecipePack
+  # <Trauma>
+  parent: TraumaHostileCubesStatic
+  # </Trauma>
+  id: HostileCubesStatic
+  recipes:
+  - AbominationCube
+  - SpaceCarpCube
+  - SpaceTickCube

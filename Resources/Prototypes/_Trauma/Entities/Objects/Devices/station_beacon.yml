@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: DefaultStationBeaconScience
+  id: DefaultStationBeaconXenobio
+  suffix: Xenobio
+  components:
+  - type: NavMapBeacon
+    defaultText: station-beacon-xenobio
+
+- type: entity
+  parent: DefaultStationBeaconScience
+  id: DefaultStationBeaconGenetics
+  suffix: Genetics
+  components:
+  - type: NavMapBeacon
+    defaultText: station-beacon-genetics
+
+- type: entity
+  parent: DefaultStationBeaconEngineering
+  id: DefaultStationBeaconReactor
+  suffix: Reactor
+  components:
+  - type: NavMapBeacon
+    defaultText: station-beacon-reactor

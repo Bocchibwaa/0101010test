@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: marking
+  id: PointyEarsStandard
+  bodyPart: HeadSide
+  forcedColoring: true
+  groupWhitelist: [Arachnid, Human]
+  sprites:
+  - sprite: _EinsteinEngines/Mobs/Customization/pointy_ears.rsi
+    state: pointy_ears_standard
+
+- type: marking
+  id: PointyEarsWide
+  bodyPart: HeadSide
+  forcedColoring: true
+  groupWhitelist: [Arachnid, Human]
+  sprites:
+  - sprite: _EinsteinEngines/Mobs/Customization/pointy_ears.rsi
+    state: pointy_ears_wide
+
+- type: marking
+  id: PointyEarsSmall
+  bodyPart: HeadSide
+  forcedColoring: true
+  groupWhitelist: [Arachnid, Human]
+  sprites:
+  - sprite: _EinsteinEngines/Mobs/Customization/pointy_ears.rsi
+    state: pointy_ears_small
+
+- type: marking
+  id: PointyEarsUpwards
+  bodyPart: HeadSide
+  forcedColoring: true
+  groupWhitelist: [Arachnid, Human]
+  sprites:
+  - sprite: _EinsteinEngines/Mobs/Customization/pointy_ears.rsi
+    state: pointy_ears_upwards
+
+- type: marking
+  id: PointyEarsTall
+  bodyPart: HeadSide
+  forcedColoring: true
+  groupWhitelist: [Arachnid, Human]
+  sprites:
+  - sprite: _EinsteinEngines/Mobs/Customization/pointy_ears.rsi
+    state: pointy_ears_tall
+
+- type: marking
+  id: PointyEarsSlanted
+  bodyPart: HeadSide
+  forcedColoring: true
+  groupWhitelist: [Arachnid, Human]
+  sprites:
+  - sprite: _EinsteinEngines/Mobs/Customization/pointy_ears.rsi
+    state: pointy_ears_slanted
+
+- type: marking
+  id: PointyEarsThin
+  bodyPart: HeadSide
+  forcedColoring: true
+  groupWhitelist: [Arachnid, Human]
+  sprites:
+  - sprite: _EinsteinEngines/Mobs/Customization/pointy_ears.rsi
+    state: pointy_ears_thin
+
+- type: marking
+  id: PointyEarsLarge
+  bodyPart: HeadSide
+  forcedColoring: true
+  groupWhitelist: [Arachnid, Human]
+  sprites:
+  - sprite: _EinsteinEngines/Mobs/Customization/pointy_ears.rsi
+    state: pointy_ears_large

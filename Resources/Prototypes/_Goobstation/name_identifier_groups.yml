@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: nameIdentifierGroup
+  id: Task
+  minValue: 0
+  maxValue: 999

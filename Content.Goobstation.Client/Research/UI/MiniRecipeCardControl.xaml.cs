@@ -1,0 +1,30 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Client.Lathe;
+using Content.Shared.Research.Prototypes;
+using Robust.Client.UserInterface.CustomControls;
+
+namespace Content.Goobstation.Client.Research.UI;
+
+[GenerateTypedNameReferences]
+public sealed partial class MiniRecipeCardControl : Control
+{
+    public MiniRecipeCardControl(TechnologyPrototype technology, LatheRecipePrototype proto, IPrototypeManager prototypeManager, SpriteSystem sprite, LatheSystem lathe)
+    {
+        RobustXamlLoader.Load(this);
+
+        var discipline = prototypeManager.Index(technology.Discipline);
+        Background.ModulateSelfOverride = discipline.Color;
+        NameLabel.SetMessage(lathe.GetRecipeName(proto));
+
+        if (proto.Result.HasValue)
+            Showcase.Texture = sprite.Frame0(prototypeManager.Index(proto.Result.Value));
+
+        if (proto.Description.HasValue)
+        {
+            var tooltip = new Tooltip();
+            tooltip.SetMessage(FormattedMessage.FromUnformatted(lathe.GetRecipeDescription(proto)));
+            Main.TooltipSupplier = _ => tooltip;
+        }
+    }
+}

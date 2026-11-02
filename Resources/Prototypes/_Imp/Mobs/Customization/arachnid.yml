@@ -1,0 +1,193 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Chest
+
+- type: marking
+  id: ArachnidOverlayFluffy
+  bodyPart: Chest
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/chest.rsi
+    state: fluffy
+
+- type: marking
+  id: ArachnidTorsoSegments
+  bodyPart: Chest
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/chest.rsi
+    state: segments1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/chest.rsi
+    state: segments2
+
+- type: marking
+  id: SpiderMirror
+  bodyPart: Chest
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/chest.rsi
+    state: mirror
+
+# Head
+
+- type: marking
+  id: ArachnidHeadSegments
+  bodyPart: Head
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/head.rsi
+    state: segments1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/head.rsi
+    state: segments2
+
+# Snout
+
+- type: marking
+  id: WhipSpiderMouth
+  bodyPart: Snout
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/snout.rsi
+    state: whipspidermouth
+
+# Eyes
+
+- type: marking
+  id: ArachnidEyesJumper
+  bodyPart: Eyes
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: jumper1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: jumper2
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: jumper3
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: jumper4
+
+- type: marking
+  id: ArachnidEyesRound
+  bodyPart: Eyes
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: round1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: round2
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: round3
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: round4
+
+- type: marking
+  id: SpiderEyesMulti
+  bodyPart: Eyes
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: multi1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: multi2
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: multi3
+  - sprite: _Impstation/Mobs/Customization/Arachnid/eyes.rsi
+    state: multi4
+
+# RArm
+
+- type: marking
+  id: ArachnidRArmSegments
+  bodyPart: RArm
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/rarm.rsi
+    state: segments1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/rarm.rsi
+    state: segments2
+
+# LArm
+
+- type: marking
+  id: ArachnidLArmSegments
+  bodyPart: LArm
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/larm.rsi
+    state: segments1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/larm.rsi
+    state: segments2
+
+# RLeg
+
+- type: marking
+  id: ArachnidRLegSegments
+  bodyPart: RLeg
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/rleg.rsi
+    state: segments1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/rleg.rsi
+    state: segments2
+
+# LLeg
+
+- type: marking
+  id: ArachnidLLegSegments
+  bodyPart: LLeg
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/lleg.rsi
+    state: segments1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/lleg.rsi
+    state: segments2
+
+# LFoot
+
+# RFoot
+
+# LHand
+
+# RHand
+
+# HeadSide
+
+- type: marking
+  id: ArachnidCheliceraeSmall
+  bodyPart: HeadSide
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/headside.rsi
+    state: small
+
+# HeadTop
+
+# Wings
+
+- type: marking
+  id: AbdomenBasic
+  bodyPart: Wings
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/wings.rsi
+    state: abdomenbasic1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/wings.rsi
+    state: abdomenbasic2
+
+- type: marking
+  id: AbdomenWidow
+  bodyPart: Wings
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/wings.rsi
+    state: widow1
+  - sprite: _Impstation/Mobs/Customization/Arachnid/wings.rsi
+    state: widow2
+
+- type: marking
+  id: CreepyArms
+  bodyPart: Wings
+  groupWhitelist: [ Arachnid ]
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Arachnid/wings.rsi
+    state: creepy

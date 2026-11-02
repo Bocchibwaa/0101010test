@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: soundCollection
+  id: FootstepResin
+  files:
+  - /Audio/_White/Effects/Footsteps/resin1.ogg

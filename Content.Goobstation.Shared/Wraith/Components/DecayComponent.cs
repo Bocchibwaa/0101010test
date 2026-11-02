@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Emag.Systems;
+
+namespace Content.Goobstation.Shared.Wraith.Components;
+
+[RegisterComponent, NetworkedComponent]
+public sealed partial class DecayComponent : Component
+{
+    /// <summary>
+    /// How much stamina damage to apply over time.
+    /// </summary>
+    [DataField]
+    public float StaminaDamageAmount = 150f;
+
+    /// <summary>
+    /// What emag interaction to use
+    /// </summary>
+    [DataField]
+    public EmagType Emag = EmagType.All;
+}

@@ -1,0 +1,29 @@
+<Document>
+
+# Service
+<!-- Trauma - moved non-service jobs into Civilian guidebook -->
+[color=#9fed58]Service[/color] has perhaps the most important job of all: keeping the crew both fed and topped up on booze.
+
+## Personnel
+[color=#9fed58]Service[/color]'s staff is made up of Bartenders, Botanists, Chefs and Service Workers.
+Service is run by the [bold]Head of Personnel[/bold], who also manages [textlink="other minor jobs" link="Civilian"/] to a lesser degree.
+
+  <Box>
+    <GuideEntityEmbed Entity="ToyFigurineBotanist" Caption="Botanist"/>
+    <GuideEntityEmbed Entity="ToyFigurineBartender" Caption="Bartender"/>
+    <GuideEntityEmbed Entity="ToyFigurineChef" Caption="Chef"/>
+    <GuideEntityEmbed Entity="PlushieLizardJobServiceworker" Caption="Service Worker"/> <!-- TODO: replace with figurine if someone ever makes that -->
+    <GuideEntityEmbed Entity="ToyFigurineHeadOfPersonnel" Caption="HoP"/>
+  </Box>
+
+## Working Together
+[color=#9fed58]Service[/color], tends to be the most [color=#a4885c]interlinked[/color] department by far.
+Most [color=#9fed58]Service[/color] jobs require [color=#a4885c]cooperation[/color] between workers.
+Chefs often need ingredients that only botanists can grow efficiently. The bartender may request bananas for special cocktails.
+
+A lot of [color=#a4885c]collaboration[/color] is necessary within and without [color=#9fed58]Service[/color]. Often times, [color=#9fed58]Service[/color] is required by other departments, so be on your toes.
+
+<!-- <Trauma> - added this -->
+By far the most common departments to work with [color=#9fed58]Service[/color] are [color=#a46106]Cargo[/color] and [color=#5b97bc]Medical[/color].
+<!-- </Trauma> -->
+</Document>

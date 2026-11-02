@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: [BriefcaseBase, BaseStash]
+  id: BriefcaseBrownFake
+  name: brown briefcase
+  suffix: False Bottom
+  components:
+  - type: Sprite
+    sprite: Objects/Storage/Briefcases/briefcase_brown.rsi
+    state: icon
+  - type: SecretStash
+    maxItemSize: Normal
+  - type: ToolOpenable
+    showExamine: false
+    openToolQualityNeeded: Screwing
+    closeToolQualityNeeded: Screwing
+    name: secret-stash-briefcase
+  - type: HideContrabandContent
+  - type: ContainerContainer
+    containers:
+      storagebase: !type:Container
+      stash: !type:ContainerSlot
+
+- type: entity
+  parent: BriefcaseWeapon
+  id: BriefcaseWeaponLarge
+  suffix: Gun, Large, Empty
+  components:
+  - type: Sprite
+    sprite: Objects/Storage/Briefcases/weapon_case.rsi
+  - type: Item
+    size: Ginormous
+  - type: Storage
+    maxItemSize: Ginormous
+    grid:
+    - 0,0,6,3

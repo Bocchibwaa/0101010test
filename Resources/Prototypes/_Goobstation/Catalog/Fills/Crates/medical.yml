@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  id: CrateBiomass
+  parent: CrateGenericSteel
+  name: biomass crate
+  description: A crate full of biomass cubes for use in cloning or other printers.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage:
+        id: MaterialBiomass

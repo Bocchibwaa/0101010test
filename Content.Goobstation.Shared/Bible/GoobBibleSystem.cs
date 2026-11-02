@@ -1,0 +1,113 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Common.Religion;
+using Content.Goobstation.Shared.Devil;
+using Content.Goobstation.Shared.Devil.Condemned;
+using Content.Goobstation.Shared.Exorcism;
+using Content.Goobstation.Shared.Religion;
+using Content.Goobstation.Shared.Religion.Nullrod;
+using Content.Medical.Common.Targeting;
+using Content.Shared.Bible.Components;
+using Content.Shared.Damage.Systems;
+using Content.Shared.DoAfter;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Popups;
+using Content.Shared.Stunnable;
+using Content.Shared.Timing.Components;
+using Content.Shared.Timing.Systems;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Timing;
+
+namespace Content.Goobstation.Shared.Bible;
+
+public sealed partial class GoobBibleSystem : EntitySystem
+{
+    [Dependency] private DamageableSystem _damage = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private UseDelaySystem _delay = default!;
+    [Dependency] private SharedStunSystem _stun = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private IGameTiming _timing = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<CondemnedComponent, BibleSmiteAttemptEvent>(OnSmiteAttempt);
+    }
+
+    private void OnSmiteAttempt(Entity<CondemnedComponent> ent, ref BibleSmiteAttemptEvent args)
+    {
+        if (!ent.Comp.SoulOwnedNotDevil)
+            args.ShouldSmite = true;
+    }
+
+    public bool TryDoSmite(EntityUid bible,
+        EntityUid performer,
+        EntityUid target,
+        UseDelayComponent? useDelay = null,
+        BibleComponent? bibleComp = null)
+    {
+        if (!Resolve(bible, ref useDelay, ref bibleComp))
+            return false;
+
+        if (!HasComp<ShouldTakeHolyComponent>(target)
+            || !HasComp<BibleUserComponent>(performer)
+            || !_timing.IsFirstTimePredicted
+            || _delay.IsDelayed(bible))
+            return false;
+
+        var ev = new BibleSmiteAttemptEvent(target);
+        RaiseLocalEvent(target, ref ev);
+        if (!ev.ShouldSmite)
+            return false;
+
+        var multiplier = 1f;
+        var isDevil = false;
+
+        if (TryComp<DevilComponent>(target, out var devil))
+        {
+            isDevil = true;
+            multiplier = devil.BibleUserDamageMultiplier;
+        }
+
+        if (!_mobState.IsIncapacitated(target))
+        {
+            var popup = Loc.GetString("weaktoholy-component-bible-sizzle", ("target", target), ("item", bible));
+            _popup.PopupEntity(popup, target, performer, PopupType.LargeCaution);
+            _audio.PlayPredicted(bibleComp.SizzleSoundPath, target, performer);
+            _damage.ChangeDamage(target,
+                bibleComp.SmiteDamage * multiplier,
+                true,
+                origin: bible,
+                targetPart: TargetBodyPart.All,
+                ignoreBlockers: true);
+            _stun.TryAddParalyzeDuration(target, bibleComp.SmiteStunDuration * multiplier);
+            _delay.TryResetDelay((bible, useDelay));
+        }
+        else if (isDevil)
+        {
+            var doAfterArgs = new DoAfterArgs(
+                EntityManager,
+                performer,
+                10f,
+                new ExorcismDoAfterEvent(),
+                eventTarget: target,
+                target: target)
+            {
+                BreakOnMove = true,
+                NeedHand = true,
+                BlockDuplicate = true,
+                BreakOnDropItem = true,
+            };
+
+            _doAfter.TryStartDoAfter(doAfterArgs);
+            var popup = Loc.GetString("devil-banish-begin", ("target", target), ("user", performer));
+            _popup.PopupEntity(popup, target, performer, PopupType.LargeCaution);
+        }
+
+        return true;
+    }
+}

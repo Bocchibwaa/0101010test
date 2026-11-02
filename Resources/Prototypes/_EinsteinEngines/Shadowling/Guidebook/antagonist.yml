@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: guideEntry
+  id: Shadowlings
+  name: guide-entry-shadowlings
+  text: "/ServerInfo/_Trauma/Guidebook/Antagonist/Shadowlings.xml"

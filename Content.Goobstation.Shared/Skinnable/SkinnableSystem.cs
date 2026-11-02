@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Body;
+using Content.Shared.Damage.Systems;
+using Content.Shared.DoAfter;
+using Content.Shared.Kitchen.Components;
+using Content.Shared.Popups;
+using Content.Shared.Toggleable;
+using Content.Shared.Tools;
+using Content.Shared.Tools.Systems;
+using Content.Shared.Verbs;
+using Content.Shared.Whitelist;
+using Robust.Shared.Audio.Systems;
+
+namespace Content.Goobstation.Shared.Skinnable;
+
+public sealed partial class SkinnableSystem : EntitySystem
+{
+    [Dependency] private BodySystem _body = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private EntityWhitelistSystem _whitelist = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private SharedPopupSystem _popups = default!;
+    [Dependency] private SharedToolSystem _tool = default!;
+
+    public static readonly ProtoId<ToolQualityPrototype> Slicing = "Slicing";
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<KitchenSpikeComponent, GetVerbsEvent<InteractionVerb>>(OnSpikeGetVerbs);
+        SubscribeLocalEvent<SkinnableComponent, GetVerbsEvent<InteractionVerb>>(OnGetVerbs);
+        SubscribeLocalEvent<SkinnableComponent, SkinningDoAfterEvent>(OnSkinningDoAfter);
+    }
+
+    private void OnSpikeGetVerbs(Entity<KitchenSpikeComponent> ent, ref GetVerbsEvent<InteractionVerb> args)
+    {
+        // relay event to the victim for skinning
+        if (ent.Comp.BodyContainer.ContainedEntity is {} victim)
+            RaiseLocalEvent(victim, args);
+    }
+
+    private void OnGetVerbs(Entity<SkinnableComponent> ent, ref GetVerbsEvent<InteractionVerb> args)
+    {
+        if (!args.CanAccess ||
+            !args.CanInteract ||
+            !args.CanComplexInteract ||
+            ent.Comp.Skinned ||
+            args.Using is not {} used ||
+            _whitelist.IsWhitelistFail(ent.Comp.Whitelist, ent) ||
+            !_tool.HasQuality(used, Slicing))
+            return;
+
+        var user = args.User;
+        args.Verbs.Add(new InteractionVerb()
+        {
+            Act = () => { StartSkinning(user, ent, used); },
+            Text = Loc.GetString("skin-verb"),
+            Icon = new SpriteSpecifier.Rsi(new("/Textures/_Trauma/Mobs/Animals/skinnedmonkey.rsi"), "monkey"),
+            Priority = 1,
+        });
+    }
+
+    private void StartSkinning(EntityUid performer, Entity<SkinnableComponent> target, EntityUid used)
+    {
+        var doAfterArgs = new DoAfterArgs(
+            EntityManager,
+            performer,
+            target.Comp.SkinningDoAfterDuation,
+            new SkinningDoAfterEvent(),
+            target,
+            target,
+            used)
+        {
+            BreakOnMove = true,
+            NeedHand = true,
+            BlockDuplicate = true,
+            BreakOnDropItem = true,
+        };
+
+        if (!_doAfter.TryStartDoAfter(doAfterArgs))
+            return;
+
+        _audio.PlayPvs(target.Comp.SkinSound, target);
+        var popup = Loc.GetString("skinning-start", ("target", target), ("performer", performer));
+        _popups.PopupEntity(popup, target, performer, PopupType.LargeCaution);
+    }
+
+    private void OnSkinningDoAfter(Entity<SkinnableComponent> target, ref SkinningDoAfterEvent args)
+    {
+        if (args.Cancelled || args.Handled || args.Target != target.Owner ||
+            _whitelist.IsWhitelistFail(target.Comp.Whitelist, target))
+            return;
+
+        Skin(target, args.User);
+    }
+
+    private void Skin(Entity<SkinnableComponent> ent, EntityUid? user)
+    {
+        if (ent.Comp.Skinned)
+            return;
+
+        ent.Comp.Skinned = true;
+        Dirty(ent, ent.Comp);
+        _damageable.ChangeDamage(ent.Owner, ent.Comp.DamageOnSkinned, origin: user);
+        // mfw no api :face_holding_back_tears:
+        foreach (var organ in _body.GetOrgans<VisualOrganComponent>(ent.Owner))
+        {
+            if (organ.Comp.Data.RsiPath != ent.Comp.UnskinnedSprite)
+                continue;
+            organ.Comp.Data.RsiPath = ent.Comp.SkinnedSprite;
+            Dirty(organ);
+        }
+    }
+}

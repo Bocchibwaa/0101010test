@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionGhostShowRadar
+  name: Mass Scanner Interface
+  description: View a Mass Scanner Interface.
+  components:
+  - type: Sprite
+    sprite: Interface/Actions/actions_ai.rsi
+    layers:
+    - state: mass_scanner
+  - type: Action
+    keywords: [ "AI", "console", "interface" ]
+    priority: 10
+    checkCanInteract: false
+  - type: InstantAction
+    event: !type:ToggleIntrinsicUIEvent
+      key: enum.RadarConsoleUiKey.Key

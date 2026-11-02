@@ -1,0 +1,130 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: diseaseSpread
+  id: Debug
+  name: Debug
+
+- type: entity
+  abstract: true
+  id: DiseaseBehaviorDebug
+  parent: DiseaseBehaviorBase
+  components:
+  - type: DiseaseEffect
+
+- type: entity
+  id: DiseaseBehaviorTurboCancer
+  parent: DiseaseBehaviorDebug
+  name: turbocancer
+  description: Deals genetic and blunt damage over time. A short time.
+  components:
+  - type: DiseaseEffect
+    complexity: 1000
+  - type: DiseaseEntityEffect
+    effects:
+    - !type:HealthChange
+      damage:
+        types:
+          Cellular: 50
+          Blunt: 50
+
+- type: entity
+  id: DiseaseBehaviorSpreadDebug
+  parent: DiseaseBehaviorDebug
+  name: debug spread
+  description: The plague.
+  components:
+  - type: DiseaseEffect
+    complexity: 1000
+  - type: DiseasePeriodicCondition
+    delayMin: 1
+    delayMax: 2
+  - type: DiseaseVomitEffect
+    severityScale: false
+    progressScale: false
+    timeScale: false
+  - type: DiseaseSpreadEffect
+    arc: 180
+    range: 4
+
+- type: entity
+  id: DiseaseBehaviorForceSpreadDebug
+  parent: DiseaseBehaviorDebug
+  name: omega spread
+  description: Worlds will rot. # [x] sufficiently edgy description
+  components:
+  - type: DiseaseEffect
+    complexity: 1000
+  - type: DiseaseChanceCondition # mostly for performance concerns
+    chance: 1
+    timeScale: false
+  - type: DiseaseForceSpreadEffect
+    range: 1.5
+    chance: 1
+    severityScale: false
+    spreadParams:
+      chance: 1
+      power: 1
+      spreadType: Debug
+
+- type: entity
+  id: DiseaseBehaviorTurboBlunt
+  parent: DiseaseBehaviorBase
+  name: poison
+  description: Deals lots of blunt damage over time.
+  components:
+  - type: DiseaseEffect
+    complexity: 1000
+  - type: DiseaseEntityEffect
+    effects:
+    - !type:HealthChange
+      damage:
+        types:
+          Blunt: 50
+
+- type: entity
+  id: DiseaseBehaviorDeconstructFloor
+  parent: DiseaseBehaviorBase
+  name: tile prying
+  description: Deconstructs the floor.
+  components:
+  - type: DiseaseEffect
+    complexity: 80
+  - type: DiseaseChanceCondition
+    chance: 1
+  - type: DiseasePryTileEffect
+    range: 2
+
+- type: entity
+  id: DiseaseTurboCancer
+  parent: DiseaseBase
+  name: turbo cancer
+  description: Deals lots of genetic damage to the infected. Better prepare the funeral.
+  components:
+  - type: Disease
+    infectionRate: 0.1
+    affectsDead: true
+    canGainImmunity: false
+    genotype: 42069
+    effects:
+      DiseaseBehaviorTurboCancer: 1
+      DiseaseBehaviorFightImmunity: 1
+      DiseaseBehaviorSpreadDebug: 1
+
+- type: entity
+  id: DiseaseTheRot
+  parent: DiseaseBase
+  name: the rot
+  description: If you are reading this, you've invoked the gods' wrath.
+  components:
+  - type: Disease
+    infectionRate: 0.003
+    immunityGainRate: 0
+    mutationRate: 0
+    affectsDead: true
+    canGainImmunity: false
+    genotype: 9001
+    effects:
+      DiseaseBehaviorTurboBlunt: 0.5
+      DiseaseBehaviorFightImmunity: 1
+      DiseaseBehaviorForceSpreadDebug: 0.5
+      DiseaseBehaviorDeconstructFloor: 0.25

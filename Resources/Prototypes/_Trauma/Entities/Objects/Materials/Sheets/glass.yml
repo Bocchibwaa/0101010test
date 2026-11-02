@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: SheetGlass
+  id: SheetGlass15
+  suffix: 15
+  components:
+  - type: Sprite
+    state: glass_2
+  - type: Stack
+    count: 15
+
+- type: entity
+  parent: SheetGlass
+  id: SheetGlass5
+  suffix: 5
+  components:
+  - type: Sprite
+    state: glass_1
+  - type: Stack
+    count: 5

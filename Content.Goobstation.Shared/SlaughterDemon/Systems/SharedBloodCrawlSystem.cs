@@ -1,0 +1,105 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Actions;
+using Content.Shared.Actions.Components;
+using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Fluids.Components;
+using Content.Shared.Polymorph;
+using Content.Shared.Popups;
+using Robust.Shared.Audio.Systems;
+
+namespace Content.Goobstation.Shared.SlaughterDemon.Systems;
+
+/// <summary>
+/// This handles the blood crawl system.
+/// Blood Crawl allows you to jaunt, as long as you activate it in a pool of blood.
+/// To exit the jaunt, you must also stand on a poll of blood.
+/// </summary>
+public abstract partial class SharedBloodCrawlSystem : EntitySystem
+{
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedSolutionContainerSystem _solution = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private EntityQuery<ActionsComponent> _actionsQuery = default!;
+
+    private HashSet<Entity<PuddleComponent>> _puddles = new();
+
+    /// <inheritdoc/>
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<BloodCrawlComponent, ComponentStartup>(OnStartup);
+        SubscribeLocalEvent<BloodCrawlComponent, BloodCrawlEvent>(OnBloodCrawl);
+    }
+
+    private void OnStartup(EntityUid uid, BloodCrawlComponent component, ComponentStartup args)
+    {
+        if (!_actionsQuery.TryGetComponent(uid, out var actions))
+            return;
+
+        _actions.AddAction(uid, component.ActionId, component: actions);
+    }
+
+    private void OnBloodCrawl(EntityUid uid, BloodCrawlComponent component, BloodCrawlEvent args)
+    {
+        if (!IsStandingOnBlood((uid, component)))
+        {
+            _popup.PopupEntity(Loc.GetString("slaughter-blood-jaunt-fail"), uid, uid);
+            _actions.SetCooldown(args.Action.Owner, component.ActionCooldown);
+            return;
+        }
+
+        component.IsCrawling = !component.IsCrawling;
+        Dirty(uid, component);
+
+        if (!CheckAlreadyCrawling((uid, component)))
+            return;
+
+        var evAttempt = new BloodCrawlAttemptEvent();
+        RaiseLocalEvent(uid, ref evAttempt);
+
+        if (evAttempt.Cancelled)
+            return;
+
+        _audio.PlayPredicted(component.EnterJauntSound, Transform(uid).Coordinates, uid);
+
+        PolymorphDemon(uid, component.Jaunt);
+
+        args.Handled = true;
+    }
+
+    #region Helper Functions
+
+    /// <summary>
+    /// Detects if an entity is standing on blood, or not.
+    /// </summary>
+    public bool IsStandingOnBlood(Entity<BloodCrawlComponent> ent)
+    {
+        var coords = Transform(ent).Coordinates;
+        _puddles.Clear();
+        _lookup.GetEntitiesInRange(coords, ent.Comp.SearchRange, _puddles);
+        foreach (var puddle in _puddles)
+        {
+            if (!_solution.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution))
+                continue;
+
+            foreach (var reagent in solution.Contents)
+            {
+                if (ent.Comp.Blood.Contains(reagent.Reagent.Prototype)
+                    && reagent.Quantity >= ent.Comp.RequiredReagentAmount)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    protected virtual bool CheckAlreadyCrawling(Entity<BloodCrawlComponent> ent)
+        => false;
+
+    protected virtual void PolymorphDemon(EntityUid user, ProtoId<PolymorphPrototype> polymorph) {}
+
+    #endregion
+}

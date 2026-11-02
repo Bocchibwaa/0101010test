@@ -1,0 +1,94 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Content.Goobstation.Shared.Silicon.Bots;
+using Content.Server.NPC;
+using Content.Server.NPC.HTN.PrimitiveTasks;
+using Content.Server.NPC.Pathfinding;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Emag.Components;
+using Content.Shared.Interaction;
+using Content.Shared.Repairable;
+
+namespace Content.Goobstation.Server.NPC.HTN.PrimitiveTasks.Operators.Specific;
+
+public sealed partial class PickNearbyWeldableOperator : HTNOperator
+{
+    [Dependency] private IEntityManager _ent = default!;
+    private DamageableSystem _damageable = default!;
+    private EntityLookupSystem _lookup = default!;
+    private PathfindingSystem _pathfinding = default!;
+    private EntityQuery<EmaggedComponent> _emaggedQuery = default!;
+    private EntityQuery<WeldbotComponent> _query = default!;
+
+    /// <summary>
+    /// Target entity to weld
+    /// </summary>
+    [DataField(required: true)]
+    public string TargetKey = string.Empty;
+
+    /// <summary>
+    /// Target entitycoordinates to move to.
+    /// </summary>
+    [DataField(required: true)]
+    public string TargetMoveKey = string.Empty;
+
+    public const float Range = 4f;
+
+    private HashSet<Entity<RepairableComponent>> _targets = new();
+
+    public override void Initialize(IEntitySystemManager sysManager)
+    {
+        base.Initialize(sysManager);
+
+        _damageable = sysManager.GetEntitySystem<DamageableSystem>();
+        _lookup = sysManager.GetEntitySystem<EntityLookupSystem>();
+        _pathfinding = sysManager.GetEntitySystem<PathfindingSystem>();
+
+        _emaggedQuery = _ent.GetEntityQuery<EmaggedComponent>();
+        _query = _ent.GetEntityQuery<WeldbotComponent>();
+    }
+
+    public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard,
+        CancellationToken cancelToken)
+    {
+        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+
+        if (!_query.TryComp(owner, out var weldbot))
+            return (false, null);
+
+        var emagged = _emaggedQuery.HasComp(owner);
+
+        var coords = _ent.GetComponent<TransformComponent>(owner).Coordinates;
+        _targets.Clear();
+        _lookup.GetEntitiesInRange(coords, Range, _targets);
+        foreach (var target in _targets)
+        {
+            if (!emagged)
+            {
+                // Check if weldbot can repair this entity
+                var damage = _damageable.GetAllDamage(target.Owner);
+                if (damage.DamageDict.Keys.Intersect(weldbot.DamageAmount.DamageDict.Keys).All(key => damage.DamageDict[key] == 0))
+                    continue;
+            }
+
+            // Needed to make sure it doesn't sometimes stop right outside its interaction range
+            var pathRange = SharedInteractionSystem.InteractionRange - 0.5f;
+            var path = await _pathfinding.GetPath(owner, target, pathRange, cancelToken);
+
+            if (path.Result == PathResult.NoPath)
+                continue;
+
+            return (true, new Dictionary<string, object>()
+            {
+                {TargetKey, target.Owner},
+                {TargetMoveKey, _ent.GetComponent<TransformComponent>(target).Coordinates},
+                {NPCBlackboard.PathfindKey, path},
+            });
+        }
+
+        return (false, null);
+    }
+}

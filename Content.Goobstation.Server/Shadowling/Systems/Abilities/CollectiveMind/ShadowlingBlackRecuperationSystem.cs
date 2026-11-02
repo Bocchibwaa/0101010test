@@ -1,0 +1,155 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Server.LightDetection;
+using Content.Goobstation.Shared.LightDetection.Components;
+using Content.Goobstation.Shared.Shadowling;
+using Content.Goobstation.Shared.Shadowling.Components;
+using Content.Goobstation.Shared.Shadowling.Components.Abilities.CollectiveMind;
+using Content.Server.EUI;
+using Content.Server.Ghost;
+using Content.Server.Polymorph.Systems;
+using Content.Shared.Actions;
+using Content.Shared.Administration.Systems;
+using Content.Shared.Body;
+using Content.Shared.DoAfter;
+using Content.Shared.Mind;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Popups;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Player;
+
+namespace Content.Goobstation.Server.Shadowling.Systems.Abilities.CollectiveMind;
+
+/// <summary>
+/// This handles the Black Recuperation logic.
+/// Black Rec. either turns back a dead Thrall to life, OR turns a living Thrall into a Lesser Shadowling by empowering them
+/// Reduces your light resistance forever. Less for thralls, more for lesser shadowlings.
+/// </summary>
+public sealed partial class ShadowlingBlackRecuperationSystem : EntitySystem
+{
+    [Dependency] private BodySystem _body = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private LightDetectionDamageSystem _light = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private PolymorphSystem _polymorph = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private RejuvenateSystem _rejuvenate = default!;
+    [Dependency] private ISharedPlayerManager _playerMan = default!;
+    [Dependency] private EuiManager _euiManager = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<ShadowlingBlackRecuperationComponent, BlackRecuperationEvent>(OnBlackRec);
+        SubscribeLocalEvent<ShadowlingBlackRecuperationComponent, BlackRecuperationDoAfterEvent>(OnBlackRecDoAfter);
+        SubscribeLocalEvent<ShadowlingBlackRecuperationComponent, MapInitEvent>(OnStartup);
+        SubscribeLocalEvent<ShadowlingBlackRecuperationComponent, ComponentShutdown>(OnShutdown);
+    }
+
+    private void OnStartup(Entity<ShadowlingBlackRecuperationComponent> ent, ref MapInitEvent args)
+        => _actions.AddAction(ent.Owner, ref ent.Comp.ActionEnt, ent.Comp.ActionId);
+
+    private void OnShutdown(Entity<ShadowlingBlackRecuperationComponent> ent, ref ComponentShutdown args)
+        => _actions.RemoveAction(ent.Owner, ent.Comp.ActionEnt);
+
+    private void OnBlackRec(EntityUid uid, ShadowlingBlackRecuperationComponent component, BlackRecuperationEvent args)
+    {
+        if (args.Handled)
+            return;
+
+        var target = args.Target;
+
+        if (!HasComp<ThrallComponent>(target))
+            return;
+
+        if (_mobStateSystem.IsAlive(target) && HasComp<LesserShadowlingComponent>(target))
+        {
+            _popup.PopupEntity(Loc.GetString("shadowling-black-rec-lesser-already"), uid, uid, PopupType.MediumCaution);
+            return;
+        }
+
+        var doAfter = new DoAfterArgs(
+            EntityManager,
+            uid,
+            component.Duration,
+            new BlackRecuperationDoAfterEvent(),
+            uid,
+            target);
+
+        _doAfter.TryStartDoAfter(doAfter);
+        args.Handled = true;
+    }
+
+    private void OnBlackRecDoAfter(EntityUid uid, ShadowlingBlackRecuperationComponent component, BlackRecuperationDoAfterEvent args)
+    {
+        if (args.Cancelled
+            || args.Handled
+            || args.Target == null)
+            return;
+
+        var target = args.Target.Value;
+
+        if (!_mobStateSystem.IsAlive(target))
+        {
+            if (_mind.TryGetMind(target, out _, out var mind)
+                && _playerMan.TryGetSessionById(mind.UserId, out var session))
+            {
+                // notify them they're being revived.
+                if (mind.CurrentEntity != target)
+                    _euiManager.OpenEui(new ReturnToBodyEui(mind, _mind, _playerMan), session);
+            }
+            else
+            {
+                _popup.PopupEntity(Loc.GetString("defibrillator-no-mind"), uid, uid, PopupType.MediumCaution);
+                return;
+            }
+
+            _rejuvenate.PerformRejuvenate(target);
+            _popup.PopupEntity(Loc.GetString("shadowling-black-rec-revive-done"), uid, target, PopupType.MediumCaution);
+
+            Spawn(component.BlackRecuperationEffect, Transform(target).Coordinates);
+            _audio.PlayPvs(component.BlackRecSound, target, AudioParams.Default.WithVolume(-1f));
+
+            if (TryComp<LightDetectionDamageComponent>(uid, out var lightDetectionDamageModifier))
+                _light.AddResistance((uid, lightDetectionDamageModifier), component.ResistanceRemoveFromThralls);
+        }
+        else
+        {
+            if (component.LesserShadowlingAmount >= component.LesserShadowlingMaxLimit)
+            {
+                _popup.PopupEntity(Loc.GetString("shadowling-black-rec-limit"), uid, uid, PopupType.MediumCaution);
+                return;
+            }
+
+            var newUid = _polymorph.PolymorphEntity(target, component.LesserShadowlingSpeciesProto);
+            if (newUid == null)
+                return;
+
+            var comps = ProtoMan.Index(component.LesserSlingComponents);
+            EntityManager.AddComponents(newUid.Value, comps);
+
+            _body.AddOrganMarking(newUid.Value, component.MarkingOrgan, component.MarkingId, Color.Red, true);
+
+            Spawn(component.BlackRecuperationEffect, Transform(newUid.Value).Coordinates);
+
+            component.LesserShadowlingAmount++;
+
+            _popup.PopupEntity(
+                Loc.GetString("shadowling-black-rec-lesser-done"),
+                uid,
+                newUid.Value,
+                PopupType.MediumCaution);
+            _audio.PlayPvs(component.BlackRecSound, newUid.Value, AudioParams.Default.WithVolume(-1f));
+
+            if (TryComp<LightDetectionDamageComponent>(uid, out var lightDetectionDamageModifier))
+                _light.AddResistance((uid, lightDetectionDamageModifier), component.ResistanceRemoveFromLesser);
+        }
+
+        args.Handled = true;
+    }
+}

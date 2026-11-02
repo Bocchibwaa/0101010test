@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: antag
+  id: Morph
+  name: ghost-role-information-morph-name
+  objective: ghost-role-information-morph-description
+  antagonist: true
+
+- type: antagSpecifier
+  id: Morph
+  spawnerPrototype: GhostRoleSpawnerMorph
+  allowNonHumans: true
+  mindRoles: [ MindRoleMorph ]
+  briefing:
+    text: morph-role-greeting
+    color: lime
+    sound: /Audio/_Trauma/Morph/mutate.ogg
+
+- type: antagSmite
+  id: Morph
+  antag: Morph
+  rule: MorphRule
+  ruleComp: MorphRule
+  icon:
+    sprite: _Trauma/Mobs/morph.rsi
+    state: morph

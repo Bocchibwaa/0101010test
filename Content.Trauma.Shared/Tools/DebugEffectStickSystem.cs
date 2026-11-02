@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Administration;
+using Content.Shared.Administration.Logs;
+using Content.Shared.Administration.Managers;
+using Content.Shared.Database;
+using Content.Shared.EntityEffects;
+using Content.Shared.Interaction;
+using Content.Shared.Interaction.Events;
+using Content.Shared.Popups;
+using Content.Trauma.Shared.EntityEffects;
+
+namespace Content.Trauma.Shared.Tools;
+
+public sealed partial class DebugEffectStickSystem : EntitySystem
+{
+    [Dependency] private EffectDataSystem _data = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private ISharedAdminManager _admin = default!;
+    [Dependency] private SharedEntityEffectsSystem _effects = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedUserInterfaceSystem _ui = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<DebugEffectStickComponent, UseInHandEvent>(OnUseInHand);
+        SubscribeLocalEvent<DebugEffectStickComponent, AfterInteractEvent>(OnAfterInteract);
+
+        Subs.BuiEvents<DebugEffectStickComponent>(DebugEffectStickUiKey.Key, subs =>
+        {
+            subs.Event<DebugStickSetEffectMessage>(OnSetEffect);
+        });
+    }
+
+    private void OnUseInHand(Entity<DebugEffectStickComponent> ent, ref UseInHandEvent args)
+    {
+        var user = args.User;
+        // sorry jimbo admins only
+        if (args.Handled || !IsWorthy(user))
+            return;
+
+        args.Handled = _ui.TryOpenUi(ent.Owner, DebugEffectStickUiKey.Key, user, predicted: true);
+    }
+
+    private void OnSetEffect(Entity<DebugEffectStickComponent> ent, ref DebugStickSetEffectMessage args)
+    {
+        var user = args.Actor;
+        if (ent.Comp.Effect == args.Effect || !IsWorthy(user))
+            return;
+
+        _adminLogger.Add(LogType.AdminCommands, LogImpact.High, $"{user:user} changed DEBUG EFFECT STICK {ent.Owner:stick} to {args.Effect:effect}");
+        ent.Comp.Effect = args.Effect;
+        Dirty(ent);
+    }
+
+    private void OnAfterInteract(Entity<DebugEffectStickComponent> ent, ref AfterInteractEvent args)
+    {
+        var user = args.User;
+        if (args.Target is not {} target || ent.Comp.Effect is not {} effect)
+            return;
+
+        args.Handled = true;
+
+        // you have to explicitly VV it and allow plebians to use it
+        // be very fucking sure it's safe if you do this
+        // setting the effect can never be allowed by non-admins
+        if (ent.Comp.Unsafe && !IsWorthy(user))
+            return;
+
+        _adminLogger.Add(LogType.AdminCommands, LogImpact.High, $"{user:user} used DEBUG EFFECT STICK {ent.Owner:stick} on {target:target} with effect {effect:effect}");
+
+        _data.SetTool(target, ent);
+        _effects.TryApplyEffect(target, effect, user: user);
+        _data.ClearTool(target);
+    }
+
+    public bool IsWorthy(EntityUid uid)
+    {
+        // equivalent to a very good VV
+        if (_admin.HasAdminFlag(uid, AdminFlags.VarEdit))
+            return true;
+
+        _popup.PopupEntity("You are not worthy...", uid, uid);
+        return false;
+    }
+}

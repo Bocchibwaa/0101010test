@@ -1,0 +1,274 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Common.Weapons.Penetration;
+using Content.Medical.Common.Targeting;
+using Content.Shared.Administration.Logs;
+using Content.Shared.Destructible;
+using Content.Shared.Effects;
+using Content.Shared.Camera;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Database;
+using Content.Shared.FixedPoint;
+using Content.Shared.Projectiles;
+using Content.Shared.Weapons.Ranged.Systems;
+using Content.Trauma.Common.Projectiles;
+using Content.Trauma.Common.Teleportation;
+using Content.Trauma.Shared.Executions;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Player;
+using Robust.Shared.Timing;
+using Content.Shared.Weapons.Ranged.Components;
+
+namespace Content.Trauma.Shared.Projectiles;
+
+/// <summary>
+/// Handles predicting projectile hits.
+/// This was previously only done serverside.
+/// </summary>
+public sealed partial class PredictedProjectileSystem : EntitySystem
+{
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private SharedCameraRecoilSystem _recoil = default!;
+    [Dependency] private SharedColorFlashEffectSystem _color = default!;
+    [Dependency] private SharedDestructibleSystem _destructible = default!;
+    [Dependency] private SharedGunSystem _gun = default!;
+    [Dependency] private SharedProjectileSystem _projectile = default!;
+    [Dependency] private EntityQuery<BeingExecutedComponent> _executedQuery = default!;
+    [Dependency] private EntityQuery<DamageableComponent> _damageQuery = default!;
+    [Dependency] private EntityQuery<ProjectileComponent> _query = default!;
+    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
+    [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
+
+    [SubscribeLocalEvent]
+    private void OnStartCollide(Entity<ProjectileComponent> ent, ref StartCollideEvent args)
+    {
+        // This is so entities that shouldn't get a collision are ignored.
+        if (args.OurFixtureId != SharedProjectileSystem.ProjectileFixture || !args.OtherFixture.Hard)
+            return;
+
+        DoHit((ent, ent.Comp, args.OurBody), args.OtherEntity);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnPortalTeleported(Entity<ProjectileComponent> ent, ref PortalTeleportedEvent args)
+    {
+        if (ent.Comp.IgnoredEntities.Count == 0)
+            return;
+
+        ent.Comp.IgnoredEntities.Clear();
+        Dirty(ent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnTargetedProjectileHit(Entity<TargetedProjectileComponent> ent, ref BeforeProjectileHitEvent args)
+    {
+        if (TryGetEntity(ent.Comp.Target, out var t) && t == args.Target)
+            args.Damage.Flags |= DamageSpecifier.DamageFlags.PreciseHit;
+    }
+
+    /// <summary>
+    /// Process a hit for a projectile and a target entity.
+    /// This overload uses the first hard fixture on the target,
+    /// there should only be 1 hard fixture on a given entity.
+    /// Checking multiple hard fixtures would need a collision layer to check against, CBF.
+    /// </summary>
+    public void DoHit(EntityUid uid, EntityUid target)
+    {
+        if (!_query.TryComp(uid, out var comp) ||
+            !_physicsQuery.TryComp(uid, out var physics) ||
+            FindHardFixture(target) == null)
+            return;
+
+        DoHit((uid, comp, physics), target);
+    }
+
+    private Fixture? FindHardFixture(EntityUid uid)
+    {
+        if (!_fixturesQuery.TryComp(uid, out var comp))
+            return null;
+
+        foreach (var fixture in comp.Fixtures.Values)
+        {
+            if (fixture.Hard)
+                return fixture;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Process a hit for a projectile and a target entity.
+    /// </summary>
+    public void DoHit(Entity<ProjectileComponent, PhysicsComponent> ent, EntityUid target)
+    {
+        var (uid, comp, ourBody) = ent;
+        if (comp is { Weapon: null, OnlyCollideWhenShot: true })
+            return;
+
+        // ignore spent in prediction ticks to allow for embedding to be predicted properly
+        if (comp.ProjectileSpent && _timing.IsFirstTimePredicted)
+            return;
+
+        if (comp.IgnoredEntities.Contains(target))
+            return;
+
+        // it's here so this check is only done once before possible hit
+        var attemptEv = new ProjectileReflectAttemptEvent(uid, comp, false, target);
+        RaiseLocalEvent(target, ref attemptEv);
+        if (attemptEv.Cancelled)
+        {
+            _projectile.SetShooter(uid, comp, target);
+            _gun.SetTarget(uid, null, out _);
+            comp.IgnoredEntities.Clear();
+            Dirty(uid, comp);
+            return;
+        }
+
+        var shooter = comp.Shooter;
+
+        var targetEv = new GotHitByProjectileEvent(uid, shooter);
+        RaiseLocalEvent(target, ref targetEv);
+        if (targetEv.Cancelled)
+        {
+            AfterProjectileHit(null, FixedPoint2.Zero);
+            return;
+        }
+
+        var damageEv = new BeforeProjectileHitEvent(comp.Damage, target, shooter);
+        RaiseLocalEvent(uid, ref damageEv);
+        var dmg = damageEv.Damage * _damageable.UniversalProjectileDamageModifier;
+        var ev = new ProjectileHitEvent(dmg, target, shooter);
+        RaiseLocalEvent(uid, ref ev);
+
+        var otherName = ToPrettyString(target);
+        var damageRequired = _destructible.DestroyedAt(target);
+        if (_damageQuery.TryComp(target, out var damageable))
+        {
+            damageRequired -= _damageable.GetTotalDamage((target, damageable));
+            damageRequired = FixedPoint2.Max(damageRequired, FixedPoint2.Zero);
+        }
+
+        TargetBodyPart? targetPart = null;
+        if (_executedQuery.TryComp(target, out var executed))
+            targetPart = executed.TargetPart;
+
+        var canMiss = executed == null; // if you are executing someone its PB, no missing
+        if (_damageable.TryChangeDamage((target, damageable), ev.Damage, out var damage, comp.IgnoreResistances, origin: shooter, targetPart: targetPart, canMiss: canMiss, increaseOnly: comp.IncreaseOnly))
+        {
+            if (!Deleted(target) && _net.IsServer) // intentionally not predicting so you know if color flashes its 100% a hit
+            {
+                _color.RaiseEffect(Color.Red, new List<EntityUid> { target }, Filter.Pvs(target, entityManager: EntityManager));
+            }
+
+            var shotByString = Exists(comp.Shooter)
+                ? $"{ToPrettyString(comp.Shooter!.Value):user}"
+                : "a now deleted entity (grenade?)";
+
+            _adminLogger.Add(LogType.BulletHit,
+                LogImpact.Medium,
+                $"Projectile {ToPrettyString(uid):projectile} shot by {shotByString} hit {otherName:target} and dealt {damage:damage} damage");
+        }
+
+        AfterProjectileHit(damage, damageRequired);
+
+        return;
+
+        void AfterProjectileHit(DamageSpecifier? dmg, FixedPoint2 dmgRequired)
+        {
+            if (TryPenetrate((uid, comp), target, dmg, dmgRequired))
+            {
+                comp.ProjectileSpent = false;
+                comp.IgnoredEntities.Add(target);
+                Dirty(ent);
+            }
+            else if (!comp.ProjectileSpent)
+            {
+                comp.ProjectileSpent = true;
+                Dirty(ent);
+            }
+
+            if (!Deleted(target))
+            {
+                _gun.PlayImpactSound(target, dmg, comp.SoundHit, comp.ForceSound);
+
+                if (!ourBody.LinearVelocity.IsLengthZero() && _timing.IsFirstTimePredicted)
+                    _recoil.KickCamera(target, ourBody.LinearVelocity.Normalized());
+            }
+
+            if (comp.DeleteOnCollide && comp.ProjectileSpent)
+                PredictedQueueDel(uid);
+
+            if (comp.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _timing.IsFirstTimePredicted)
+            {
+                RaiseLocalEvent(new ImpactEffectEvent(comp.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
+            }
+        }
+    }
+
+    private bool TryPenetrate(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier? damage, FixedPoint2 damageRequired)
+    {
+        var comp = projectile.Comp;
+
+        if (comp.Penetrate)
+            return true;
+
+        // <Goob> - Splits penetration change if target have PenetratableComponent
+        if (TryComp<PenetratableComponent>(target, out var penetratable))
+        {
+            // Here penetration threshold count as "penetration health".
+            // If it's lower than damage than penetation damage entity cause it deletes projectile
+            if (comp.PenetrationThreshold < penetratable.PenetrateDamage)
+                return false;
+
+            comp.PenetrationThreshold -= FixedPoint2.New(penetratable.PenetrateDamage);
+            comp.Damage *= (1 - penetratable.DamagePenaltyModifier);
+            return true;
+        }
+        // </Goob>
+
+        if (damage == null)
+            return false;
+
+        if (damage.GetTotal() <= FixedPoint2.Zero)
+            return false;
+
+        // If penetration is to be considered, we need to do some checks to see if the projectile should stop.
+        if (comp.PenetrationThreshold == 0)
+            return false;
+        // If a damage type is required, stop the bullet if the hit entity doesn't have that type.
+        if (comp.PenetrationDamageTypeRequirement != null)
+        {
+            foreach (var requiredDamageType in comp.PenetrationDamageTypeRequirement)
+            {
+                if (!damage.DamageDict.Keys.Contains(requiredDamageType))
+                    return false;
+            }
+        }
+
+        // If the object won't be destroyed, it "tanks" the penetration hit.
+        if (damage.GetTotal() < damageRequired)
+        {
+            return false;
+        }
+
+        if (!comp.ProjectileSpent)
+        {
+            comp.PenetrationAmount += damageRequired;
+            // The projectile has dealt enough damage to be spent.
+            if (comp.PenetrationAmount >= comp.PenetrationThreshold)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}

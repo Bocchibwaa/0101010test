@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: latheRecipe
+  id: MailCapsule
+  result: MailCapsulePrimed
+  completetime: 1
+  materials:
+    Glass: 100
+    Plastic: 100

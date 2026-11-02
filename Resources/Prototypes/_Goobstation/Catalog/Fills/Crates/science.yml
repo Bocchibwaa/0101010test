@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: CrateRoboticsSecure
+  id: CrateScienceModsuitCoresFilled
+  name: MOD cores crate
+  description: Contains three MOD cores inside.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage:
+        id: ModsuitCoreStandard
+        amount: 3

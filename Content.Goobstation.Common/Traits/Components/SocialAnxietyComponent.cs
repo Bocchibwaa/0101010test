@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+
+namespace Content.Goobstation.Common.Traits.Components;
+
+// whoever put this in common fuck you
+[RegisterComponent, NetworkedComponent]
+public sealed partial class SocialAnxietyComponent : Component
+{
+    [DataField] public TimeSpan DownedTime = TimeSpan.FromSeconds(3);
+}

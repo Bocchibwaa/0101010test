@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: job
+  id: SecurityClown
+  name: job-name-security-clown
+  description: job-description-security-clown
+  playTimeTracker: JobSecurityClown
+  requirements:
+  - !type:OverallPlaytimeRequirement
+    time: 10h
+  - !type:RoleTimeRequirement
+    role: JobClown
+    time: 1h
+  startingGear: SecurityClownGear
+  icon: JobIconSecurityClown
+  supervisors: job-supervisors-security
+  setPreference: false
+  access:
+  - Security
+  - Brig
+  - Maintenance
+  - Service
+  - Theatre
+  - External
+  - Cryogenics
+  special:
+  - !type:OrganChipsSpecial
+    chips:
+    - SkillChipCombatEducation
+    - SkillChipClown
+    - SkillChipUnarmed
+  - !type:ApplyStatusEffectSpecial
+    statusEffects:
+    - StatusEffectClumsyClown
+  - !type:AddComponentSpecial
+    components:
+    - type: SleepEmitSound
+      snore: /Audio/Voice/Misc/silly_snore.ogg
+      interval: 10
+    - type: SpeechFontOverride
+      font: LDFComicSans
+    - type: Clown
+  - !type:AddImplantSpecial
+    implants: [ SadTromboneImplant, MindShieldImplant ]
+
+- type: startingGear
+  id: SecurityClownGear
+  equipment:
+    eyes: ClothingEyesGlassesSecurity
+    mask: ClothingMaskClownSecurity
+    jumpsuit: ClothingUniformJumpsuitClown
+    shoes: ClothingShoesClown
+    outerClothing: ClothingOuterArmorBasic
+    id: SecurityClownPDA
+    ears: ClothingHeadsetAltSecurityRegular
+    belt: ClothingBeltSecurityFilled
+    pocket1: WeaponPistolMk58
+    pocket2: BookSecurity
+  storage:
+    back:
+    - Flash
+    - ClownRecorder
+
+- type: chameleonOutfit
+  id: SecurityClownChameleonOutfit
+  job: SecurityClown
+  equipment:
+    mask: ClothingMaskClownSecurity
+    jumpsuit: ClothingUniformJumpsuitClown
+    shoes: ClothingShoesClown
+    outerClothing: ClothingOuterArmorBasic
+    ears: ClothingHeadsetSecurity

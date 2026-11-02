@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  name: hammer
+  parent: BaseItem
+  id: MeleeHammer
+  description: 3 steel 2 wood
+  components:
+  - type: WeaponClass
+    class: Tool
+  - type: Sprite
+    sprite: _Goobstation/Objects/Weapons/Melee/hammer.rsi
+    state: icon
+  - type: MeleeWeapon
+    animationRotation: -90
+    wideAnimationRotation: -135
+    attackRate: 1
+    damage:
+      types:
+        Blunt: 10
+    heavyStaminaCost: 6
+    soundHit:
+      path: /Audio/_Trauma/Weapons/Melee/forging/tink.ogg
+  - type: Item
+    size: Small
+    sprite: _Goobstation/Objects/Weapons/Melee/hammer.rsi
+    storedOffset: 1,-1
+    storedRotation: -45
+  - type: Tag
+    tags:
+    - Hammer
+  - type: Tool
+    qualities:
+    - Hammering
+    useSound:
+      path: /Audio/Items/trayhit2.ogg
+  - type: Construction
+    graph: Hammer
+    node: hammer

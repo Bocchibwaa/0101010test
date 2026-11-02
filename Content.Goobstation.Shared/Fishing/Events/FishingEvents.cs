@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Actions;
+
+namespace Content.Goobstation.Shared.Fishing.Events;
+
+public sealed partial class ThrowFishingLureActionEvent : WorldTargetActionEvent;
+
+public sealed partial class PullFishingLureActionEvent : InstantActionEvent;
+
+[Serializable, NetSerializable]
+public sealed class ActiveFishingSpotComponentState : ComponentState
+{
+    public readonly float FishDifficulty;
+    public bool IsActive;
+    public TimeSpan? FishingStartTime;
+    public NetEntity? AttachedFishingLure;
+
+    public ActiveFishingSpotComponentState(float fishDifficulty, bool isActive, TimeSpan? fishingStartTime, NetEntity? attachedFishingLure)
+    {
+        FishDifficulty = fishDifficulty;
+        IsActive = isActive;
+        FishingStartTime = fishingStartTime;
+        AttachedFishingLure = attachedFishingLure;
+    }
+}
+
+/// <summary>
+/// Raised on a fish reward entity when spawned by fishing
+/// </summary>
+[ByRefEvent]
+public readonly record struct FishCaughtEvent(EntityUid Fish, EntityUid User);

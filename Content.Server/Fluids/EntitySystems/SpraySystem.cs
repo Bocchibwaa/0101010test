@@ -1,0 +1,313 @@
+// <Trauma>
+using Content.Goobstation.Shared.OfficeChair;
+using Content.Server.Chemistry.Components;
+using Content.Shared.Chemistry.Components;
+using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Inventory;
+using Content.Shared.Vapor;
+using Content.Shared.Whitelist;
+using Robust.Shared.Prototypes;
+// </Trauma>
+using Content.Server.Chemistry.EntitySystems;
+using Content.Server.Gravity;
+using Content.Server.Popups;
+using Content.Shared.CCVar;
+using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Fluids;
+using Content.Shared.Interaction;
+using Robust.Server.GameObjects;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Configuration;
+using Robust.Shared.Physics.Components;
+using System.Numerics;
+using Content.Shared.Fluids.EntitySystems;
+using Content.Shared.Fluids.Components;
+using Content.Shared.Timing.Systems;
+using Robust.Server.Containers;
+using Robust.Shared.Audio;
+using Robust.Shared.Map;
+
+namespace Content.Server.Fluids.EntitySystems;
+
+public sealed partial class SpraySystem : SharedSpraySystem
+{
+    // <Trauma>
+    [Dependency] private InventorySystem _inventory = default!;
+    [Dependency] private EntityWhitelistSystem _whitelist = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    // </Trauma>
+    [Dependency] private GravitySystem _gravity = default!;
+    [Dependency] private PhysicsSystem _physics = default!;
+    [Dependency] private UseDelaySystem _useDelay = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainer = default!;
+    [Dependency] private VaporSystem _vapor = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private ContainerSystem _container = default!;
+
+    private float _gridImpulseMultiplier;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<SprayComponent, AfterInteractEvent>(OnAfterInteract);
+        SubscribeLocalEvent<SprayComponent, UserActivateInWorldEvent>(OnActivateInWorld);
+        Subs.CVar(_cfg, CCVars.GridImpulseMultiplier, UpdateGridMassMultiplier, true);
+    }
+
+    private void OnActivateInWorld(Entity<SprayComponent> entity, ref UserActivateInWorldEvent args)
+    {
+        if (args.Handled)
+            return;
+
+        args.Handled = true;
+
+        var targetMapPos = _transform.GetMapCoordinates(Transform(args.Target));
+
+        Spray(entity, targetMapPos, args.User);
+    }
+
+    private void UpdateGridMassMultiplier(float value)
+    {
+        _gridImpulseMultiplier = value;
+    }
+
+    private void OnAfterInteract(Entity<SprayComponent> entity, ref AfterInteractEvent args)
+    {
+        if (args.Handled)
+            return;
+
+        args.Handled = true;
+
+        var clickPos = _transform.ToMapCoordinates(args.ClickLocation);
+
+        Spray(entity, clickPos, args.User);
+    }
+
+    public override void Spray(Entity<SprayComponent> entity, EntityUid? user = null)
+    {
+        var xform = Transform(entity);
+        var throwing = xform.LocalRotation.ToWorldVec() * entity.Comp.SprayDistance;
+        var direction = xform.Coordinates.Offset(throwing);
+
+        Spray(entity, _transform.ToMapCoordinates(direction), user);
+    }
+
+    public override void Spray(Entity<SprayComponent> entity, MapCoordinates mapcoord, EntityUid? user = null)
+    {
+        // Assmos - Extinguisher Nozzle
+        var sprayOwner = entity.Owner;
+        var solutionName = entity.Comp.Solution;
+
+        if (entity.Comp.ExternalContainer == true && user != null)
+        {
+            bool foundContainer = false;
+
+            // Check held items (exclude nozzle)
+            foreach (var item in _hands.EnumerateHeld(user.Value))
+            {
+                if (item == entity.Owner)
+                {
+                    continue;
+                }
+
+                if (!_whitelist.IsWhitelistFailOrNull(entity.Comp.ProviderWhitelist, item) &&
+                    _solutionContainer.TryGetSolution(item, SprayComponent.TankSolutionName, out _, out _))
+                {
+                    sprayOwner = item;
+                    solutionName = SprayComponent.TankSolutionName;
+                    foundContainer = true;
+                    break;
+                }
+            }
+
+            // Fall back to target slot
+            if (!foundContainer && _inventory.TryGetContainerSlotEnumerator(user.Value, out var enumerator, entity.Comp.TargetSlot))
+            {
+                while (enumerator.NextItem(out var item))
+                {
+                    if (!_whitelist.IsWhitelistFailOrNull(entity.Comp.ProviderWhitelist, item) &&
+                        _solutionContainer.TryGetSolution(item, SprayComponent.TankSolutionName, out _, out _))
+                    {
+                        sprayOwner = item;
+                        solutionName = SprayComponent.TankSolutionName;
+                        foundContainer = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!_solutionContainer.TryGetSolution(sprayOwner, solutionName, out var soln, out var solution)) return;
+        // End of assmos changes
+        //if (!_solutionContainer.TryGetSolution(entity.Owner, entity.Comp.Solution, out var soln, out var solution)) return;
+
+        var ev = new SprayAttemptEvent(user);
+        RaiseLocalEvent(entity, ref ev);
+        if (ev.Cancelled)
+        {
+            if (ev.CancelPopupMessage != null && user != null)
+                _popupSystem.PopupEntity(ev.CancelPopupMessage, entity.Owner, user.Value); // Trauma - removed Loc.GetString, the 1 system using this already does that
+            return;
+        }
+
+        if (_useDelay.IsDelayed((entity, null)))
+            return;
+
+        if (solution.Volume <= 0)
+        {
+            if (user != null)
+                _popupSystem.PopupEntity(Loc.GetString(entity.Comp.SprayEmptyPopupMessage, ("entity", entity)), entity.Owner, user.Value);
+            return;
+        }
+
+        var sprayerXform = Transform(entity);
+
+        var sprayerMapPos = _transform.GetMapCoordinates(sprayerXform);
+        var clickMapPos = mapcoord;
+
+        var diffPos = clickMapPos.Position - sprayerMapPos.Position;
+        if (diffPos == Vector2.Zero || diffPos == Vector2Helpers.NaN)
+            return;
+
+        // Lavaland Shitcode Start - You should spray yourself NOW.
+        // Too lazy to learn this system, so you get a copypaste job!
+        if ((clickMapPos.Position - sprayerMapPos.Position).Length() < 0.5f)
+        {
+            // Split a portion of the solution for the self-spray
+            var adjustedSolutionAmount = entity.Comp.TransferAmount;
+            var newSolution = _solutionContainer.SplitSolution(soln.Value, adjustedSolutionAmount);
+
+            if (newSolution.Volume > 0)
+            {
+                // Spawn vapor with a slight offset to create movement
+                var offset = new Vector2(0.1f, 0); // Small offset to ensure collision
+                var vapor = Spawn(entity.Comp.SprayedPrototype, sprayerMapPos.Offset(offset));
+                var vaporXform = Transform(vapor);
+
+                if (TryComp(vapor, out AppearanceComponent? appearance))
+                {
+                    _appearance.SetData(vapor, VaporVisuals.Color, solution.GetColor(ProtoMan).WithAlpha(1f), appearance);
+                    _appearance.SetData(vapor, VaporVisuals.State, true, appearance);
+                }
+
+                var vaporComponent = Comp<VaporComponent>(vapor);
+                var ent = (vapor, vaporComponent);
+                _solutionContainer.TryAddSolution((vapor, Comp<SolutionComponent>(vapor)), newSolution);
+
+                // Create a slight movement effect
+                var rotation = Angle.FromDegrees(45);
+                var impulseDirection = -offset.Normalized();
+                var time = 0.5f;  // Shorter duration for self-spray
+                var target = sprayerMapPos.Offset(impulseDirection * 0.5f);  // Small movement distance
+
+                _vapor.Start(ent, vaporXform, impulseDirection * 0.5f, entity.Comp.SprayVelocity, target, time, user);
+
+                if (TryComp<PhysicsComponent>(user, out var body))
+                {
+                    if (_gravity.IsWeightless(user.Value))
+                        _physics.ApplyLinearImpulse(user.Value, -impulseDirection.Normalized() * entity.Comp.PushbackAmount, body: body);
+
+                    RaiseLocalEvent(user.Value, new SprayUserImpulseEvent(-impulseDirection.Normalized() * entity.Comp.PushbackAmount)); // Goobstation - Vehicle Spray Pushback (Office chairs)
+                }
+
+                _audio.PlayPvs(entity.Comp.SpraySound, entity, entity.Comp.SpraySound.Params.WithVariation(0.125f));
+
+                _useDelay.TryResetDelay(entity.Owner);
+
+                return;
+            }
+        }
+        // Lavaland Shitcode End
+        var diffNorm = diffPos.Normalized();
+        var diffLength = diffPos.Length();
+
+        if (diffLength > entity.Comp.SprayDistance)
+        {
+            diffLength = entity.Comp.SprayDistance;
+        }
+
+        var diffAngle = diffNorm.ToAngle();
+
+        // Vectors to determine the spawn offset of the vapor clouds.
+        var threeQuarters = diffNorm * 0.75f;
+        var quarter = diffNorm * 0.25f;
+
+        var amount = Math.Max(Math.Min((solution.Volume / entity.Comp.TransferAmount).Int(), entity.Comp.VaporAmount), 1);
+        var spread = entity.Comp.VaporSpread / amount;
+
+        var accumulatedVehiclePush = Vector2.Zero; // Goobstation - Vehicle Spray Pushback (Office chairs)
+
+        for (var i = 0; i < amount; i++)
+        {
+            var rotation = new Angle(diffAngle + Angle.FromDegrees(spread * i) -
+                                     Angle.FromDegrees(spread * (amount - 1) / 2));
+
+            // Calculate the destination for the vapor cloud. Limit to the maximum spray distance.
+            var target = sprayerMapPos
+                .Offset((diffNorm + rotation.ToVec()).Normalized() * diffLength + quarter);
+
+            var distance = (target.Position - sprayerMapPos.Position).Length();
+            if (distance > entity.Comp.SprayDistance)
+                target = sprayerMapPos.Offset(diffNorm * entity.Comp.SprayDistance);
+
+            var adjustedSolutionAmount = entity.Comp.TransferAmount / entity.Comp.VaporAmount;
+
+            // Spawn the vapor cloud onto the grid/map the user is present on. Offset the start position based on how far the target destination is.
+            var vaporPos = sprayerMapPos.Offset(distance < 1 ? quarter : threeQuarters);
+            var vapor = Spawn(entity.Comp.SprayedPrototype, vaporPos);
+            var vaporXform = Transform(vapor);
+
+            _transform.SetWorldRotation(vaporXform, rotation);
+
+            _vapor.TryAddSolution(vapor, soln.Value, adjustedSolutionAmount);
+
+            // impulse direction is defined in world-coordinates, not local coordinates
+            var impulseDirection = rotation.ToVec();
+            var time = diffLength / entity.Comp.SprayVelocity;
+
+            _vapor.Start(vapor, vaporXform, impulseDirection * diffLength, entity.Comp.SprayVelocity, target, time, user);
+
+            var thingGettingPushed = entity.Owner;
+            if (_container.TryGetOuterContainer(entity, sprayerXform, out var container))
+                thingGettingPushed = container.Owner;
+
+            if (TryComp<PhysicsComponent>(thingGettingPushed, out var body))
+            {
+                if (_gravity.IsWeightless(thingGettingPushed))
+                {
+                    // push back the player
+                    _physics.ApplyLinearImpulse(thingGettingPushed, -impulseDirection * entity.Comp.PushbackAmount, body: body);
+                }
+                else
+                {
+                    // push back the grid the player is standing on
+                    var userTransform = Transform(thingGettingPushed);
+                    if (userTransform.GridUid == userTransform.ParentUid && userTransform.ParentUid != userTransform.MapUid) // Trauma - check map too
+                    {
+                        // apply both linear and angular momentum depending on the player position
+                        // multiply by a cvar because grid mass is currently extremely small compared to all other masses
+                        _physics.ApplyLinearImpulse(userTransform.GridUid.Value, -impulseDirection * _gridImpulseMultiplier * entity.Comp.PushbackAmount, userTransform.LocalPosition);
+                    }
+                }
+            }
+
+            accumulatedVehiclePush += -impulseDirection * entity.Comp.PushbackAmount; // Goobstation - Vehicle Spray Pushback (Office chairs)
+        }
+
+        // <Trauma>
+        if (user != null)
+            RaiseLocalEvent(user.Value, new SprayUserImpulseEvent(accumulatedVehiclePush));
+        // </Trauma>
+
+        var audioParams = entity.Comp.SpraySound?.Params ?? AudioParams.Default;
+        audioParams = audioParams.WithVariation(0.125f);
+        _audio.PlayPvs(entity.Comp.SpraySound, entity, audioParams);
+
+        _useDelay.TryResetDelay(entity.Owner);
+    }
+}

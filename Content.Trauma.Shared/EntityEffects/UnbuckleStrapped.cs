@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Buckle;
+using Content.Shared.Buckle.Components;
+using Content.Shared.EntityEffects;
+
+namespace Content.Trauma.Shared.EntityEffects;
+
+/// <summary>
+/// Unbuckles everything buckled to the target entity.
+/// </summary>
+public sealed partial class UnbuckleStrapped : EntityEffectBase<UnbuckleStrapped>;
+
+public sealed partial class UnbuckleStrappedEffectSystem : EntityEffectSystem<StrapComponent, UnbuckleStrapped>
+{
+    [Dependency] private SharedBuckleSystem _buckle = default!;
+
+    protected override void Effect(Entity<StrapComponent> ent, ref EntityEffectEvent<UnbuckleStrapped> args)
+    {
+        _buckle.StrapRemoveAll(ent);
+    }
+}

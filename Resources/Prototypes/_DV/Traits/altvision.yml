@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: trait
+  id: DogVision
+  name: trait-deuteranopia-name
+  description: trait-deuteranopia-desc
+  components:
+    - type: DogVision

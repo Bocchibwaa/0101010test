@@ -1,0 +1,125 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Server.Wraith.GameTicking;
+using Content.Goobstation.Shared.Wraith.Components;
+using Content.Goobstation.Shared.Wraith.Events;
+using Content.Goobstation.Shared.Wraith.WraithPoints;
+using Content.Server.Actions;
+using Content.Server.Mind;
+using Content.Shared.Administration.Logs;
+using Content.Shared.Database;
+using Content.Shared.Popups;
+using Content.Trauma.Common.RadialSelector;
+using Robust.Server.GameObjects;
+
+namespace Content.Goobstation.Server.Wraith;
+
+/// <summary>
+/// This handles evolving into a higher form with Wraith.
+/// </summary>
+public sealed partial class WraithEvolveSystem : EntitySystem
+{
+    [Dependency] private UserInterfaceSystem _ui = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private MindSystem _mind = default!;
+    [Dependency] private ActionsSystem _actions = default!;
+    [Dependency] private MetaDataSystem _meta = default!;
+    [Dependency] private SharedPopupSystem _popups = default!;
+    [Dependency] private ISharedAdminLogManager _admin = default!;
+    [Dependency] private WraithEvolveRuleSystem _wraithEvolveRule = default!;
+    [Dependency] private WraithPointsSystem _wraithPoints = default!;
+
+    private CompName _wraithName;
+
+    /// <inheritdoc/>
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        _wraithName = Factory.CompName<WraithComponent>();
+    }
+
+    [SubscribeLocalEvent]
+    private void OnMapInit(Entity<EvolveComponent> ent, ref MapInitEvent args) =>
+        _actions.AddAction(ent.Owner, ref ent.Comp.ActionEnt, ent.Comp.ActionId);
+
+    [SubscribeLocalEvent]
+    private void OnShutdown(Entity<EvolveComponent> ent, ref ComponentShutdown args) =>
+        _actions.RemoveAction(ent.Owner, ent.Comp.ActionEnt);
+
+    [SubscribeLocalEvent]
+    private void OnWraithEvolve(Entity<EvolveComponent> ent, ref WraithEvolveEvent args)
+    {
+        var ev = new WraithEvolveAttemptEvent(ent.Comp.CorpsesRequired);
+        RaiseLocalEvent(ent, ref ev);
+
+        if (ev.Cancelled)
+            return;
+
+        _ui.TryToggleUi(ent.Owner, RadialSelectorUiKey.Key, ent.Owner);
+        _ui.SetUiState(ent.Owner, RadialSelectorUiKey.Key, new RadialSelectorState(ent.Comp.AvailableEvolutions));
+
+        args.Handled = true;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnWraithEvolveRecieved(Entity<EvolveComponent> ent, ref RadialSelectorSelectedMessage args)
+    {
+        Evolve(ent, args.SelectedItem);
+
+        _ui.CloseUi(ent.Owner, RadialSelectorUiKey.Key, args.Actor);
+    }
+
+    private void Evolve(Entity<EvolveComponent> ent, string? evolve)
+    {
+        var uid = ent.Owner;
+        if (evolve == null
+            || !ProtoMan.Resolve(evolve, out var evolvePrototype)
+            || !evolvePrototype.HasComp(_wraithName)
+            || !_mind.TryGetMind(uid, out var mindUid, out var mind))
+            return;
+
+        // Preserve progression before the new form initializes its components
+        var currentWp = _wraithPoints.GetCurrentWp(uid);
+        var passiveWpRate = _wraithPoints.GetCurrentWpRate(uid);
+
+        // Haunt's generation bonus is temporary, so do not transfer it
+        if (TryComp<HauntComponent>(uid, out var haunt))
+            passiveWpRate -= haunt.HauntWpRegenApplied;
+
+        var coordinates = _transformSystem.GetMoverCoordinates(uid);
+        var newForm = Spawn(evolve, coordinates);
+
+        var meta = MetaData(uid);
+        _meta.SetEntityName(newForm, meta.EntityName);
+
+        _mind.TransferTo(mindUid, newForm, mind: mind);
+        _mind.UnVisit(mindUid, mind);
+
+        _wraithEvolveRule.SpawnERTChaplain();
+
+        CopyComps(uid, newForm);
+
+        // Restore progression after the new form has initialized
+        if (HasComp<WraithPointsComponent>(newForm))
+            _wraithPoints.ChangeWraithPoints(currentWp, newForm);
+
+        if (HasComp<PassiveWraithPointsComponent>(newForm))
+            _wraithPoints.SetWpRate(passiveWpRate, newForm);
+
+        _admin.Add(LogType.Action, LogImpact.High, $"{ToPrettyString(ent.Owner)} evolved to {ToPrettyString(newForm)} as a Wraith");
+
+        RemComp<EvolveComponent>(newForm);
+        Del(uid);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnWraithEvolveAttempt(Entity<AbsorbCorpseComponent> ent, ref WraithEvolveAttemptEvent args)
+    {
+        if (ent.Comp.CorpsesAbsorbed < args.CorpsesRequired)
+        {
+            _popups.PopupEntity(Loc.GetString("wraith-evolve-not-enough", ("corpseCount", args.CorpsesRequired)), ent.Owner, ent.Owner);
+            args.Cancelled = true;
+        }
+    }
+}

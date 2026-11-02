@@ -1,0 +1,125 @@
+# region Base
+- type: construction
+  abstract: true
+  id: BaseCrate
+  category: construction-category-storage
+  canRotate: false
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 0
+  practical:
+    MetalworkingKnowledge: 1
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  abstract: true
+  id: BaseBox
+  category: construction-category-storage
+  objectType: Item
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  useQuality: false
+  # </Trauma>
+# endregion Base
+
+# region Crates
+- type: construction
+  parent: BaseCrate
+  id: CrateLivestock
+  graph: CrateLivestock
+  targetNode: cratelivestock
+  # <Trauma>
+  practical:
+    CarvingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseCrate
+  id: CrateGenericSteel
+  graph: CrateGenericSteel
+  targetNode: crategenericsteel
+
+- type: construction
+  parent: BaseCrate
+  id: CrateSecure
+  graph: CrateSecure
+  targetNode: cratesecure
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 0
+    ElectronicsKnowledge: 0
+  # </Trauma>
+
+- type: construction
+  parent: BaseCrate
+  id: CrateFreezer
+  name: construction-recipe-crate-freezer
+  graph: CrateFreezer
+  targetNode: done
+
+- type: construction
+  parent: BaseCrate
+  id: CratePlastic
+  graph: CratePlastic
+  targetNode: crateplastic
+
+- type: construction
+  parent: BaseCrate
+  id: BigBox
+  name: construction-recipe-big-box
+  graph: BaseBigBox
+  targetNode: basebigbox
+  # <Trauma>
+  theory: {} # cardboard
+  practical: {}
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseCrate
+  id: BoxCardboard
+  name: construction-recipe-box-cardboard
+  graph: BoxCardboard
+  targetNode: boxcardboard
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseCrate
+  id: CrateCoffin
+  graph: CrateCoffin
+  targetNode: cratecoffin
+  # <Trauma>
+  practical:
+    CarvingKnowledge: 2
+  useQuality: false
+  # </Trauma>
+# endregion Crates
+
+# region Boxes
+- type: construction
+  parent: BaseBox
+  id: BoxCardboardSmall
+  name: construction-recipe-box-cardboard-small
+  graph: BoxCardboardSmall
+  targetNode: boxcardboardsmall
+
+- type: construction
+  parent: BaseBox
+  id: ToteBase
+  name: construction-recipe-box-tote
+  graph: ToteBase
+  targetNode: totebase
+
+- type: construction
+  parent: BaseBox
+  id: FoodBoxPizza
+  graph: FoodBoxPizza
+  startNode: start
+  targetNode: foodboxpizza
+# endregion Boxes

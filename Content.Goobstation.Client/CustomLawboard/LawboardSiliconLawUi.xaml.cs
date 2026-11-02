@@ -1,0 +1,142 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using System.Linq;
+using Content.Client.UserInterface.Controls;
+using Content.Shared.FixedPoint;
+using Content.Shared.Silicons.Laws;
+using Content.Shared.Silicons.Laws.Components;
+using Content.Goobstation.Shared.CustomLawboard;
+using Robust.Shared.Timing;
+
+namespace Content.Goobstation.Client.CustomLawboard;
+
+[GenerateTypedNameReferences]
+public sealed partial class LawboardSiliconLawUi : FancyWindow
+{
+    private List<SiliconLaw> _laws = new();
+
+    public event Action<List<SiliconLaw>, bool>? LawsChangedEvent;
+    public EntityUid Entity;
+    public SiliconLawProviderComponent? LawProvider;
+
+    public LawboardSiliconLawUi()
+    {
+        RobustXamlLoader.Load(this);
+        NewLawButton.OnPressed += _ => AddNewLaw();
+        Save.OnPressed += _ => SaveLaws();
+
+        if (LawProvider != null && LawProvider.Lawset != null)
+        {
+            SetLaws(LawProvider.Lawset.Laws);
+        }
+    }
+
+    private void AddNewLaw()
+    {
+        var newLaw = new SiliconLaw();
+        newLaw.Order = FixedPoint2.New(_laws.Count + 1);
+        _laws.Add(newLaw);
+        SetLaws(_laws);
+    }
+
+    public void SaveLaws()
+    {
+        Save.Disabled = true;
+        Timer.Spawn(500, () => Save.Disabled = false); // This is so it feels like it did something. It's completely unnecessary but it adds some feedback
+
+        ProcessLawsChanged(true);
+    }
+
+    public void ProcessLawsChanged(bool popup = false)
+    {
+        LawsChangedEvent?.Invoke(_laws, popup); // The popup is just for flavor. There's probably a better way to do this
+    }
+
+    public void SetLaws(List<SiliconLaw> sLaws)
+    {
+        _laws = sLaws;
+        LawContainer.RemoveAllChildren();
+
+        foreach (var law in sLaws.OrderBy(l => l.Order))
+        {
+            var lawControl = new LawboardSiliconLawContainer();
+            lawControl.SetLaw(law);
+            lawControl.MoveLawDown += MoveLawDown;
+            lawControl.MoveLawUp += MoveLawUp;
+            lawControl.DeleteAction += DeleteLaw;
+            lawControl.ChangeLawEvent += ChangeLaw;
+
+            LawContainer.AddChild(lawControl);
+        }
+
+        NewLawButton.Disabled = sLaws.Count >= SharedCustomLawboardSystem.MaxLaws;
+
+        ProcessLawsChanged();
+    }
+
+    public void DeleteLaw(SiliconLaw law)
+    {
+        _laws.Remove(law);
+        SetLaws(_laws);
+    }
+
+    public void MoveLawDown(SiliconLaw law)
+    {
+        if (_laws.Count == 0)
+        {
+            return;
+        }
+
+        var index = _laws.IndexOf(law);
+        if (index == -1)
+        {
+            return;
+        }
+
+        _laws[index].Order += FixedPoint2.New(1);
+        SetLaws(_laws);
+    }
+
+    public void MoveLawUp(SiliconLaw law)
+    {
+        if (_laws.Count == 0)
+        {
+            return;
+        }
+
+        var index = _laws.IndexOf(law);
+        if (index == -1)
+        {
+            return;
+        }
+
+        _laws[index].Order += FixedPoint2.New(-1);
+        SetLaws(_laws);
+    }
+
+    public void ChangeLaw(SiliconLaw law)
+    {
+        if (_laws.Count == 0)
+        {
+            return;
+        }
+
+        var index = _laws.IndexOf(law);
+        if (index == -1)
+        {
+            return;
+        }
+
+        if (law.LawString.Length > SharedCustomLawboardSystem.MaxLawLength)
+        {
+            law.LawString = law.LawString[..SharedCustomLawboardSystem.MaxLawLength]; // Makes the law have a max length to prevent the Horrors of a 9000 character law.
+        }
+
+        _laws[index].LawString = law.LawString;
+    }
+
+    public List<SiliconLaw> GetLaws()
+    {
+        return _laws;
+    }
+}

@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Server.Implants.Components;
+using Content.Shared.Body.Components;
+using Content.Shared.Body.Systems;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Implants;
+using Robust.Shared.Containers;
+using Robust.Shared.Timing;
+
+namespace Content.Goobstation.Server.Implants.Systems;
+
+public sealed partial class StypticStimulatorImplantSystem : EntitySystem
+{
+    [Dependency] private BloodstreamSystem _bloodstream = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<StypticStimulatorImplantComponent, ImplantImplantedEvent>(OnImplant);
+        SubscribeLocalEvent<StypticStimulatorImplantComponent, EntGotRemovedFromContainerMessage>(OnUnimplanted);
+    }
+
+    private void OnImplant(Entity<StypticStimulatorImplantComponent> implant, ref ImplantImplantedEvent args)
+    {
+        implant.Comp.User = args.Implanted;
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var query = EntityQueryEnumerator<StypticStimulatorImplantComponent>();
+        while (query.MoveNext(out var comp))
+        {
+            if (comp.NextExecutionTime > _gameTiming.CurTime || comp.User is not { } user)
+                continue;
+
+            if (TryComp<BloodstreamComponent>(user, out var bloodstreamComponent))
+                _bloodstream.TryModifyBleedAmount((user, bloodstreamComponent), comp.BleedingModifier);
+
+            _damageable.ChangeDamage(user, comp.DamageModifier, true, false);
+
+            comp.NextExecutionTime = _gameTiming.CurTime + comp.ExecutionDelay;
+        }
+    }
+
+    private void OnUnimplanted(Entity<StypticStimulatorImplantComponent> implant, ref EntGotRemovedFromContainerMessage args)
+    {
+        implant.Comp.User = null;
+    }
+}

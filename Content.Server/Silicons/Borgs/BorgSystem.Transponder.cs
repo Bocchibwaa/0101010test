@@ -1,0 +1,194 @@
+using Content.Shared.Damage.Components;
+using Content.Shared.FixedPoint;
+using Content.Shared.Mobs;
+using Content.Shared.Movement.Components;
+using Content.Shared.Popups;
+using Content.Shared.Robotics;
+using Content.Shared.Silicons.Borgs.Components;
+using Content.Shared.DeviceNetwork.Components;
+using Content.Shared.DeviceNetwork.Events;
+using Content.Shared.Emag.Systems;
+using Robust.Shared.Utility;
+
+namespace Content.Server.Silicons.Borgs;
+
+/// <inheritdoc/>
+public sealed partial class BorgSystem
+{
+    public void UpdateTransponder(float frameTime)
+    {
+        var now = _timing.CurTime;
+        var query = EntityQueryEnumerator<BorgTransponderComponent, BorgChassisComponent, DeviceNetworkComponent, MetaDataComponent>();
+        while (query.MoveNext(out var uid, out var comp, out var chassis, out var device, out var meta))
+        {
+            if (comp.NextDisable is { } nextDisable && now >= nextDisable)
+                DoDisable((uid, comp, chassis, meta));
+
+            if (now < comp.NextBroadcast)
+                continue;
+
+            var chargeFraction = 0f;
+            if (_powerCell.TryGetBatteryFromSlot(uid, out var battery))
+                chargeFraction = _battery.GetChargeLevel(battery.Value.AsNullable());
+
+            var hpPercent = CalcHP(uid);
+
+            // checks if it has a brain and if the brain is not a empty MMI (gives false anyway if the fake disable is true)
+            var hasBrain = CheckBrain(chassis.BrainEntity) && !comp.FakeDisabled;
+            var canDisable = comp.NextDisable == null && !comp.FakeDisabling;
+            var data = new CyborgControlData(
+                comp.Sprite,
+                comp.Name,
+                meta.EntityName,
+                chargeFraction,
+                hpPercent,
+                chassis.ModuleCount,
+                hasBrain,
+                canDisable);
+
+            var payload = new RoboticsCyborgDataPayload
+            {
+                Data = data,
+            };
+            _deviceNetwork.SendPacket((uid, device), null, ref payload);
+
+            comp.NextBroadcast = now + comp.BroadcastDelay;
+        }
+    }
+
+    private void DoDisable(Entity<BorgTransponderComponent, BorgChassisComponent, MetaDataComponent> ent)
+    {
+        ent.Comp1.NextDisable = null;
+        if (ent.Comp1.FakeDisabling)
+        {
+            ent.Comp1.FakeDisabled = true;
+            ent.Comp1.FakeDisabling = false;
+            return;
+        }
+
+        if (ent.Comp2.BrainEntity is not { } brain)
+            return;
+
+        var message = Loc.GetString(ent.Comp1.DisabledPopup, ("name", Name(ent, ent.Comp3)));
+        _popup.PopupEntity(message, ent);
+        _container.Remove(brain, ent.Comp2.BrainContainer);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDisable(Entity<BorgTransponderComponent> ent, ref DeviceNetworkPacketEvent<RoboticsCyborgDisablePayload> args)
+    {
+        Disable(ent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDestroy(Entity<BorgTransponderComponent> ent, ref DeviceNetworkPacketEvent<RoboticsCyborgDestroyPayload> args)
+    {
+        Destroy(ent.AsNullable());
+    }
+
+    private void Disable(Entity<BorgTransponderComponent, BorgChassisComponent?> ent)
+    {
+        if (!Resolve(ent, ref ent.Comp2) || ent.Comp2.BrainEntity == null || ent.Comp1.NextDisable != null)
+            return;
+
+        // update ui immediately
+        ent.Comp1.NextBroadcast = _timing.CurTime;
+
+        // pretend the borg is being disabled forever now
+        if (CheckEmagged(ent, "disabled"))
+            ent.Comp1.FakeDisabling = true;
+        else
+            _popup.PopupEntity(Loc.GetString(ent.Comp1.DisablingPopup), ent);
+
+        ent.Comp1.NextDisable = _timing.CurTime + ent.Comp1.DisableDelay;
+    }
+
+    /// <summary>
+    /// Makes a borg with <see cref="BorgTransponderComponent"/> explode
+    /// </summary>
+    /// <param name="ent">the entity of the borg</param>
+    public void Destroy(Entity<BorgTransponderComponent?> ent)
+    {
+        if (!Resolve(ent, ref ent.Comp))
+            return;
+
+        // this is stealthy until someone realises you havent exploded
+        if (CheckEmagged(ent, "destroyed"))
+        {
+            // prevent reappearing on the console a few seconds later
+            RemComp<BorgTransponderComponent>(ent);
+            return;
+        }
+
+        var message = Loc.GetString(ent.Comp.DestroyingPopup, ("name", Name(ent)));
+        _popup.PopupEntity(message, ent);
+        _trigger.ActivateTimerTrigger(ent.Owner);
+
+        // prevent a shitter borg running into people
+        RemComp<InputMoverComponent>(ent);
+    }
+
+    private bool CheckEmagged(EntityUid uid, string name)
+    {
+        if (_emag.CheckFlag(uid, EmagType.Interaction))
+        {
+            _popup.PopupEntity(Loc.GetString($"borg-transponder-emagged-{name}-popup"), uid, uid, PopupType.LargeCaution);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Sets <see cref="BorgTransponderComponent.Sprite"/>.
+    /// </summary>
+    public void SetTransponderSprite(Entity<BorgTransponderComponent> ent, SpriteSpecifier sprite)
+    {
+        ent.Comp.Sprite = sprite;
+    }
+
+    /// <summary>
+    /// Sets <see cref="BorgTransponderComponent.Name"/>.
+    /// </summary>
+    public void SetTransponderName(Entity<BorgTransponderComponent> ent, string name)
+    {
+        ent.Comp.Name = name;
+    }
+
+    /// <summary>
+    /// Returns a ratio between 0 and 1, 1 when they have no damage and 0 whenever they are crit (or more damaged)
+    /// </summary>
+    public float CalcHP(EntityUid uid) // Trauma - made public
+    {
+        if (!TryComp<DamageableComponent>(uid, out var damageable))
+            return 1;
+
+        if (!_mobState.IsAlive(uid))
+            return 0;
+
+        if (!_mobThresholdSystem.TryGetThresholdForState(uid, MobState.Critical, out var threshold) &&
+            !_mobThresholdSystem.TryGetThresholdForState(uid, MobState.Dead, out threshold)) // Trauma - drones don't use a crit state
+        {
+            Log.Error($"Borg({ToPrettyString(uid)}), doesn't have critical threshold.");
+            return 1;
+        }
+
+        return 1 - ((FixedPoint2)(_damageable.GetTotalDamage((uid, damageable)) / threshold)).Float();
+    }
+
+    /// <summary>
+    /// Returns true if the borg has a brain
+    /// </summary>
+    private bool CheckBrain(EntityUid? brainEntity)
+    {
+        if (brainEntity == null)
+            return false;
+
+        // if the brainEntity.Value has the component MMIComponent then it is a MMI,
+        // in that case it trys to get the "brain" of the MMI, if it is null the MMI is empty and so it returns false
+        if (TryComp<MMIComponent>(brainEntity.Value, out var mmi) && _itemSlotsSystem.GetItemOrNull(brainEntity.Value, mmi.BrainSlotId) == null)
+            return false;
+
+        return true;
+    }
+}

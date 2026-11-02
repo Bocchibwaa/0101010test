@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Robotics
+
+- type: entity
+  parent: AirlockScience
+  id: AirlockRobotics
+  suffix: Robotics
+  components:
+  - type: Sprite
+    sprite: _Trauma/Structures/Doors/robotics.rsi
+
+- type: entity
+  parent: AirlockScienceGlass
+  id: AirlockRoboticsGlass
+  suffix: Robotics
+  components:
+  - type: Sprite
+    sprite: _Trauma/Structures/Doors/robotics-glass.rsi

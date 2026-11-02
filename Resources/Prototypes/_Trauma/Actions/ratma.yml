@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionRatmaJump
+  name: Jump
+  description: Jump after the food.
+  components:
+  - type: Sprite
+    sprite: Interface/Actions/jump.rsi
+    layers:
+    - state: icon
+  - type: Action
+    useDelay: 0.5
+  - type: InstantAction
+    event: !type:GravityJumpEvent

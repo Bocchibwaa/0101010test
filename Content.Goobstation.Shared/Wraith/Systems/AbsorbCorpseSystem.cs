@@ -1,0 +1,215 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Wraith.Components;
+using Content.Goobstation.Shared.Wraith.Events;
+using Content.Goobstation.Shared.Wraith.WraithPoints;
+using Content.Shared.Administration.Logs;
+using Content.Shared.Atmos.Rotting;
+using Content.Shared.Body.Components;
+using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Database;
+using Content.Shared.DoAfter;
+using Content.Shared.Mind;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Popups;
+using Content.Shared.Tag;
+using Robust.Shared.Audio.Systems;
+
+namespace Content.Goobstation.Shared.Wraith.Systems;
+
+public sealed partial class AbsorbCorpseSystem : EntitySystem
+{
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private ISharedAdminLogManager _admin = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedRottingSystem _rotting = default!;
+    [Dependency] private SharedSolutionContainerSystem _solution = default!;
+    [Dependency] private TagSystem _tag = default!;
+    [Dependency] private WraithPointsSystem _wraithPoints = default!;
+
+    private EntityQuery<WraithAbsorbableComponent> _absorbableQuery;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<AbsorbCorpseComponent, AbsorbCorpseEvent>(OnAbsorb);
+        SubscribeLocalEvent<PlaguebringerComponent, AbsorbCorpseAttemptEvent>(OnPlaguebringerAttempt);
+        SubscribeLocalEvent<AbsorbCorpseComponent, AbsorbCorpseDoAfterEvent>(OnAbsorbFinished);
+
+        _absorbableQuery = GetEntityQuery<WraithAbsorbableComponent>();
+    }
+
+    private void OnAbsorb(Entity<AbsorbCorpseComponent> ent, ref AbsorbCorpseEvent args)
+    {
+        var target = args.Target;
+        var user = args.Performer;
+
+        if (_tag.HasTag(target, ent.Comp.Tag) || !_absorbableQuery.TryComp(args.Target, out var absorbable)) // save the monkeys
+            return;
+
+        if (!_mobState.IsDead(target))
+        {
+            _popup.PopupEntity(Loc.GetString("wraith-absorb-living"), user, user);
+            return;
+        }
+
+        // user already absorbed, stop there
+        if (absorbable.Absorbed)
+        {
+            _popup.PopupEntity(Loc.GetString("wraith-absorb-already"), ent.Owner, ent.Owner);
+            return;
+        }
+
+        var doAfterArgs = new DoAfterArgs(
+            EntityManager,
+            ent.Owner,
+            ent.Comp.AbsorbDoAfter,
+            new AbsorbCorpseDoAfterEvent(),
+            ent.Owner,
+            target)
+        {
+            BreakOnMove = true,
+            BreakOnWeightlessMove = true,
+        };
+
+        if (!_doAfter.TryStartDoAfter(doAfterArgs))
+            return;
+
+        args.Handled = true;
+    }
+
+    private void OnAbsorbFinished(Entity<AbsorbCorpseComponent> ent, ref AbsorbCorpseDoAfterEvent args)
+    {
+        var user = args.User;
+        if (args.Target is not {} target || !_absorbableQuery.TryComp(target, out var absorbable))
+            return;
+
+        var ev = new AbsorbCorpseAttemptEvent(target);
+        RaiseLocalEvent(user, ref ev);
+        if (ev.Cancelled)
+            return;
+
+        if (ev.Handled)
+        {
+            absorbable.Absorbed = true;
+            Dirty(target, absorbable);
+
+            _admin.Add(LogType.Action, LogImpact.Medium,
+                $"{ToPrettyString(ent.Owner)} absorbed the corpse of {ToPrettyString(args.Target)} as a Plaguebringer Wraith");
+            args.Handled = true;
+            return;
+        }
+
+        if (_rotting.IsRotten(target))
+        {
+            _popup.PopupEntity(Loc.GetString("wraith-absorb-too-decomposed"), user, user);
+            return;
+        }
+
+        // do reagent checking logic, if true activate cooldown
+        if (RemoveReagent(target, ent))
+        {
+            args.Handled = true;
+            return;
+        }
+
+        // Spawn visual/sound effects
+        PredictedSpawnAtPosition(ent.Comp.SmokeProto, Transform(target).Coordinates); //Part 2 TO DO: Port nice smoke visuals from Goonstation instead of spawning this generic smoke.
+        _audio.PlayPredicted(ent.Comp.AbsorbSound, ent.Owner, user);
+
+        var wpTarget = ent.Owner;
+        if (_mind.TryGetMind(ent.Owner, out _, out var mind) && mind.OwnedEntity is { } owned)
+            wpTarget = owned;
+
+        _wraithPoints.AdjustWpGenerationRate(ent.Comp.WpPassiveAdd, wpTarget);
+
+        // apply rot
+        // EnsureComp<RottingComponent>(target); // TODO Removed until someone figures out how to make it partially rot instead of instant full rot
+
+        _popup.PopupEntity(Loc.GetString("wraith-absorb-smoke1"), target, target);
+        ent.Comp.CorpsesAbsorbed++;
+        Dirty(ent);
+
+        // mark as absorbed
+        absorbable.Absorbed = true;
+        Dirty(target, absorbable);
+
+        _admin.Add(LogType.Action, LogImpact.Medium,
+            $"{ToPrettyString(ent.Owner)} absorbed the corpse of {ToPrettyString(args.Target)} as a Wraith");
+        args.Handled = true;
+    }
+
+    #region Special
+
+    private void OnPlaguebringerAttempt(Entity<PlaguebringerComponent> ent, ref AbsorbCorpseAttemptEvent args)
+    {
+        if (!TryComp<PerishableComponent>(args.Target, out var perish)
+            || !TryComp<DamageableComponent>(args.Target, out var damageable))
+            return;
+
+        var dict = _damageable.GetAllDamage((args.Target, damageable)).DamageDict;
+        var toxinDamage = dict.GetValueOrDefault("Poison") + dict.GetValueOrDefault("Radiation");
+
+        if (toxinDamage >= 60 || perish.Stage > 2)
+        {
+            var wpTarget = ent.Owner;
+            if (_mind.TryGetMind(ent.Owner, out _, out var mind) && mind.OwnedEntity is { } owned)
+                wpTarget = owned;
+
+            _wraithPoints.AdjustWraithPoints(150, wpTarget);
+            _wraithPoints.AdjustWpGenerationRate(0.2, wpTarget);
+            _popup.PopupEntity(Loc.GetString("wraith-absorb-rotbonus"), ent.Owner, ent.Owner, PopupType.Medium);
+
+        }
+        else if (toxinDamage < 30 && perish.Stage <= 2)
+        {
+            _popup.PopupEntity(Loc.GetString("wraith-absorb-fresh"), ent.Owner, ent.Owner, PopupType.MediumCaution);
+            args.Cancelled = true;
+        }
+
+        args.Handled = true;
+    }
+
+    #endregion
+
+    #region Helper
+    private bool RemoveReagent(EntityUid target, Entity<AbsorbCorpseComponent> ent)
+    {
+        if (!TryComp<BloodstreamComponent>(target, out var blood)
+            || !_solution.ResolveSolution(target, blood.BloodSolutionName, ref blood.BloodSolution, out var bloodSolution))
+            return false;
+
+        foreach (var (reagentId, qty) in bloodSolution.Contents)
+        {
+            if (reagentId.Prototype != ent.Comp.Reagent || qty < ent.Comp.FormaldehydeThreshhold)
+                continue;
+
+            _solution.RemoveReagent(blood.BloodSolution.Value, reagentId, ent.Comp.ChemToRemove);
+
+            _damageable.TryChangeDamage(ent.Owner, ent.Comp.Damage, ignoreResistances: true);
+            _popup.PopupEntity(Loc.GetString("wraith-absorb-tainted"), ent.Owner, ent.Owner, PopupType.MediumCaution);
+            return true;
+        }
+
+        return false;
+    }
+    #endregion
+
+    #region Public
+    public void Reset(Entity<AbsorbCorpseComponent?> ent)
+    {
+        if (!Resolve(ent.Owner, ref ent.Comp))
+            return;
+
+        ent.Comp.CorpsesAbsorbed = 0;
+        Dirty(ent);
+    }
+    #endregion
+}

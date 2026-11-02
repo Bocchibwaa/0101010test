@@ -1,0 +1,60 @@
+- type: entity
+  parent: BaseItem
+  name: light replacer
+  id: LightReplacer
+  description: An item which uses magnets to easily replace broken lights. Refill by adding more lights into the replacer.
+  components:
+  # <Trauma>
+  - type: EntityProviderAreaPickup
+    comp: LightBulb
+  # </Trauma>
+  - type: Sprite
+    sprite: Objects/Specific/Janitorial/light_replacer.rsi
+    state: icon
+  - type: Item
+    sprite: Objects/Specific/Janitorial/light_replacer.rsi
+  - type: LightReplacer
+  - type: EntityProvider
+    whitelist:
+      components:
+      - LightBulb
+  - type: ContainerContainer
+    containers:
+      entity-provider: !type:Container
+  - type: StaticPrice
+    price: 100
+  - type: UserInterface
+    interfaces:
+      enum.LightReplacerUiKey.Key:
+        type: LightReplacerMenuBoundUserInterface
+  - type: Tag
+    tags:
+    - DroneUsable # Trauma
+    - LightReplacer
+
+- type: entity
+  parent: LightReplacer
+  id: LightReplacerFilled
+  suffix: Filled
+  components:
+  - type: EntityProvider
+    entityCounter:
+      LightTube: 8
+      LightBulb: 5
+
+# The following entities are solely used for sprites in the radial menu.
+- type: entity
+  id: EjectTubes
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Janitorial/light_replacer.rsi
+    state: eject-tubes
+
+- type: entity
+  id: EjectBulbs
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Janitorial/light_replacer.rsi
+    state: eject-bulbs

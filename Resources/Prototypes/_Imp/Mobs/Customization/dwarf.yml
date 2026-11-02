@@ -1,0 +1,262 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Chest
+
+- type: marking
+  id: DwarfConstellationChest
+  bodyPart: Chest
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/chest.rsi
+    state: constellation
+
+
+- type: marking
+  id: DwarfMarkBear
+  bodyPart: Chest
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/chest.rsi
+    state: markbear
+
+
+- type: marking
+  id: DwarfMarkCobra
+  bodyPart: Chest
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/chest.rsi
+    state: markcobra
+
+
+- type: marking
+  id: DwarfMarkSpider
+  bodyPart: Chest
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/chest.rsi
+    state: markspider
+
+- type: marking
+  id: DwarfTattooShootingStar
+  bodyPart: Chest
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/chest.rsi
+    state: shootingstar
+
+# Head
+
+- type: marking
+  id: DwarfBearCheeks
+  bodyPart: Head
+  groupWhitelist: [ Human ]
+  forcedColoring: true
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/head.rsi
+    state: bearcheeks
+
+- type: marking
+  id: DwarfConstellationHead
+  bodyPart: Head
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/head.rsi
+    state: constellation
+
+
+# Snout
+
+# Eyes
+
+# RArm
+
+- type: marking
+  id: DwarfConstellationRArm
+  bodyPart: RArm
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/rarm.rsi
+    state: constellation
+
+# LArm
+
+- type: marking
+  id: DwarfConstellationLArm
+  bodyPart: LArm
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/larm.rsi
+    state: constellation
+
+# RLeg
+
+- type: marking
+  id: DwarfConstellationRLeg
+  bodyPart: RLeg
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/rleg.rsi
+    state: constellation
+
+# LLeg
+
+- type: marking
+  id: DwarfConstellationLLeg
+  bodyPart: LLeg
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/lleg.rsi
+    state: constellation
+
+# UndergarmentBottom
+
+# UndergarmentTop
+
+# LFoot
+
+- type: marking
+  id: DwarfConstellationLFoot
+  bodyPart: LFoot
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/lfoot.rsi
+    state: constellation
+
+# RFoot
+
+- type: marking
+  id: DwarfConstellationRFoot
+  bodyPart: RFoot
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/rfoot.rsi
+    state: constellation
+
+# LHand
+
+- type: marking
+  id: DwarfConstellationLHand
+  bodyPart: LHand
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/lhand.rsi
+    state: constellation
+
+- type: marking
+  id: DwarfMarkKangarooLHand
+  bodyPart: LHand
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/lhand.rsi
+    state: markkangaroo
+
+# RHand
+
+- type: marking
+  id: DwarfConstellationRHand
+  bodyPart: RHand
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/rhand.rsi
+    state: constellation
+
+- type: marking
+  id: DwarfMarkKangarooRHand
+  bodyPart: RHand
+  groupWhitelist: [ Human ]
+  coloring:
+    default:
+      type:
+        !type:SimpleColoring
+        color: "#FFFFFF"
+  sprites:
+  - sprite: _Impstation/Mobs/Customization/Dwarf/rhand.rsi
+    state: markkangaroo
+
+# FacialHair
+
+# Hair
+
+# HeadSide
+
+# HeadTop
+
+# Tail
+
+# RArmExtension

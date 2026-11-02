@@ -1,0 +1,84 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: ToteBase
+  id: BoxSkillChipsBase
+  name: skillchips box
+  description: A large box for storing spare skillchips. Might be sterile? Who knows.
+  components:
+  - type: Storage
+    whitelist: null # just a box
+
+- type: entity
+  parent: BoxSkillChipsBase
+  id: BoxSkillChipsService
+  name: service skillchips box
+  description: A large box containing service skillchips. Definitely isn't sterile. Oh well.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: SkillChipEducation
+          amount: 6
+        - id: SkillChipCombatEducation
+          amount: 4
+        - id: SkillChipEchelonEducation
+        - id: SkillChipClown
+        - id: SkillChipChef
+        - id: SkillChipStoner
+
+
+- type: entity
+  parent: BoxSkillChipsBase
+  id: BoxSkillChipsCargo
+  name: cargo skillchips box
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: SkillChipMining
+          amount: 3
+
+- type: entity
+  parent: BoxSkillChipsBase
+  id: BoxSkillChipsEngi
+  name: engi skillchips box
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: SkillChipTool
+          amount: 6
+        - id: SkillChipDatabase
+          amount: 6
+
+- type: entity
+  parent: BoxSkillChipsBase
+  id: BoxSkillChipsMed
+  name: med skillchips box
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: SkillChipDoctor
+          amount: 5
+        - id: SkillChipSurgeon
+          amount: 5
+        - id: SkillChipChemist
+          amount: 2
+
+- type: entity
+  parent: BoxSkillChipsBase
+  id: BoxSkillChipsSci
+  name: sci skillchips box
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: SkillChipDatabase
+          amount: 6

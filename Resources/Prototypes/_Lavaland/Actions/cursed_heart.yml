@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionPumpCursedHeart
+  name: Heartbeat
+  description: Pump your own blood to live!
+  components:
+  - type: Sprite
+    sprite: _Lavaland/Objects/Specific/Lavaland/loot.rsi
+    layers:
+    - state: cursed_heart
+  - type: Action
+    checkCanInteract: false
+    checkConsciousness: false
+    itemIconStyle: BigAction
+    useDelay: 1
+  - type: InstantAction
+    event: !type:PumpHeartActionEvent
+      damage:
+        types:
+          Blunt: -5
+          Slash: -5
+          Piercing: -5
+          Ballistic: -5
+          Heat: -4
+          Cold: -4
+          Shock: -4
+          Caustic: -4
+          Asphyxiation: -5
+          Bloodloss: -5

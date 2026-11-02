@@ -1,0 +1,190 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Content.Goobstation.Common.Blob;
+using Content.Goobstation.Shared.Blob.Components;
+using Content.Goobstation.Shared.GameTicking.Rules;
+using Content.Server.Audio;
+using Content.Server.Chat.Managers;
+using Content.Server.Chat.Systems;
+using Content.Server.RoundEnd;
+using Content.Server.Shuttles.Systems;
+using Content.Shared.AlertLevel;
+using Content.Shared.Antag;
+using Content.Shared.Audio;
+using Content.Shared.Destructible;
+using Content.Shared.GameTicking;
+using Content.Shared.GameTicking.Components;
+using Content.Shared.GameTicking.Rules;
+using Content.Shared.Station.Components;
+using Content.Shared.Station.Systems;
+using Content.Trauma.Common.GameTicking;
+using Robust.Shared.Player;
+
+namespace Content.Goobstation.Server.Blob.GameTicking;
+
+public sealed partial class BlobRuleSystem : GameRuleSystem<BlobRuleComponent>
+{
+    [Dependency] private RoundEndSystem _roundEnd = default!;
+    [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private StationSystem _station = default!;
+    [Dependency] private AlertLevelSystem _alertLevel = default!;
+    [Dependency] private GameTicker _ticker = default!;
+    [Dependency] private IChatManager _chatMan = default!;
+    [Dependency] private EmergencyShuttleSystem _emergency = default!;
+    [Dependency] private ServerGlobalSoundSystem _sound = default!;
+    [Dependency] private CommonNewAntagOrEvacSystem _antagEvac = default!;
+
+    private static readonly ProtoId<AlertLevelPrototype> StationAlertCritical = "DeltaBlob";
+    private static readonly ProtoId<AlertLevelPrototype> StationAlertDetected = "Red";
+
+    protected override void ActiveTick(EntityUid uid, BlobRuleComponent component, GameRuleComponent gameRule, float frameTime)
+    {
+        component.Accumulator += frameTime;
+
+        if (component.Accumulator < 10)
+            return;
+
+        component.Accumulator = 0;
+
+        var check = new Dictionary<EntityUid, long>();
+        var blobCoreQuery = EntityQueryEnumerator<BlobCoreComponent, MetaDataComponent, TransformComponent>();
+        while (blobCoreQuery.MoveNext(out var ent, out var comp, out var md, out var xform))
+        {
+            if (TerminatingOrDeleted(ent, md) ||
+                !CheckBlobInStation(ent, xform, out var stationUid))
+            {
+                continue;
+            }
+
+            check.TryAdd(stationUid, 0);
+
+            check[stationUid] += comp.BlobTiles.Count;
+        }
+
+        foreach (var (station, tiles) in check)
+        {
+            CheckChangeStage(station, component, tiles);
+        }
+    }
+
+    private bool CheckBlobInStation(EntityUid blobCore, TransformComponent? xform, out EntityUid stationUid)
+    {
+        if (_station.GetOwningStation(blobCore, xform) is not { } station)
+        {
+            _chatMan.SendAdminAlert(blobCore, Loc.GetString("blob-alert-out-off-station"));
+            QueueDel(blobCore);
+            stationUid = EntityUid.Invalid;
+            return false;
+        }
+
+        stationUid = station;
+        return true;
+    }
+
+    private void CheckChangeStage(
+        Entity<StationBlobConfigComponent?> stationUid,
+        BlobRuleComponent blobRuleComp,
+        long blobTilesCount)
+    {
+        Resolve(stationUid, ref stationUid.Comp, false);
+
+        var stationName = Name(stationUid);
+
+        if (blobTilesCount >= (stationUid.Comp?.StageBegin ?? StationBlobConfigComponent.DefaultStageBegin)
+            && _roundEnd.ExpectedCountdownEnd != null
+            && !_emergency.EmergencyShuttleArrived)
+        {
+            _roundEnd.CancelRoundEndCountdown(forceRecall: true);
+            _chat.DispatchStationAnnouncement(stationUid,
+                Loc.GetString("blob-alert-recall-shuttle"),
+                Loc.GetString("Station"),
+                false,
+                null,
+                Color.Red);
+        }
+        else if (blobTilesCount >= (stationUid.Comp?.StageBegin ?? StationBlobConfigComponent.DefaultStageBegin)
+                 && _roundEnd.ExpectedCountdownEnd != null && _emergency.EmergencyShuttleArrived)
+        {
+            _chat.DispatchStationAnnouncement(stationUid,
+                Loc.GetString("blob-alert-shuttle-arrived"),
+                Loc.GetString("Station"),
+                false,
+                null,
+                Color.OrangeRed);
+        }
+
+        switch (blobRuleComp.Stage)
+        {
+            case BlobStage.Default when blobTilesCount >= (stationUid.Comp?.StageBegin ?? StationBlobConfigComponent.DefaultStageBegin):
+                blobRuleComp.Stage = BlobStage.Begin;
+
+                _chat.DispatchGlobalAnnouncement(
+                    Loc.GetString("blob-alert-detect"),
+                    stationName,
+                    true,
+                    null,
+                    Color.Red);
+
+                if (blobRuleComp.DetectedAudio is { } detectedAudio)
+                    // Station is the source here because that's the only UID we have in this method. Гойда.
+                    _sound.DispatchStationEventMusic(stationUid, detectedAudio, StationEventMusicType.Blob, detectedAudio.Params);
+
+                _alertLevel.SetLevel(stationUid.Owner, StationAlertDetected, force: true);
+                return;
+            case BlobStage.Begin when blobTilesCount >= (stationUid.Comp?.StageCritical ?? StationBlobConfigComponent.DefaultStageCritical):
+                blobRuleComp.Stage = BlobStage.Critical;
+                _chat.DispatchGlobalAnnouncement(
+                    Loc.GetString("blob-alert-critical-cburn"),
+                    stationName,
+                    true,
+                    blobRuleComp.CriticalAudio,
+                    Color.Red);
+
+                if (blobRuleComp.CriticalAudio is { } criticalAudio)
+                {
+                    _sound.StopStationEventMusic(stationUid, StationEventMusicType.Blob);
+                    _sound.DispatchStationEventMusic(stationUid, criticalAudio, StationEventMusicType.Blob, criticalAudio.Params);
+                }
+
+                if (!blobRuleComp.BlobCBurnCalled)
+                    _ticker.StartGameRule(blobRuleComp.BlobCBurnEvent);
+                blobRuleComp.BlobCBurnCalled = true;
+
+                _alertLevel.SetLevel(stationUid.Owner, StationAlertCritical, true, true, true, true);
+                return;
+
+            case BlobStage.Critical when blobTilesCount >= (stationUid.Comp?.StageTheEnd ?? StationBlobConfigComponent.DefaultStageEnd):
+                blobRuleComp.Stage = BlobStage.TheEnd;
+                _roundEnd.EndRound();
+                _sound.StopStationEventMusic(stationUid, StationEventMusicType.Blob);
+                return;
+        }
+    }
+
+    public void MakeBlob(EntityUid player)
+    {
+        var comp = EnsureComp<BlobCarrierComponent>(player);
+        comp.HasMind = HasComp<ActorComponent>(player);
+        comp.TransformationDelay = 10 * 60; // 10min
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDestruction(Entity<BlobCoreComponent> ent, ref DestructionEventArgs args)
+    {
+        var query = EntityQueryEnumerator<BlobRuleComponent>();
+
+        while (query.MoveNext(out var uid, out _))
+        {
+            _antagEvac.SpawnNewAntagIfBelowPercent(uid, TimeSpan.FromMinutes(5), true);
+            break;
+        }
+    }
+
+    [SubscribeLocalEvent]
+    private void AfterAntagSelected(EntityUid uid, BlobRuleComponent component, AfterAntagEntitySelectedEvent args)
+    {
+        MakeBlob(args.EntityUid);
+    }
+}

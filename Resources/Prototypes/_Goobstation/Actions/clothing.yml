@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionClothingSeal
+  name: Seal clothing
+  description: Seals your current clothing.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: ConfirmableAction
+    confirmDelay: 0
+    primeTime: 2
+  - type: Action
+    checkCanInteract: true
+    checkConsciousness: true
+    itemIconStyle: NoItem
+  - type: Sprite
+    sprite: _Goobstation/Actions/modsuit.rsi
+    layers:
+    - state: activate
+      map: [ "enum.ActionVisuals.Icon" ]
+    - state: activate-ready
+      visible: false
+      map: [ "enum.ActionVisuals.IconToggled" ]
+  - type: InstantAction
+    event: !type:SealClothingEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionHailer
+  name: Hail
+  description: Audibly hail nearby crew, useful for giving quick orders.
+  components:
+  - type: Action
+    useDelay: 2
+  - type: Sprite
+    sprite: Clothing/Mask/gassecurity.rsi
+    layers:
+    - state: icon
+  - type: InstantAction
+    event: !type:HailerActionEvent

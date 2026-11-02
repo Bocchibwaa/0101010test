@@ -1,0 +1,415 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# /tg/ gases
+
+- type: reagent
+  id: BZ
+  name: reagent-name-bz
+  desc: reagent-desc-bz
+  physicalDesc: reagent-physical-desc-gaseous
+  flavor: bitter
+  color: "#9370db"
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 0.5
+        - !type:MetabolizerTypeCondition
+          type: [ Cybernetic ]
+          inverted: true
+        scaling: true
+        ignoreResistances: true
+        damage:
+          types:
+            Poison: 2.5
+      - !type:ModifyStatusEffect
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 0.3
+        effectProto: StatusEffectSeeingRainbow
+        type: Add
+        time: 15
+      - !type:PopupMessage
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 0.5
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.1
+        type: Local
+        visualType: Medium
+        messages: [ "effect-sleepy" ]
+        probability: 0.1
+      - !type:MovespeedModifier
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 1
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.1
+        speedModifier: 0.65
+      - !type:ModifyStatusEffect
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 1
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.1
+        effectProto: StatusEffectForcedSleeping
+        time: 6
+        delay: 5
+    Respiration:
+      effects:
+      - !type:Emote
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 0.2
+        emote: Cough
+        showInChat: true
+        probability: 0.1
+      - !type:HealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 0.5
+        - !type:MetabolizerTypeCondition
+          type: [ Cybernetic ]
+          inverted: true
+        scaling: true
+        ignoreResistances: true
+        damage:
+          types:
+            Poison: 2.5
+      - !type:ModifyStatusEffect
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 0.3
+        effectProto: StatusEffectSeeingRainbow
+        type: Add
+        time: 15
+      - !type:PopupMessage
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 0.5
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.1
+        type: Local
+        visualType: Medium
+        messages: [ "effect-sleepy" ]
+        probability: 0.1
+      - !type:MovespeedModifier
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 1
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.1
+        speedModifier: 0.65
+      - !type:ModifyStatusEffect
+        conditions:
+        - !type:ReagentCondition
+          reagent: BZ
+          min: 1
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.1
+        effectProto: StatusEffectForcedSleeping
+        time: 6
+        delay: 5
+
+- type: reagent
+  id: Healium
+  name: reagent-name-healium
+  desc: reagent-desc-healium
+  physicalDesc: reagent-physical-desc-gaseous
+  flavor: strange
+  color: "#90560b"
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:EvenHealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          max: 24
+        damage:
+          Burn: -2
+          Toxin: -5
+          Brute: -2
+      - !type:EvenHealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          min: 24
+        damage:
+          Burn: -20
+          Toxin: -50
+          Brute: -20
+      - !type:PopupMessage
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          min: 4
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.1
+        type: Local
+        visualType: Medium
+        messages: [ "effect-sleepy" ]
+        probability: 0.01
+      - !type:ModifyStatusEffect
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          min: 8
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.01
+        effectProto: StatusEffectForcedSleeping
+        time: 1
+        type: Add
+      - !type:Drunk
+        boozePower: 45
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          min: 4
+    Respiration:
+      effects:
+      - !type:EvenHealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          max: 24
+        damage:
+          Burn: -2
+          Toxin: -5
+          Brute: -2
+      - !type:EvenHealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          min: 24
+        damage:
+          Burn: -20
+          Toxin: -50
+          Brute: -20
+      - !type:PopupMessage
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          min: 4
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.1
+        type: Local
+        visualType: Medium
+        messages: [ "effect-sleepy" ]
+        probability: 0.01
+      - !type:ModifyStatusEffect
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          min: 8
+        - !type:ReagentCondition
+          reagent: NitrosylPlasmide
+          max: 0.01
+        effectProto: StatusEffectForcedSleeping
+        time: 1
+        type: Add
+      - !type:Drunk
+        boozePower: 45
+        conditions:
+        - !type:ReagentCondition
+          reagent: Healium
+          min: 4
+
+- type: reagent
+  id: Nitrium
+  name: reagent-name-nitrium
+  desc: reagent-desc-nitrium
+  physicalDesc: reagent-physical-desc-gaseous
+  flavor: sour
+  color: "#90560B"
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:NitriumMovespeedModifier
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 1
+          max: 8
+        speedModifier: 1.25
+      - !type:NitriumMovespeedModifier
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 8
+          max: 12
+        speedModifier: 1.4
+      - !type:NitriumMovespeedModifier
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 12
+        speedModifier: 1.6
+      - !type:AddReagentToBlood
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 6
+        reagent: NitrosylPlasmide
+        amount: 2.5
+      - !type:GenericStatusEffect
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 8
+        key: Stutter
+        component: StutteringAccent
+        time: 8
+      - !type:HealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 10
+        damage:
+          types:
+            Asphyxiation: 15
+    Respiration:
+      effects:
+      - !type:NitriumMovespeedModifier
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 1
+          max: 8
+        speedModifier: 1.25
+      - !type:NitriumMovespeedModifier
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 8
+          max: 12
+        speedModifier: 1.4
+      - !type:NitriumMovespeedModifier
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 12
+        speedModifier: 1.6
+      - !type:AddReagentToBlood
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 6
+        reagent: NitrosylPlasmide
+        amount: 2.5
+      - !type:GenericStatusEffect
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 8
+        key: Stutter
+        component: StutteringAccent
+        time: 8
+      - !type:HealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: Nitrium
+          min: 10
+        damage:
+          types:
+            Asphyxiation: 15
+
+- type: reagent
+  id: Pluoxium
+  name: reagent-name-pluoxium
+  desc: reagent-desc-pluoxium
+  physicalDesc: reagent-physical-desc-gaseous
+  flavor: bitter
+  color: "#7b68ee"
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:Oxygenate
+        factor: 8
+        conditions:
+        - !type:MetabolizerTypeCondition
+          type: [ Human, Animal, Rat, Plant, Arachnid, Moth, Cybernetic ]
+      # Convert Pluox into CO2.
+      - !type:ModifyLungGas
+        conditions:
+        - !type:MetabolizerTypeCondition
+          type: [ Vox ]
+          inverted: true
+        ratios:
+          CarbonDioxide: 1.0
+          Oxygen: -1.0
+      - !type:HealthChange
+        conditions:
+        - !type:MetabolizerTypeCondition
+          type: [ Vox ]
+        scaling: true
+        ignoreResistances: true
+        damage:
+          types:
+            Poison: 10
+      - !type:AdjustAlert
+        alertType: Toxins
+        conditions:
+        - !type:ReagentCondition
+          reagent: Pluoxium
+          min: 0.5
+        - !type:MetabolizerTypeCondition
+          type: [ Vox ]
+        clear: true
+        time: 5
+    Respiration:
+      effects:
+      - !type:Oxygenate
+        factor: 8
+        conditions:
+        - !type:MetabolizerTypeCondition
+          type: [ Human, Animal, Rat, Plant, Arachnid, Moth, Cybernetic ]
+      # Convert Pluox into CO2.
+      - !type:ModifyLungGas
+        conditions:
+        - !type:MetabolizerTypeCondition
+          type: [ Vox ]
+          inverted: true
+        ratios:
+          CarbonDioxide: 1.0
+          Oxygen: -1.0
+      - !type:HealthChange
+        conditions:
+        - !type:MetabolizerTypeCondition
+          type: [ Vox ]
+        scaling: true
+        ignoreResistances: true
+        damage:
+          types:
+            Poison: 10
+      - !type:AdjustAlert
+        alertType: Toxins
+        conditions:
+        - !type:ReagentCondition
+          reagent: Pluoxium
+          min: 0.5
+        - !type:MetabolizerTypeCondition
+          type: [ Vox ]
+        clear: true
+        time: 5

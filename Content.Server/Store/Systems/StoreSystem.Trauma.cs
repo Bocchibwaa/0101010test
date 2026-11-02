@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Server.Polymorph.Systems;
+using Content.Shared.GameTicking;
+using Content.Shared.Polymorph;
+using Content.Shared.Store;
+using Content.Shared.Store.Components;
+
+namespace Content.Server.Store.Systems;
+
+public sealed partial class StoreSystem
+{
+    [Dependency] private PolymorphSystem _polymorph = default!;
+    [Dependency] private GameTicker _ticker = default!;
+
+    [SubscribeLocalEvent]
+    private void OnPolymorphed(Entity<StoreComponent> ent, ref PolymorphedEvent args)
+    {
+        if (args.IsRevert)
+            return;
+
+        _polymorph.CopyPolymorphComponent<StoreComponent>(ent, args.NewEntity);
+    }
+
+    private bool TryUpdateRestockTime(ListingData listing)
+    {
+        var stationTime = _timing.CurTime.Subtract(_ticker.RoundStartTimeSpan);
+
+        if (listing.RestockTime > stationTime)
+            return false;
+
+        if (listing.ResetRestockOnPurchase)
+        {
+            var restockDuration = listing.RestockAfterPurchase ?? listing.RestockTime;
+            listing.RestockTime = stationTime + restockDuration;
+        }
+
+        return true;
+    }
+}

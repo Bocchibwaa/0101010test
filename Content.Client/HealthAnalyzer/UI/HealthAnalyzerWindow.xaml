@@ -1,0 +1,15 @@
+<controls:FancyWindow
+    xmlns="https://spacestation14.io"
+    xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+    xmlns:ui="clr-namespace:Content.Client.HealthAnalyzer.UI"
+    MinWidth="800"
+    MinHeight="525"> <!-- Shitmed - increased size from 525x300 -->
+    <ScrollContainer
+        Margin="5 5 5 5"
+        ReturnMeasure="True"
+        VerticalExpand="True">
+
+        <ui:HealthAnalyzerControl
+            Name="HealthAnalyzer"/>
+    </ScrollContainer>
+</controls:FancyWindow>

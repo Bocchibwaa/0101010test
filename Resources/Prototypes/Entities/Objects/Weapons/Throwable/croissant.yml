@@ -1,0 +1,24 @@
+- type: entity
+  parent: [ FoodBakedCroissant, ThrowingKnife ]
+  id: WeaponCroissant
+  suffix: Weapon
+  components:
+  # <Trauma>
+  - type: Temperature
+    heatCapacity: 1884.9557 # perishable foood gives it temperature
+  - type: ThrowableBlocked
+  # </Trauma>
+  - type: Item
+    sprite: null # Should be removed if croissant receives an inhand sprite
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.2
+        density: 5
+        mask:
+        - ItemMask
+        restitution: 0.3
+        friction: 0.2
+  - type: ThrowingAngle
+    angularVelocity: true # spins

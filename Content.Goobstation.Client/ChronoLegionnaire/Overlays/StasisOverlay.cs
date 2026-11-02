@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.ChronoLegionnaire.Components;
+using Robust.Client.Player;
+using Robust.Shared.Enums;
+
+namespace Content.Goobstation.Client.ChronoLegionnaire.Overlays;
+
+public sealed partial class StasisOverlay : Overlay
+{
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private IEntityManager _entMan = default!;
+    [Dependency] private IPlayerManager _player = default!;
+
+    public override bool RequestScreenTexture => true;
+
+    public override OverlaySpace Space => OverlaySpace.WorldSpace;
+
+    private readonly ShaderInstance _coloredScreenBorder;
+
+    public static readonly ProtoId<ShaderPrototype> WideColoredScreenBorder = "WideColoredScreenBorder";
+
+    public StasisOverlay()
+    {
+        IoCManager.InjectDependencies(this);
+        _coloredScreenBorder = _proto.Index(WideColoredScreenBorder).InstanceUnique();
+    }
+
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        if (_entMan.HasComponent<InsideStasisComponent>(_player.LocalSession?.AttachedEntity))
+            return true;
+
+        return false;
+    }
+
+    protected override void Draw(in OverlayDrawArgs args)
+    {
+        if (ScreenTexture == null)
+            return;
+
+        _coloredScreenBorder?.SetParameter("SCREEN_TEXTURE", ScreenTexture);
+        _coloredScreenBorder?.SetParameter("borderColor", Color.CornflowerBlue);
+        _coloredScreenBorder?.SetParameter("borderSize", 55.0f);
+
+        var handle = args.WorldHandle;
+        var viewport = args.WorldBounds;
+
+        handle.UseShader(_coloredScreenBorder);
+        handle.DrawRect(viewport, Color.White);
+        handle.UseShader(null);
+    }
+}

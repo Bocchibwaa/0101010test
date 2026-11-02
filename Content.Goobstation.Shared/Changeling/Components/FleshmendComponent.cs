@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Damage.Prototypes;
+using Content.Shared.FixedPoint;
+using Robust.Shared.Audio;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+
+namespace Content.Goobstation.Shared.Changeling.Components;
+
+/// <summary>
+/// Status effect component responsible for Fleshmend's passive effects.
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+[AutoGenerateComponentPause]
+public sealed partial class FleshmendComponent : Component
+{
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer))]
+    [AutoPausedField]
+    public TimeSpan UpdateTimer;
+
+    /// <summary>
+    ///     Delay between healing ticks.
+    /// </summary>
+    [DataField]
+    public TimeSpan UpdateDelay = TimeSpan.FromSeconds(1);
+
+    public EntityUid? SoundSource; // used to stop the passive sound (if it exists)
+
+    [DataField]
+    public SoundSpecifier? PassiveSound = new SoundPathSpecifier("/Audio/_Goobstation/Changeling/Effects/fleshmend_sfx.ogg");
+
+    /// <summary>
+    ///     Used in the case that someone wants to change the default effect (e.g if they are adding a fleshmend-esque passive to some random mob or ability)
+    /// </summary>
+    [DataField]
+    public string? EffectState;
+    [DataField]
+    public ResPath? ResPath;
+
+    [DataField]
+    public bool DoVisualEffect = true;
+
+    [DataField]
+    public bool IgnoreFire = false; // for whatever reason
+
+    [DataField]
+    public Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2> Healing = new()
+    {
+        { "Brute", 9 },
+        { "Burn", 5 },
+        { "Airloss", 4 }
+    };
+
+    [DataField]
+    public float BleedingAdjust = -2.5f;
+
+    [DataField]
+    public float BloodLevelAdjust = 10f;
+}

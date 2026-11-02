@@ -1,0 +1,59 @@
+- type: entity
+  parent: [ BaseAirlockIndestructible, StructureHealthDoorStrong ]
+  id: HighSecDoor
+  name: high security door
+  description: Keeps the bad out and keeps the good in.
+  components:
+  - type: Sprite
+    sprite: Structures/Doors/Airlocks/Standard/airlock-vault.rsi
+  - type: Door
+    crushDamage:
+      types:
+        Blunt: 50
+  - type: Weldable
+    fuel: 10
+    time: 10
+  - type: WiresPanelSecurity
+    securityLevel: maxSecurity
+  - type: Wires
+    boardName: wires-board-name-highsec
+    layoutId: HighSec
+    alwaysRandomize: true
+  - type: Damageable
+    damageModifierSet: StrongMetallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 1500
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+    # <Trauma>
+    - trigger: !type:DamageTrigger
+        damage: 1450
+      behaviors:
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          SheetPlasteel1:
+            min: 1
+            max: 2
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalSlam
+      - !type:ChangeConstructionNodeBehavior
+        node: assembly
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+    # </Trauma>
+  - type: Construction
+    graph: Airlock
+    node: highSecDoor
+  - type: Tag
+    tags:
+    - HighSecDoor
+    # This tag is used to nagivate the Airlock construction graph. It's needed because this construction graph is shared between Airlock, AirlockGlass, and HighSecDoor
+    - DoorRemoteWhitelist
+    # This tag is used by door remotes to allow or not a door remote to normally be able to interact with a door

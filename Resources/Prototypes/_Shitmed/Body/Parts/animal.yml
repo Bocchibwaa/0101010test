@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+## Base
+
+- type: entity
+  abstract: true
+  id: OrganAnimalSpriteExternal
+  components:
+  - type: Sprite
+    sprite: _Shitmed/Mobs/Species/Animal/parts.rsi
+  - type: VisualOrgan
+    data:
+      sprite: _Shitmed/Mobs/Species/Animal/parts.rsi
+  - type: VisualOrganMarkings
+    markingData:
+      group: None
+
+- type: entity
+  abstract: true
+  parent: [ OrganAnimal, OrganAnimalSpriteExternal ]
+  id: OrganAnimalExternal
+
+## Parts
+
+- type: entity
+  parent: [ OrganBaseTorso, OrganAnimalExternal ]
+  id: OrganAnimalTorso
+  components:
+  - type: BodyPart
+    # no head (headswap) or limbs (mouse with hands), just basic organs
+    slots:
+    - Heart
+    - Lungs
+    - Stomach
+    - Liver
+    - Kidneys

@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: roleLoadout
+  id: JobGeneticist
+  groups:
+  - GroupTankHarness
+  - ScientistHead
+  - ScientistNeck
+  - GeneticistJumpsuit
+  - GeneticistBackpack
+  - GeneticistOuterClothing
+  - ScientistGloves
+  - ScientistShoes
+  - Glasses
+  - AssistiveItems
+  - Survival
+  - Trinkets
+  - GroupSpeciesBreathTool
+  - ScientistEnvirohelm
+  - ScientistEnvirosuit
+  - ScientistEnvirogloves
+  - ExclusiveItems
+
+- type: roleLoadout
+  id: JobRancher
+  groups:
+  - GroupTankHarness
+  - Glasses
+  - Survival
+  - Trinkets
+  - GroupSpeciesBreathTool
+  - BotanistEnvirohelm
+  - BotanistEnvirosuit
+  - BotanistEnvirogloves
+  - ExclusiveItems
+
+- type: roleLoadout
+  id: JobDClass
+  groups:
+  - GroupTankHarness
+  - DClassJumpsuit
+  - DClassBackpacks
+  - DClassNeck
+  - DClassFace
+  - DClassGloves
+  - DClassOuterClothing
+  - DClassShoes
+  - Survival
+  - Trinkets
+  - GroupSpeciesBreathTool
+  - DClassEnvirohelm
+  - DClassEnvirosuit
+  - DClassEnvirogloves
+  - ExclusiveItems

@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: statusEffect
+  id: Stasis
+  alert: Stasis
+  alwaysAllowed: true
+
+# CREATED BY Goldminermac
+# https://github.com/space-wizards/space-station-14/pull/31149
+# LICENSED UNDER THE MIT LICENSE
+# SEE README.MD AND LICENSE.TXT IN THE ROOT OF THIS REPOSITORY FOR MORE INFORMATION
+- type: statusEffect
+  id: Vulgarity
+# END OF MIT-LICENSED CODE
+
+- type: statusEffect
+  id: Brainrotted
+
+- type: statusEffect
+  id: Centered
+  alert: Centered
+  alwaysAllowed: true
+
+- type: statusEffect
+  id: Dementia
+
+- type: statusEffect
+  id: Fleshmend
+  alert: Fleshmend
+  alwaysAllowed: true
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: EmoteVomitCounterStatusEffect
+  name: emote vomit
+  components:
+  - type: CounterStatusEffect
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: BlockVomitEmotesStatusEffect
+  name: block vomit emotes

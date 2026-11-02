@@ -1,0 +1,157 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+## Parent File to easily add more attributes, here it's used for plasmaman mostly
+- type: entity
+  abstract: true
+  parent: ClothingShoesBase
+  id: ClothingShoesModsuitBase
+  components:
+  - type: Appearance
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Shoes/Modsuits/standard.rsi
+    state: null
+    layers:
+    - state: boots
+    - state: boots-sealed
+      map: [ "sealed" ]
+  - type: Clothing
+    equipSound: /Audio/Mecha/mechmove03.ogg
+    unequipSound: /Audio/Mecha/mechmove03.ogg
+    slots: [ feet ]
+  - type: SealableClothing
+    sealUpPopup: sealable-clothing-seal-up-boots
+    sealDownPopup: sealable-clothing-seal-down-boots
+  - type: SealableClothingVisuals
+    spriteLayer: sealed
+    clothingVisuals:
+      shoes:
+      - state: equipped-FEET-sealed
+  - type: Armor
+    traumaDeductions:
+      Dismemberment: 0.1
+      OrganDamage: 0.1
+      BoneDamage: 0.1
+      VeinsDamage: 0
+  - type: Tag
+    tags:
+    - PlasmamanSafe
+    - WhitelistChameleon
+  - type: IgniteFromGasImmunity
+    parts:
+    - FootLeft
+    - FootRight
+
+- type: entity
+  parent: ClothingShoesModsuitBase
+  id: ClothingModsuitBootsStandard
+  name: standard modsuit boots
+  description: A special modular suit boots designed for compact folding inside modular suit control.
+  categories: [ HideSpawnMenu ]
+
+- type: entity
+  parent: [ ClothingShoesModsuitBase, BaseModsuitPieceSecurity ]
+  id: ClothingModsuitBootsSecurity
+  name: soldat modsuit boots
+  description: THE IRON BOOTS OF THE LAW.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Shoes/Modsuits/security.rsi
+  - type: ClothingSlowOnDamageModifier
+    modifier: 0.5
+  - type: ModifyStandingUpTime
+    multiplier: 0.5
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.9
+        Slash: 0.9
+        Piercing: 0.9
+
+- type: entity
+  parent: [ ClothingShoesModsuitBase, BaseModsuitPieceHOS ]
+  id: ClothingModsuitBootsHeadOfSecurity
+  name: bulwark modsuit boots
+  description: I call these my commie stompers.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Shoes/Modsuits/headofsecurity.rsi
+  - type: ClothingSlowOnDamageModifier
+    modifier: 0.5
+  - type: ModifyStandingUpTime
+    multiplier: 0.5
+  - type: Armor
+    traumaDeductions:
+      Dismemberment: 0.2
+      OrganDamage: 0.2
+      BoneDamage: 0.2
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.8
+        Slash: 0.8
+        Piercing: 0.8
+
+- type: entity
+  parent: [ ClothingShoesModsuitBase, BaseModsuitPieceParamedic ]
+  id: ClothingModsuitBootsParamedic
+  name: sanitater modsuit boots
+  description: Made to get bloody.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Shoes/Modsuits/paramedic.rsi
+
+- type: entity
+  parent: [ ClothingShoesModsuitBase, BaseModsuitPieceEngineer ]
+  id: ClothingModsuitBootsEngineer
+  name: sapper modsuit boots
+  description: Made to get oily. # yes erp..???
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Shoes/Modsuits/engineer.rsi
+  - type: ItemToggle
+  - type: ToggleClothing
+    action: ActionToggleMagboots
+  - type: ComponentToggler
+    components:
+    - type: NoSlip
+  - type: Magboots
+    enabledPrefix: null
+  - type: ClothingSpeedModifier
+    walkModifier: 0.9
+    sprintModifier: 0.9
+
+- type: entity
+  parent: [ ClothingShoesModsuitBase, BaseModsuitPieceAtmos ]
+  id: ClothingModsuitBootsAtmostech
+  name: aeolus modsuit boots
+  description: Made to get burnt.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Shoes/Modsuits/atmostech.rsi
+  - type: FireProtection # lmao
+    reduction: 1
+
+- type: entity
+  parent: [ ClothingShoesModsuitBase, BaseModsuitPieceRD ]
+  id: ClothingModsuitBootsResearchDirector
+  name: minerva modsuit boots
+  description: Won't stop you slipping on your own blood when the holocarp gets to you.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Shoes/Modsuits/researchdirector.rsi
+
+- type: entity
+  parent: [ ClothingShoesModsuitBase, BaseModsuitPieceCaptain ]
+  id: ClothingModsuitBootsCaptain
+  name: magnate modsuit boots
+  description: These boots were designed by THE Michael Jordan and crafted with ancient alloys, man.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Shoes/Modsuits/captain.rsi

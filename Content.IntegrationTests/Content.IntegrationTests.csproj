@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputPath>..\bin\Content.IntegrationTests\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <Import Project="../MSBuild/Content.props" />
+  <ItemGroup>
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Trauma -->
+    <ProjectReference Include="../Content.Common/Content.Common.csproj" />
+    <ProjectReference Include="../Content.Goobstation.Client/Content.Goobstation.Client.csproj" />
+    <ProjectReference Include="../Content.Goobstation.Server/Content.Goobstation.Server.csproj" />
+    <ProjectReference Include="../Content.Goobstation.Shared/Content.Goobstation.Shared.csproj" />
+    <ProjectReference Include="../Content.Trauma.Client/Content.Trauma.Client.csproj" />
+    <ProjectReference Include="../Content.Trauma.Client/Content.Trauma.Client.csproj" />
+    <ProjectReference Include="../Content.Trauma.Server/Content.Trauma.Server.csproj" />
+    <ProjectReference Include="../Content.Trauma.Shared/Content.Trauma.Shared.csproj" />
+    <ProjectReference Include="../Content.Factory.Client/Content.Factory.Client.csproj" />
+    <ProjectReference Include="../Content.Factory.Server/Content.Factory.Server.csproj" />
+    <ProjectReference Include="../Content.Lavaland.Client/Content.Lavaland.Client.csproj" />
+    <ProjectReference Include="../Content.Lavaland.Server/Content.Lavaland.Server.csproj" />
+    <ProjectReference Include="../Content.Medical.Client/Content.Medical.Client.csproj" />
+    <ProjectReference Include="../Content.Medical.Server/Content.Medical.Server.csproj" />
+    <!-- /Trauma -->
+    <ProjectReference Include="..\Content.Client\Content.Client.csproj" />
+    <ProjectReference Include="..\Content.Server\Content.Server.csproj" />
+    <ProjectReference Include="..\Content.Shared\Content.Shared.csproj" />
+    <ProjectReference Include="..\Content.Tests\Content.Tests.csproj" />
+  </ItemGroup>
+  <Import Project="..\RobustToolbox\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\RobustToolbox\MSBuild\Robust.CompNetworkGenerator.targets" />
+
+  <Import Project="..\RobustToolbox\Imports\Client.props" />
+  <Import Project="..\RobustToolbox\Imports\Server.props" />
+  <Import Project="..\RobustToolbox\Imports\Shared.props" />
+  <Import Project="..\RobustToolbox\Imports\Testing.props" />
+</Project>

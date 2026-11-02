@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Basic
+
+- type: entity
+  parent: BaseShadowlingAction
+  id: ActionGuise
+  name: Guise
+  description: Become invisible in the darkness.
+  components:
+  - type: Sprite
+    layers:
+    - state: shadow_walk
+  - type: Action
+    useDelay: 120
+  - type: InstantAction
+    event: !type:GuiseEvent

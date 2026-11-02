@@ -1,0 +1,195 @@
+// <Trauma>
+using Robust.Shared.Maths;
+// </Trauma>
+using System.Numerics;
+using Content.Server.Beam.Components;
+using Content.Shared.Beam;
+using Content.Shared.Beam.Components;
+using Content.Shared.GameTicking;
+using Content.Shared.Physics;
+using Robust.Server.GameObjects;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Map;
+using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
+
+namespace Content.Server.Beam;
+
+public sealed partial class BeamSystem : SharedBeamSystem
+{
+    [Dependency] private FixtureSystem _fixture = default!;
+    [Dependency] private TransformSystem _transform = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedBroadphaseSystem _broadphase = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<BeamComponent, CreateBeamSuccessEvent>(OnBeamCreationSuccess);
+        SubscribeLocalEvent<BeamComponent, BeamControllerCreatedEvent>(OnControllerCreated);
+        SubscribeLocalEvent<BeamComponent, BeamFiredEvent>(OnBeamFired);
+        SubscribeLocalEvent<BeamComponent, ComponentRemove>(OnRemove);
+    }
+
+    private void OnBeamCreationSuccess(EntityUid uid, BeamComponent component, CreateBeamSuccessEvent args)
+    {
+        component.BeamShooter = args.User;
+    }
+
+    private void OnControllerCreated(EntityUid uid, BeamComponent component, BeamControllerCreatedEvent args)
+    {
+        component.OriginBeam = args.OriginBeam;
+    }
+
+    private void OnBeamFired(EntityUid uid, BeamComponent component, BeamFiredEvent args)
+    {
+        component.CreatedBeams.Add(args.CreatedBeam);
+    }
+
+    private void OnRemove(EntityUid uid, BeamComponent component, ComponentRemove args)
+    {
+        if (component.VirtualBeamController == null)
+            return;
+
+        if (component.CreatedBeams.Count == 0 && component.VirtualBeamController.Value.Valid)
+            QueueDel(component.VirtualBeamController.Value);
+    }
+
+    /// <summary>
+    /// If <see cref="TryCreateBeam"/> is successful, it spawns a beam from the user to the target.
+    /// </summary>
+    /// <param name="prototype">The prototype used to make the beam</param>
+    /// <param name="userAngle">Angle of the user firing the beam</param>
+    /// <param name="calculatedDistance">The calculated distance from the user to the target.</param>
+    /// <param name="beamStartPos">Where the beam will spawn in</param>
+    /// <param name="distanceCorrection">Calculated correction so the <see cref="EdgeShape"/> can be properly dynamically created</param>
+    /// <param name="controller"> The virtual beam controller that this beam will use. If one doesn't exist it will be created here.</param>
+    /// <param name="bodyState">Optional sprite state for the <see cref="prototype"/> if it needs a dynamic one</param>
+    /// <param name="shader">Optional shader for the <see cref="prototype"/> and <see cref="bodyState"/> if it needs something other than default</param>
+    /// <param name="beamAction">Goobstation. Action that is called on each beam entity.</param>
+    private void CreateBeam(string prototype,
+        Angle userAngle,
+        Vector2 calculatedDistance,
+        MapCoordinates beamStartPos,
+        Vector2 distanceCorrection,
+        EntityUid? controller,
+        string? bodyState = null,
+        string shader = "unshaded",
+        Action<EntityUid>? beamAction = null) // Goob edit
+    {
+        var beamSpawnPos = beamStartPos;
+        var ent = Spawn(prototype, beamSpawnPos);
+        var shape = new EdgeShape(distanceCorrection, new Vector2(0,0));
+
+        if (!TryComp<BeamComponent>(ent, out var beam))
+            return;
+
+        beamAction?.Invoke(ent); // Goobstation
+
+        if (TryComp<PhysicsComponent>(ent, out var physics) && physics.CanCollide)
+        {
+            _fixture.TryCreateFixture(
+                    ent,
+                    shape,
+                    BeamComponent.FixtureID,
+                    hard: false,
+                    collisionMask: (int)CollisionGroup.ItemMask,
+                    collisionLayer: (int)CollisionGroup.MobLayer,
+                    body: physics);
+
+            _broadphase.RegenerateContacts((ent, physics));
+        }
+
+        var distanceLength = distanceCorrection.Length();
+
+        var beamVisualizerEvent = new BeamVisualizerEvent(GetNetEntity(ent), distanceLength, userAngle, bodyState, shader);
+        RaiseNetworkEvent(beamVisualizerEvent);
+
+        if (controller != null)
+            beam.VirtualBeamController = controller;
+
+        else
+        {
+            var controllerEnt = Spawn("VirtualBeamEntityController", beamSpawnPos);
+            beam.VirtualBeamController = controllerEnt;
+
+            _audio.PlayPvs(beam.Sound, ent);
+
+            var beamControllerCreatedEvent = new BeamControllerCreatedEvent(ent, controllerEnt);
+            RaiseLocalEvent(controllerEnt, beamControllerCreatedEvent);
+        }
+
+        //Create the rest of the beam, sprites handled through the BeamVisualizerEvent
+        for (var i = 0; i < distanceLength-1; i++)
+        {
+            beamSpawnPos = beamSpawnPos.Offset(calculatedDistance.Normalized());
+            var newEnt = Spawn(prototype, beamSpawnPos);
+
+            beamAction?.Invoke(newEnt); // Goobstation
+
+            var ev = new BeamVisualizerEvent(GetNetEntity(newEnt), distanceLength, userAngle, bodyState, shader);
+            RaiseNetworkEvent(ev);
+        }
+
+        var beamFiredEvent = new BeamFiredEvent(ent);
+        RaiseLocalEvent(beam.VirtualBeamController.Value, beamFiredEvent);
+    }
+
+    /// <summary>
+    /// Called where you want an entity to create a beam from one target to another.
+    /// Tries to create the beam and does calculations like the distance, angle, and offset.
+    /// </summary>
+    /// <param name="user">The entity that's firing off the beam</param>
+    /// <param name="target">The entity that's being targeted by the user</param>
+    /// <param name="bodyPrototype">The prototype spawned when this beam is created</param>
+    /// <param name="bodyState">Optional sprite state for the <see cref="bodyPrototype"/> if a default one is not given</param>
+    /// <param name="shader">Optional shader for the <see cref="bodyPrototype"/> if a default one is not given</param>
+    /// <param name="controller"></param>
+    /// <param name="beamAction">Goobstation. Action that is called on each beam entity.</param>
+    public bool TryCreateBeam(EntityUid user, EntityUid target, string bodyPrototype, string? bodyState = null, string shader = "unshaded", EntityUid? controller = null, Action<EntityUid>? beamAction = null) // Goob edit
+    {
+        if (Deleted(user) || Deleted(target))
+            return false; // Goob edit
+
+        var userMapPos = _transform.GetMapCoordinates(user);
+        var targetMapPos = _transform.GetMapCoordinates(target);
+
+        //The distance between the target and the user.
+        var calculatedDistance = targetMapPos.Position - userMapPos.Position;
+        var userAngle = calculatedDistance.ToWorldAngle();
+
+        // <Trauma> - fix lightning rotation
+        var gridRot = Angle.Zero;
+        if (Transform(user).GridUid is { } grid)
+            gridRot = -_transform.GetWorldRotation(grid);
+        userAngle += gridRot;
+        // </Trauma>
+
+        if (userMapPos.MapId != targetMapPos.MapId)
+            return false; // Goob edit
+
+        //Where the start of the beam will spawn
+        var beamStartPos = userMapPos.Offset(calculatedDistance.Normalized());
+
+        //Don't divide by zero
+        if (calculatedDistance.Length() == 0)
+            return false; // Goob edit
+
+        if (controller != null && TryComp<BeamComponent>(controller, out var controllerBeamComp))
+        {
+            controllerBeamComp.HitTargets.Add(user);
+            controllerBeamComp.HitTargets.Add(target);
+        }
+
+        var distanceCorrection = gridRot.RotateVec(calculatedDistance - calculatedDistance.Normalized()); // Trauma - fix lightning shape rotation
+
+        CreateBeam(bodyPrototype, userAngle, calculatedDistance, beamStartPos, distanceCorrection, controller, bodyState, shader, beamAction);
+
+        var ev = new CreateBeamSuccessEvent(user, target);
+        RaiseLocalEvent(user, ev);
+
+        return true; // Goobstation
+    }
+}

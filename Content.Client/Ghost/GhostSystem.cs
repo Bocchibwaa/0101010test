@@ -1,0 +1,220 @@
+// <Trauma>
+using Content.Trauma.Common.Sprite;
+using Content.Trauma.Common.Wizard;
+// </Trauma>
+using Content.Client.Movement.Systems;
+using Content.Shared.Actions;
+using Content.Shared.Ghost.Components;
+using Content.Shared.Ghost.Systems;
+using Content.Shared.NightVision;
+using Content.Shared.Overlays;
+using Robust.Client.Console;
+using Robust.Client.GameObjects;
+using Robust.Client.Player;
+using Robust.Shared.Player;
+
+namespace Content.Client.Ghost
+{
+    public sealed partial class GhostSystem : SharedGhostSystem
+    {
+        // <Trauma>
+        [Dependency] private CommonGhostVisibilitySystem _ghostVis = default!;
+        [Dependency] private CommonSpriteVisibilitySystem _spriteVis = default!;
+        // </Trauma>
+        [Dependency] private IClientConsoleHost _console = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private SharedActionsSystem _actions = default!;
+        [Dependency] private ContentEyeSystem _contentEye = default!;
+        [Dependency] private SpriteSystem _sprite = default!;
+        [Dependency] private SharedNightVisionSystem _nv = default!;
+
+        public int AvailableGhostRoleCount { get; private set; }
+
+        private bool _ghostVisibility = true;
+
+        public bool GhostVisibility
+        {
+            get => _ghostVis.GhostsVisible() || _ghostVisibility; // Goob edit
+            private set
+            {
+                if (_ghostVis.GhostsVisible()) // Goobstation
+                    value = true;
+
+                if (_ghostVisibility == value)
+                {
+                    return;
+                }
+
+                _ghostVisibility = value;
+
+                // <Trauma> - use sprite visibility system instead of SetVisible, removed Sprite from the query
+                var query = AllEntityQuery<GhostComponent>();
+                while (query.MoveNext(out var uid, out _))
+                {
+                    _spriteVis.UpdateVisibilityModifiers(uid, nameof(GhostComponent), value || uid == _playerManager.LocalEntity);
+                }
+                // </Trauma>
+            }
+        }
+
+        public GhostComponent? Player => CompOrNull<GhostComponent>(_playerManager.LocalEntity);
+        public bool IsGhost => Player != null;
+
+        public event Action<GhostComponent>? PlayerRemoved;
+        public event Action<GhostComponent>? PlayerUpdated;
+        public event Action<GhostComponent>? PlayerAttached;
+        public event Action? PlayerDetached;
+        public event Action<GhostWarpsResponseEvent>? GhostWarpsResponse;
+        public event Action<GhostUpdateGhostRoleCountEvent>? GhostRoleCountUpdated;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            SubscribeLocalEvent<GhostComponent, ComponentStartup>(OnStartup);
+            SubscribeLocalEvent<GhostComponent, ComponentRemove>(OnGhostRemove);
+            SubscribeLocalEvent<GhostComponent, AfterAutoHandleStateEvent>(OnGhostState);
+
+            SubscribeLocalEvent<GhostComponent, LocalPlayerAttachedEvent>(OnGhostPlayerAttach);
+            SubscribeLocalEvent<GhostComponent, LocalPlayerDetachedEvent>(OnGhostPlayerDetach);
+
+            SubscribeNetworkEvent<GhostWarpsResponseEvent>(OnGhostWarpsResponse);
+            SubscribeNetworkEvent<GhostUpdateGhostRoleCountEvent>(OnUpdateGhostRoleCount);
+
+            SubscribeLocalEvent<EyeComponent, ToggleLightingActionEvent>(OnToggleLighting);
+            SubscribeLocalEvent<EyeComponent, ToggleFoVActionEvent>(OnToggleFoV);
+            SubscribeLocalEvent<EyeComponent, ToggleGhostsActionEvent>(OnToggleGhosts); // Goob edit
+        }
+
+        private void OnStartup(EntityUid uid, GhostComponent component, ComponentStartup args)
+        {
+            // <Trauma> - use sprite visibility system instead of SetVisible
+            _spriteVis.UpdateVisibilityModifiers(uid, nameof(GhostComponent), GhostVisibility || uid == _playerManager.LocalEntity);
+            // </Trauma>
+        }
+
+        private void OnToggleLighting(EntityUid uid, EyeComponent component, ToggleLightingActionEvent args)
+        {
+            if (args.Handled)
+                return;
+
+            if (!component.DrawLight)
+            {
+                // normal lighting
+                Popup.PopupEntity(Loc.GetString("ghost-gui-toggle-lighting-manager-popup-normal"), args.Performer);
+                _contentEye.RequestEye(component.DrawFov, true);
+            }
+            else if (TryComp<NightVisionComponent>(uid, out var nv) && !nv.Enabled)
+            {
+                Popup.PopupEntity(Loc.GetString("ghost-gui-toggle-lighting-manager-popup-half-bright"), args.Performer);
+                _nv.SetEnabled((uid, nv), true);
+            }
+            else
+            {
+                // fullbright mode
+                Popup.PopupEntity(Loc.GetString("ghost-gui-toggle-lighting-manager-popup-fullbright"), args.Performer);
+                _contentEye.RequestEye(component.DrawFov, false);
+                _nv.SetEnabled((uid, nv), false);
+            }
+
+            args.Handled = true;
+        }
+
+        private void OnToggleFoV(EntityUid uid, EyeComponent component, ToggleFoVActionEvent args)
+        {
+            if (args.Handled)
+                return;
+
+            Popup.PopupEntity(Loc.GetString("ghost-gui-toggle-fov-popup"), args.Performer);
+            _contentEye.RequestToggleFov(uid, component);
+            args.Handled = true;
+        }
+
+        private void OnToggleGhosts(EntityUid uid, EyeComponent component, ToggleGhostsActionEvent args) // Goob edit
+        {
+            if (args.Handled || _ghostVis.GhostsVisible()) // Goob edit
+                return;
+
+            var locId = GhostVisibility ? "ghost-gui-toggle-ghost-visibility-popup-off" : "ghost-gui-toggle-ghost-visibility-popup-on";
+            Popup.PopupEntity(Loc.GetString(locId), args.Performer);
+            if (uid == _playerManager.LocalEntity)
+                ToggleGhostVisibility();
+
+            args.Handled = true;
+        }
+
+        private void OnGhostRemove(EntityUid uid, GhostComponent component, ComponentRemove args)
+        {
+            _actions.RemoveAction(uid, component.ToggleLightingActionEntity);
+            _actions.RemoveAction(uid, component.ToggleFoVActionEntity);
+            _actions.RemoveAction(uid, component.ToggleGhostsActionEntity);
+            _actions.RemoveAction(uid, component.ToggleGhostHearingActionEntity);
+
+            if (uid != _playerManager.LocalEntity)
+                return;
+
+            GhostVisibility = false;
+            PlayerRemoved?.Invoke(component);
+        }
+
+        private void OnGhostPlayerAttach(EntityUid uid, GhostComponent component, LocalPlayerAttachedEvent localPlayerAttachedEvent)
+        {
+            GhostVisibility = true;
+            PlayerAttached?.Invoke(component);
+        }
+
+        private void OnGhostState(EntityUid uid, GhostComponent component, ref AfterAutoHandleStateEvent args)
+        {
+            if (TryComp<SpriteComponent>(uid, out var sprite))
+                _sprite.LayerSetColor((uid, sprite), 0, component.Color);
+
+            if (uid != _playerManager.LocalEntity)
+                return;
+
+            PlayerUpdated?.Invoke(component);
+        }
+
+        private void OnGhostPlayerDetach(EntityUid uid, GhostComponent component, LocalPlayerDetachedEvent args)
+        {
+            GhostVisibility = false;
+            PlayerDetached?.Invoke();
+        }
+
+        private void OnGhostWarpsResponse(GhostWarpsResponseEvent msg)
+        {
+            if (!IsGhost)
+            {
+                return;
+            }
+
+            GhostWarpsResponse?.Invoke(msg);
+        }
+
+        private void OnUpdateGhostRoleCount(GhostUpdateGhostRoleCountEvent msg)
+        {
+            AvailableGhostRoleCount = msg.AvailableGhostRoles;
+            GhostRoleCountUpdated?.Invoke(msg);
+        }
+
+        public void RequestWarps()
+        {
+            RaiseNetworkEvent(new GhostWarpsRequestEvent());
+        }
+
+        public void ReturnToBody()
+        {
+            var msg = new GhostReturnToBodyRequest();
+            RaiseNetworkEvent(msg);
+        }
+
+        public void OpenGhostRoles()
+        {
+            _console.RemoteExecuteCommand(null, "ghostroles");
+        }
+
+        public void ToggleGhostVisibility(bool? visibility = null)
+        {
+            GhostVisibility = visibility ?? !GhostVisibility;
+        }
+    }
+}

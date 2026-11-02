@@ -1,0 +1,749 @@
+# Numbers for armor here largely taken from /tg/.
+# NOTE: Half of the kind of armor you're probably thinking of is in vests.yml. These should probably be merged some day.
+
+# Armor values heavily edited by Goobstation due to woundmed
+
+#Basic armor vest for inheritance
+- type: entity
+  abstract: true
+  parent: [ ClothingOuterBaseMedium, AllowSuitStorageClothing ]
+  id: ClothingOuterArmorBase
+  name: armor vest
+  description: A standard Type I armored vest that provides decent protection against most types of damage.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/security.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/security.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    traumaDeductions:
+      Dismemberment: 0.2
+      OrganDamage: 0.2
+      BoneDamage: 0.2
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.65 # Trauma, was 0.7
+        Slash: 0.65 # Trauma, was 0.7
+        Piercing: 0.65 # Trauma, was 0.7
+        Ballistic: 0.65 # Trauma
+        Heat: 0.80
+      # <Trauma> - This is done so shotguns are worse against armor
+      flatReductions:
+        Ballistic: 2
+      # </Trauma>
+  - type: ExplosionResistance
+    damageCoefficient: 0.75 # Trauma, was 0.9
+  - type: ModifyDelayedKnockdown # Goobstation
+    delayDelta: 3
+    knockdownTimeDelta: -3
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+
+#Standard armor vest, allowed for security only
+- type: entity
+  parent: [ BaseSecurityContraband, ClothingOuterArmorBase ]
+  id: ClothingOuterArmorBasic
+  components:
+  - type: Tag
+    tags:
+    - CorgiWearable
+    - WhitelistChameleon
+
+#Alternate / slim basic armor vest, allowed for security and bartenders
+- type: entity
+  parent: [ BaseSecurityBartenderContraband, ClothingOuterArmorBasic ]
+  id: ClothingOuterArmorBasicSlim
+  name: armor vest
+  suffix: slim
+  description: A slim Type I armored vest that provides decent protection against most types of damage.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/security_slim.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/security_slim.rsi
+
+- type: entity
+  parent: ClothingOuterArmorBasic
+  id: ClothingOuterArmorBulletproof
+  name: bulletproof vest
+  description: A Type III heavy bulletproof vest that excels in protecting the wearer against traditional projectile weaponry and explosives to a minor extent.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/bulletproof.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/bulletproof.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    - Tail
+    traumaDeductions:
+      Dismemberment: 0.1
+      OrganDamage: 0.1
+      BoneDamage: 0.1
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.8
+        Slash: 0.8
+        Piercing: 0.8 # Trauma, was 0.3
+        Ballistic: 0.3
+        Heat: 0.8
+      # <Trauma> - This is done so shotguns are worse against armor
+      flatReductions:
+        Ballistic: 3
+      # </Trauma>
+  - type: ExplosionResistance
+    damageCoefficient: 0.65 # Trauma - was 0.8
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+
+- type: entity
+  parent: ClothingOuterArmorBasic
+  id: ClothingOuterArmorReflective
+  name: reflective vest
+  description: An armored vest with advanced shielding to protect against energy weapons.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/armor_reflec.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/armor_reflec.rsi
+  - type: Armor
+    coverage:
+    - Torso
+    # Does not give dismemberment deduction because of reflection. yeah do with it somehow
+    modifiers:
+      coefficients:
+        Blunt: 0.8
+        Slash: 0.8
+        Piercing: 0.8
+        Heat: 0.3
+  - type: Reflect
+    reflectProb: 0.8 # Trauma - was 1
+    reflects:
+      - Energy
+    reflectingInHands: false
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+
+#Detective's vest
+- type: entity
+  parent: [ClothingOuterArmorBasic, BaseSecurityContraband]
+  id: ClothingOuterVestDetective
+  name: detective's vest
+  description: A hard-boiled private investigator's armored vest.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Vests/detvest.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Vests/detvest.rsi
+
+- type: entity
+  parent: [ClothingOuterBaseMedium, AllowSuitStorageClothing, BaseCommandContraband]
+  id: ClothingOuterArmorCaptainCarapace
+  name: "captain's carapace"
+  description: "An armored chestpiece that provides protection whilst still offering maximum mobility and flexibility. Issued only to the station's finest."
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/captain_carapace.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/captain_carapace.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    traumaDeductions:
+      Dismemberment: 0.2
+      OrganDamage: 0.2
+      BoneDamage: 0.2
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.6
+        Slash: 0.6
+        Piercing: 0.6 # Trauma, was 0.4
+        Ballistic: 0.3 # Trauma
+        Heat: 0.5
+  - type: ExplosionResistance
+    damageCoefficient: 0.3 # Trauma - was 0.65
+  - type: GroupExamine
+  - type: ModifyDelayedKnockdown # Goobstation
+    delayDelta: 3
+    knockdownTimeDelta: -3
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+  - type: StaticPrice # Goob
+    price: 1000
+  - type: Tag
+    tags:
+    - CorgiWearable
+    - WhitelistChameleon
+
+- type: entity
+  parent: [ClothingOuterArmorCaptainCarapace, BaseCentcommContraband]
+  id: ClothingOuterArmorCentcommCarapace
+  name: centcomm carapace
+  description: 'An armored chestpiece that provides protection whilst still offering maximum mobility and flexibility. Issued only to centcomm officials and agents.'
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/centcomm_carapace.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/centcomm_carapace.rsi
+
+#Web vest
+- type: entity
+  parent: [ClothingOuterArmorBase, ClothingOuterStorageBase, BaseSyndicateContraband,
+    AllowSuitStorageClothing] # Trauma
+  id: ClothingOuterVestWeb
+  name: web vest
+  description: A synthetic armor vest. This one has added webbing and ballistic plates.
+  components:
+  # <Trauma>
+  - type: ModifyDelayedKnockdown
+    delayDelta: 3
+    knockdownTimeDelta: -3
+  - type: StaminaResistance
+    damageCoefficient: 0.5
+  # </Trauma>
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Vests/webvest.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Vests/webvest.rsi
+  - type: Armor
+    traumaDeductions:
+      Dismemberment: 0.3
+      OrganDamage: 0.3
+      BoneDamage: 0.3
+      VeinsDamage: 0
+    coverage: # Shitmed
+    - Torso
+    modifiers:
+      coefficients:
+        Blunt: 0.7
+        Slash: 0.7
+        Piercing: 0.7 # Trauma, was 0.3
+        Ballistic: 0.3 # Trauma
+        Heat: 0.8
+      # <Trauma> - This is done so shotguns are worse against armor
+      flatReductions:
+        Ballistic: 3
+      # </Trauma>
+
+#Elite web vest
+- type: entity
+  parent: [ClothingOuterArmorBase, TemperatureProtection, ClothingOuterStorageBase, BaseSyndicateContraband,
+    AllowSuitStorageClothing] # Trauma
+  id: ClothingOuterVestWebElite
+  name: elite web vest
+  description: A synthetic armor vest. This one has added webbing and heat resistant fibers.
+  components:
+  # <Trauma>
+  - type: ModifyDelayedKnockdown
+    delayDelta: 3
+    knockdownTimeDelta: -3
+  - type: StaminaResistance
+    damageCoefficient: 0.5
+  # </Trauma>
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Vests/elitevest.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Vests/elitevest.rsi
+  - type: Armor
+    traumaDeductions:
+      Dismemberment: 0.25
+      OrganDamage: 0.25
+      BoneDamage: 0.25
+      VeinsDamage: 0
+    coverage: # Shitmed
+    - Torso
+    modifiers:
+      coefficients:
+        Blunt: 0.7
+        Slash: 0.7
+        Piercing: 0.7 # Trauma, was 0.8
+        Ballistic: 0.8 # Trauma
+        Heat: 0.3
+        Caustic: 0.3
+  - type: ExplosionResistance
+    damageCoefficient: 0.3 # Trauma - was 0.5
+  - type: FireProtection
+    reduction: 1 # Trauma - was 0.85, completely protects torso but nothing else
+
+#Mercenary web vest
+- type: entity
+  parent: [ BaseMajorContraband, ClothingOuterVestWeb] #web vest so it should have some pockets for ammo
+  id: ClothingOuterVestWebMerc
+  name: mercenary web vest
+  description: A high-quality armored vest made from a hard synthetic material. It's surprisingly flexible and light, despite formidable armor plating.
+  components:
+  # <Trauma>
+  - type: ModifyDelayedKnockdown
+    delayDelta: 2.25
+    knockdownTimeDelta: -2.25
+  - type: StaminaResistance
+    damageCoefficient: 0.65
+  # </Trauma>
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Vests/mercwebvest.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Vests/mercwebvest.rsi
+  - type: Armor
+    traumaDeductions: # Shitmed
+      Dismemberment: 0.2
+      OrganDamage: 0.2
+      BoneDamage: 0.2
+      VeinsDamage: 0
+    coverage: # Shitmed
+    - Torso
+    modifiers:
+      coefficients:
+        Blunt: 0.5
+        Slash: 0.5
+        Piercing: 0.5
+        Ballistic: 0.5 # Trauma
+        Heat: 0.8
+      # <Trauma> - This is done so shotguns are worse against armor
+      flatReductions:
+        Ballistic: 3
+      # </Trauma>
+# Armor covering multiple body parts including limbs
+- type: entity
+  parent: [ClothingOuterBaseLarge, AllowSuitStorageClothing, BaseSyndicateContraband ]
+  id: ClothingOuterArmorRaid
+  name: syndicate raid suit
+  description: A somewhat flexible and well-armored suit with a powerful shoulder mounted flashlight manufactured in the Gorlex Marauder's iconic blood-red color scheme, it does not protect its wearer from space.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/syndie-raid.rsi
+    layers:
+    - state: icon
+    - state: light-overlay
+      visible: false
+      shader: unshaded
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/syndie-raid.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    - Arm
+    - Hand
+    - Leg
+    - Foot
+    - Tail
+    traumaDeductions:
+      Dismemberment: 0.5
+      OrganDamage: 0.5
+      BoneDamage: 0.5
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.3
+        Slash: 0.3
+        Piercing: 0.3
+        Ballistic: 0.3 # Trauma
+        Heat: 0.5
+        # Caustic: 0.3
+      # <Trauma> - This is done so shotguns are worse against armor
+      flatReductions:
+        Ballistic: 3
+      # </Trauma>
+  - type: ExplosionResistance
+    damageCoefficient: 0.35
+  - type: StaminaResistance # do not add these to other equipment or mobs, we don't want to microbalance these everywhere
+    damageCoefficient: 0.5 # Goob edit
+  - type: ClothingSpeedModifier
+    walkModifier: 0.9
+    sprintModifier: 0.9
+  #Shoulder mounted flashlight
+  - type: ToggleableVisuals
+    spriteLayer: light
+    clothingVisuals:
+      outerClothing:
+      - state: equipped-OUTERCLOTHING-light
+        shader: unshaded
+  - type: ItemTogglePointLight
+  - type: Appearance
+  - type: HandheldLight
+    addPrefix: false
+    blinkingBehaviourId: blinking
+    radiatingBehaviourId: radiating
+  - type: PointLight
+    enabled: false
+    color: "#80ff80"
+    radius: 5
+    energy: 2
+    lightMask: ConeSingle
+    autoRot: true
+    netsync: false
+  - type: LightBehaviour
+    behaviours:
+      - !type:FadeBehaviour
+        id: radiating
+        interpolate: Linear
+        maxDuration: 2.0
+        startValue: 3.0
+        endValue: 2.0
+        isLooped: true
+        reverseWhenFinished: true
+      - !type:PulseBehaviour
+        id: blinking
+        interpolate: Nearest
+        maxDuration: 1.0
+        startValue: 0.1
+        endValue: 2.0
+        isLooped: true
+  - type: Battery
+    maxCharge: 600
+    startingCharge: 600
+  - type: BatterySelfRecharger
+    autoRechargeRate: 2
+  - type: ModifyDelayedKnockdown # Goobstation
+    delayDelta: 3
+    knockdownTimeDelta: -3
+  - type: Item
+    size: Normal
+
+- type: entity
+  parent: [ClothingOuterBaseLarge, AllowSuitStorageClothing, BaseSecurityContraband]
+  id: ClothingOuterArmorRiot
+  name: riot suit
+  description: A suit of semi-flexible polycarbonate body armor with heavy padding to protect against melee attacks. Perfect for fighting delinquents around the station.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/riot.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/riot.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    - Arm
+    - Leg
+    - Tail
+    traumaDeductions:
+      Dismemberment: 0.4
+      OrganDamage: 0.4
+      BoneDamage: 0.4
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.35
+        Slash: 0.35
+        Piercing: 0.35 # Trauma, was 0.7
+        Heat: 0.8
+  - type: ExplosionResistance
+    damageCoefficient: 0.75 # Trauma - was 0.9, it doesnt cover head/hands/feet
+  - type: GroupExamine
+  - type: ModifyDelayedKnockdown # Goobstation
+    delayDelta: 3
+    knockdownTimeDelta: -3
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+
+- type: entity
+  parent: [ ClothingOuterBaseLarge, BaseMajorContraband, AllowSuitStorageClothing ]
+  id: ClothingOuterArmorCult
+  name: acolyte armor
+  description: An evil-looking piece of cult armor, made of bones.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/cult_armour.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/cult_armour.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    - Tail
+    - Arm
+    - Leg
+    traumaDeductions:
+      Dismemberment: 0.33
+      OrganDamage: 0.33
+      BoneDamage: 0.33
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.4
+        Slash: 0.4
+        Piercing: 0.4
+        Ballistic: 0.5 # Trauma
+        Heat: 0.5
+  - type: GroupExamine
+  - type: ModifyDelayedKnockdown # Goobstation
+    delayDelta: 3
+    knockdownTimeDelta: -3
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+  - type: ExplosionResistance
+    damageCoefficient: 0.75 # Trauma - was 0.9, doesn't cover head/hands/feet
+
+- type: entity
+  parent: [ClothingOuterBaseLarge, AllowSuitStorageClothing]
+  id: ClothingOuterArmorHeavy
+  name: heavy armor suit
+  description: A heavily armored suit that protects against excessive damage.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/heavy.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/heavy.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    - Arm
+    - Hand
+    - Leg
+    - Foot
+    - Tail
+    traumaDeductions: # prevents traumas at all (kinda)
+      Dismemberment: 1
+      OrganDamage: 1
+      BoneDamage: 1
+      VeinsDamage: 1
+    modifiers:
+      coefficients:
+        Blunt: 0.2
+        Slash: 0.2
+        Piercing: 0.2
+        Ballistic: 0.2 # Trauma
+        Heat: 0.5
+        Radiation: 0
+      # <Trauma> - This is done so shotguns are worse against armor
+      flatReductions:
+        Ballistic: 3
+      # </Trauma>
+  - type: GroupExamine
+  - type: ProtectedFromStepTriggers
+    slots: WITHOUT_POCKET
+  - type: ModifyDelayedKnockdown # Goobstation
+    cancel: true
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+  - type: ExplosionResistance
+    damageCoefficient: 0.4 # Trauma - was 0.5, doesn't cover head
+
+- type: entity
+  parent: ClothingOuterArmorHeavy
+  id: ClothingOuterArmorHeavyGreen
+  name: green heavy armor suit
+  description: A heavily armored suit with green accents that protects against excessive damage.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/heavygreen.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/heavygreen.rsi
+
+- type: entity
+  parent: ClothingOuterArmorHeavy
+  id: ClothingOuterArmorHeavyRed
+  name: red heavy armor suit
+  description: A heavily armored suit with red accents that protects against excessive damage.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/heavyred.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/heavyred.rsi
+
+- type: entity
+  parent: [ClothingOuterArmorHeavy, ClothingOuterWizardBaseArmor, BaseMagicalContraband] # Goob edit
+  id: ClothingOuterArmorMagusblue
+  name: blue magus armor
+  description: An blue armored suit that provides good protection. Doesn't count as wizard robes. # Goob edit
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/magusblue.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/magusblue.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.4
+        Slash: 0.4
+        Piercing: 0.4
+        Ballistic: 0.4 # Trauma
+        Heat: 0.4
+        Radiation: 0.1
+        Caustic: 0.1
+      # <Trauma> - This is done so shotguns are worse against armor
+      flatReductions:
+        Ballistic: 3
+      # </Trauma>
+  - type: ClothingSpeedModifier # Goobstation
+    walkModifier: 1.0
+    sprintModifier: 1.0
+  - type: Tag # Goobstation
+    tags:
+    - WhitelistChameleon
+    - SyringeArmor
+  - type: ModifyDelayedKnockdown # Goobstation
+    cancel: true
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+  - type: ExplosionResistance
+    damageCoefficient: 0.4 # Trauma - was 0.5
+
+- type: entity
+  parent: ClothingOuterArmorMagusblue # Goob edit
+  id: ClothingOuterArmorMagusred
+  name: red magus armor
+  description: A red armored suit that provides good protection. Doesn't count as wizard robes. # Goob edit
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/magusred.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/magusred.rsi
+
+- type: entity
+  parent: [ ClothingOuterBaseLarge, BaseMajorContraband, AllowSuitStorageClothing ]
+  id: ClothingOuterArmorChangeling
+  name: chitinous armor
+  description: Inflates the changeling's body into an all-consuming chitinous mass of armor.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/lingarmor.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/lingarmor.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    - Arm
+    - Hand
+    - Leg
+    - Foot
+    - Tail
+    - Wings
+    traumaDeductions:
+      Dismemberment: 0.4
+      OrganDamage: 0.4
+      BoneDamage: 0.4
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.5
+        Slash: 0.5
+        Piercing: 0.5
+        Ballistic: 0.5 # Trauma
+        Heat: 0.5
+        Caustic: 0.5
+  - type: ClothingSpeedModifier
+    walkModifier: 0.65
+    sprintModifier: 0.65
+  - type: HeldSpeedModifier
+  - type: ExplosionResistance
+    damageCoefficient: 0.4 # Trauma - was 0.5, no head coverage
+  - type: GroupExamine
+  - type: ProtectedFromStepTriggers
+    slots: WITHOUT_POCKET
+  - type: ModifyDelayedKnockdown
+    cancel: true
+  - type: StaminaResistance
+    damageCoefficient: 0.5
+  - type: HideClothingLayerClothing # Goobstation
+    hiddenSlots:
+    - jumpsuit
+
+- type: entity
+  parent: [ ClothingOuterBaseLarge, BaseMajorContraband, AllowSuitStorageClothing ]
+  id: ClothingOuterArmorBone
+  name: bone armor
+  description: Sits on you like a second skin.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/bone_armor.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/bone_armor.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    - Arm
+    - Leg
+    - Tail
+    traumaDeductions:
+      Dismemberment: -1
+      OrganDamage: -1
+      BoneDamage: 1 # this is bones dude
+      VeinsDamage: -1
+    modifiers:
+      coefficients:
+        Blunt: 0.7
+        Slash: 0.7
+        Piercing: 0.7
+  - type: ClothingSpeedModifier
+    walkModifier: 0.8
+    sprintModifier: 0.8
+  - type: HeldSpeedModifier
+  - type: ExplosionResistance
+    damageCoefficient: 0.35 # Trauma - was 0.5, no head/hands/feet coverage
+  - type: GroupExamine
+  - type: Construction
+    graph: BoneArmor
+    node: armor
+  - type: ProtectedFromStepTriggers
+    slots: WITHOUT_POCKET
+  - type: ModifyDelayedKnockdown # Goobstation
+    delayDelta: 3
+    knockdownTimeDelta: -3
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+  - type: HideClothingLayerClothing # Goobstation
+    hiddenSlots:
+    - jumpsuit
+
+- type: entity
+  parent: [ ClothingOuterBaseLarge, BaseMajorContraband, AllowSuitStorageClothing ]
+  id: ClothingOuterArmorPodWars
+  name: ironclad II armor
+  description: A repurposed suit of ironclad II armor, a relic of the pod wars.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/podwars_armor.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/podwars_armor.rsi
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    - Arm
+    - Leg
+    - Tail
+    traumaDeductions:
+      Dismemberment: 0.27
+      OrganDamage: 0.27
+      BoneDamage: 0.27
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.3
+        Slash: 0.3
+        Piercing: 0.3 # Trauma, was 0.7
+        Heat: 0.7
+  - type: GroupExamine
+  - type: ProtectedFromStepTriggers
+    slots: WITHOUT_POCKET
+  - type: ModifyDelayedKnockdown # Goobstation
+    delayDelta: 3
+    knockdownTimeDelta: -3
+  - type: StaminaResistance # Goobstation
+    damageCoefficient: 0.5
+  - type: HideClothingLayerClothing # Goobstation
+    hiddenSlots:
+    - jumpsuit
+
+- type: entity
+  parent: ClothingOuterArmorBase
+  id: CardArmour
+  name: cardboard armour
+  description: A medieval chestpiece built from cardboard.
+  components:
+  - type: Sprite
+    sprite: Clothing/OuterClothing/Armor/card_armour.rsi
+  - type: Clothing
+    sprite: Clothing/OuterClothing/Armor/card_armour.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.9
+  - type: StaminaResistance
+    damageCoefficient: 0.90
+  - type: Construction
+    graph: cardArmour
+    node: cardarmour

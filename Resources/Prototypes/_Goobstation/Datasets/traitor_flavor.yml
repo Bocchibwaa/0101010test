@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: dataset
+  id: TraitorFlavor
+  values:
+  - "cybersun"
+  - "corporateclimber"
+  - "donkco"
+  - "gorlex"
+  - "legaltrouble"
+  - "waffleco"
+  - "waffleco-terrorist"

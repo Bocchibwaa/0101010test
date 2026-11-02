@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Medical.Common.Damage;
+using Content.Medical.Common.Targeting;
+using Content.Shared.Damage;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
+
+namespace Content.Goobstation.Shared.Clothing.Components
+{
+    [RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
+    public sealed partial class DamageOverTimeComponent : Component
+    {
+        [DataField(required: true), AutoNetworkedField]
+        public DamageSpecifier Damage { get; set; } = new();
+
+        [DataField(customTypeSerializer: typeof(TimespanSerializer)), AutoNetworkedField]
+        public TimeSpan Interval = TimeSpan.FromSeconds(1);
+
+        [DataField, AutoNetworkedField]
+        public bool IgnoreResistances { get; set; }
+
+        [DataField, AutoNetworkedField]
+        public float Multiplier = 1f;
+
+        [DataField, AutoNetworkedField]
+        public float MultiplierIncrease;
+
+        [DataField, AutoNetworkedField]
+        public TargetBodyPart? TargetBodyPart;
+
+        [DataField, AutoNetworkedField]
+        public SplitDamageBehavior Split = SplitDamageBehavior.Split;
+
+        [DataField, AutoPausedField]
+        public TimeSpan NextTickTime = TimeSpan.Zero;
+    }
+}

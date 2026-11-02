@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  abstract: true
+  parent: ClothingHandsButcherable
+  id: ClothingHandsGlovesEnviroglovesBase
+  components:
+  - type: Armor
+    modifiers:
+      coefficients:
+        Caustic: 0.95
+  - type: IgniteFromGasImmunity
+    parts:
+    - HandLeft
+    - HandRight
+  - type: Tag
+    tags:
+    - ClothMade
+    - Recyclable
+    - WhitelistChameleon
+    - PlasmamanSafe

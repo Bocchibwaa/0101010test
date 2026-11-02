@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+
+namespace Content.Goobstation.Shared.Devil.Contract;
+
+[RegisterComponent, NetworkedComponent]
+[AutoGenerateComponentState]
+public sealed partial class DevilContractComponent : Component
+{
+    /// <summary>
+    /// The entity who signed the paper, AKA, the entity who has the effects applied.
+    /// </summary>
+    [DataField]
+    public EntityUid? Signer;
+
+    /// <summary>
+    /// The entity who created the contract, AKA, the entity who gains the soul.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public EntityUid? ContractOwner;
+
+    /// <summary>
+    /// All current clauses.
+    /// </summary>
+    [DataField]
+    public HashSet<DevilClausePrototype> CurrentClauses = [];
+
+    /// <summary>
+    /// Has the contract been signed by the signer?
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool IsVictimSigned;
+
+    /// <summary>
+    /// Has the contract been signed by the devil?
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool IsDevilSigned;
+
+    /// <summary>
+    /// Has the contract been signed by both the devil and the victim?
+    /// </summary>
+    public bool IsContractFullySigned => IsVictimSigned && IsDevilSigned;
+
+    public bool IsContractSignable => ContractWeight >= 0;
+
+    public bool CanApplyEffects => IsContractFullySigned && IsContractSignable && Signer != null && ContractOwner != null;
+
+    /// <summary>
+    /// Does the contract weigh positively or negatively?
+    /// </summary>
+    /// <remarks>
+    /// The higher it is, the more the cons.
+    /// </remarks>
+    [DataField, AutoNetworkedField]
+    public int ContractWeight;
+}

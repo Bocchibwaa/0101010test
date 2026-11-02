@@ -1,0 +1,274 @@
+// <Trauma>
+using Content.Trauma.Common.Wizard;
+using Content.Shared.Audio;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Random.Helpers;
+using Robust.Shared.Timing;
+// </Trauma>
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
+using Content.Shared.Administration.Logs;
+using Content.Shared.Database;
+using Content.Shared.Hands;
+using Content.Shared.Inventory;
+using Content.Shared.Inventory.Events;
+using Content.Shared.Item.ItemToggle;
+using Content.Shared.Popups;
+using Content.Shared.Projectiles;
+using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Events;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Network;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Random;
+using Content.Shared.Examine;
+using Content.Shared.Localizations;
+
+namespace Content.Shared.Weapons.Reflect;
+
+/// <summary>
+/// This handles reflecting projectiles and hitscan shots.
+/// </summary>
+public sealed partial class ReflectSystem : EntitySystem
+{
+    // <Trauma>
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    // </Trauma>
+    [Dependency] private INetManager _netManager = default!;
+    //[Dependency] private IRobustRandom _random = default!; // Trauma - replaced by predicted random
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private ItemToggleSystem _toggle = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.SubscribeWithRelay<ReflectComponent, ProjectileReflectAttemptEvent>(OnReflectUserCollide, baseEvent: false);
+        Subs.SubscribeWithRelay<ReflectComponent, HitScanReflectAttemptEvent>(OnReflectUserHitscan, baseEvent: false);
+        SubscribeLocalEvent<ReflectComponent, ProjectileReflectAttemptEvent>(OnReflectCollide);
+        SubscribeLocalEvent<ReflectComponent, HitScanReflectAttemptEvent>(OnReflectHitscan);
+
+        SubscribeLocalEvent<ReflectComponent, GotEquippedEvent>(OnReflectEquipped);
+        SubscribeLocalEvent<ReflectComponent, GotUnequippedEvent>(OnReflectUnequipped);
+        SubscribeLocalEvent<ReflectComponent, GotEquippedHandEvent>(OnReflectHandEquipped);
+        SubscribeLocalEvent<ReflectComponent, GotUnequippedHandEvent>(OnReflectHandUnequipped);
+        SubscribeLocalEvent<ReflectComponent, ExaminedEvent>(OnExamine);
+    }
+
+    private void OnReflectUserCollide(Entity<ReflectComponent> ent, ref ProjectileReflectAttemptEvent args)
+    {
+        if (args.Cancelled)
+            return;
+
+        if (!ent.Comp.InRightPlace)
+            return; // only reflect when equipped correctly
+
+        if (TryReflectProjectile(ent, args.Target, args.ProjUid))  // Trauma - pass the actual target
+            args.Cancelled = true;
+    }
+
+    private void OnReflectUserHitscan(Entity<ReflectComponent> ent, ref HitScanReflectAttemptEvent args)
+    {
+        if (args.Reflected)
+            return;
+
+        if (!ent.Comp.InRightPlace)
+            return; // only reflect when equipped correctly
+
+        if (TryReflectHitscan(ent, args.Target, args.Shooter, args.SourceItem, args.Direction, args.Reflective, args.Damage, out var dir)) // Trauma - pass the actual target, added damage
+        {
+            args.Direction = dir.Value;
+            args.Reflected = true;
+        }
+    }
+
+    private void OnReflectCollide(Entity<ReflectComponent> ent, ref ProjectileReflectAttemptEvent args)
+    {
+        if (args.Cancelled)
+            return;
+
+        if (TryReflectProjectile(ent, ent.Owner, args.ProjUid))
+            args.Cancelled = true;
+    }
+
+    private void OnReflectHitscan(Entity<ReflectComponent> ent, ref HitScanReflectAttemptEvent args)
+    {
+        if (args.Reflected)
+            return;
+
+        if (TryReflectHitscan(ent, ent.Owner, args.Shooter, args.SourceItem, args.Direction, args.Reflective, args.Damage, out var dir))
+        {
+            args.Direction = dir.Value;
+            args.Reflected = true;
+        }
+    }
+
+    public bool TryReflectProjectile(Entity<ReflectComponent> reflector, EntityUid user, Entity<ProjectileComponent?> projectile)
+    {
+        // <Trauma>
+        var rand = SharedRandomExtensions.PredictedRandom(_timing, GetNetEntity(reflector));
+        // </Trauma>
+        if (!TryComp<ReflectiveComponent>(projectile, out var reflective) ||
+            (reflector.Comp.Reflects & reflective.Reflective) == 0x0 ||
+            !_toggle.IsActivated(reflector.Owner) ||
+            !rand.Prob(reflector.Comp.ReflectProb) || // Trauma - use predicted random
+            !TryComp<PhysicsComponent>(projectile, out var physics))
+        {
+            return false;
+        }
+
+        var rotation = rand.NextAngle(-reflector.Comp.Spread / 2, reflector.Comp.Spread / 2).Opposite(); // Trauma - use predicted random
+        var existingVelocity = _physics.GetMapLinearVelocity(projectile, component: physics);
+        var relativeVelocity = existingVelocity - _physics.GetMapLinearVelocity(user);
+        var newVelocity = rotation.RotateVec(relativeVelocity);
+
+        // Have the velocity in world terms above so need to convert it back to local.
+        var difference = newVelocity - existingVelocity;
+
+        _physics.SetLinearVelocity(projectile, physics.LinearVelocity + difference, body: physics);
+
+        var locRot = Transform(projectile).LocalRotation;
+        var newRot = rotation.RotateVec(locRot.ToVec());
+        _transform.SetLocalRotation(projectile, newRot.ToAngle());
+
+        // <Trauma>
+        var ev = new ProjectileReflectedEvent(reflector, user);
+        RaiseLocalEvent(projectile, ref ev);
+        /* moved below
+        PlayAudioAndPopup(reflector.Comp, user);
+        */
+        EntityUid? shooter = null;
+        // </Trauma>
+
+        if (Resolve(projectile, ref projectile.Comp, false))
+        {
+            // WD EDIT START
+            if (reflector.Comp.DamageOnReflectModifier != 0)
+            {
+                _damageable.ChangeDamage(reflector.Owner, projectile.Comp.Damage * reflector.Comp.DamageOnReflectModifier,
+                    projectile.Comp.IgnoreResistances, origin: projectile.Comp.Shooter);
+            }
+            // WD EDIT END
+
+            _adminLogger.Add(LogType.BulletHit, LogImpact.Medium, $"{ToPrettyString(user)} reflected {ToPrettyString(projectile)} from {ToPrettyString(projectile.Comp.Weapon)} shot by {projectile.Comp.Shooter}");
+
+            shooter = projectile.Comp.Shooter; // Trauma
+            projectile.Comp.Shooter = user;
+            projectile.Comp.Weapon = user;
+            Dirty(projectile, projectile.Comp);
+        }
+        else
+        {
+            _adminLogger.Add(LogType.BulletHit, LogImpact.Medium, $"{ToPrettyString(user)} reflected {ToPrettyString(projectile)}");
+        }
+
+        PlayAudioAndPopup(reflector.Comp, user, shooter); // Trauma
+
+        return true;
+    }
+
+    public bool TryReflectHitscan( // Goob edit
+        Entity<ReflectComponent> reflector,
+        EntityUid user,
+        EntityUid? shooter,
+        EntityUid shotSource,
+        Vector2 direction,
+        ReflectType hitscanReflectType,
+        DamageSpecifier? damage, // WD EDIT
+        [NotNullWhen(true)] out Vector2? newDirection)
+    {
+        // <Trauma>
+        var rand = SharedRandomExtensions.PredictedRandom(_timing, GetNetEntity(reflector));
+        // </Trauma>
+        if ((reflector.Comp.Reflects & hitscanReflectType) == 0x0 ||
+            !_toggle.IsActivated(reflector.Owner) ||
+            // <Trauma>
+            !((reflector.Comp.Reflects & hitscanReflectType) != 0x0 && rand.Prob(reflector.Comp.ReflectProb)))
+            // </Trauma>
+        {
+            newDirection = null;
+            return false;
+        }
+
+        PlayAudioAndPopup(reflector.Comp, user, shooter); // Trauma - added shooter
+
+        // WD EDIT START
+        if (reflector.Comp.DamageOnReflectModifier != 0 && damage != null)
+            _damageable.ChangeDamage(reflector.Owner, damage * reflector.Comp.DamageOnReflectModifier, origin: shooter);
+        // WD EDIT END
+
+        var spread = rand.NextAngle(-reflector.Comp.Spread / 2, reflector.Comp.Spread / 2); // Trauma - use predicted random
+        newDirection = -spread.RotateVec(direction);
+
+        if (shooter != null)
+            _adminLogger.Add(LogType.HitScanHit, LogImpact.Medium, $"{ToPrettyString(user)} reflected hitscan from {ToPrettyString(shotSource)} shot by {ToPrettyString(shooter.Value)}");
+        else
+            _adminLogger.Add(LogType.HitScanHit, LogImpact.Medium, $"{ToPrettyString(user)} reflected hitscan from {ToPrettyString(shotSource)}");
+
+        return true;
+    }
+
+    private void PlayAudioAndPopup(ReflectComponent reflect, EntityUid user, EntityUid? shooter) // Trauma - added shooter
+    {
+        // <Trauma>
+        _popup.PopupPredicted(Loc.GetString("reflect-shot"), user, shooter);
+        _audio.PlayPredicted(reflect.SoundOnReflect, user, shooter);
+        // </Trauma>
+    }
+
+    private void OnReflectEquipped(Entity<ReflectComponent> ent, ref GotEquippedEvent args)
+    {
+        ent.Comp.InRightPlace = (ent.Comp.SlotFlags & args.SlotFlags) == args.SlotFlags;
+    }
+
+    private void OnReflectUnequipped(Entity<ReflectComponent> ent, ref GotUnequippedEvent args)
+    {
+        ent.Comp.InRightPlace = false;
+        Dirty(ent);
+    }
+
+    private void OnReflectHandEquipped(Entity<ReflectComponent> ent, ref GotEquippedHandEvent args)
+    {
+        ent.Comp.InRightPlace = ent.Comp.ReflectingInHands;
+        Dirty(ent);
+    }
+
+    private void OnReflectHandUnequipped(Entity<ReflectComponent> ent, ref GotUnequippedHandEvent args)
+    {
+        ent.Comp.InRightPlace = false;
+    }
+
+    #region Examine
+    private void OnExamine(Entity<ReflectComponent> ent, ref ExaminedEvent args)
+    {
+        if (!ent.Comp.Examinable) return; // Goobstation
+        // This isn't examine verb or something just because it looks too much bad.
+        // Trust me, universal verb for the potential weapons, armor and walls looks awful.
+        var value = MathF.Round(ent.Comp.ReflectProb * 100, 1);
+
+        if (!_toggle.IsActivated(ent.Owner) || value == 0 || ent.Comp.Reflects == ReflectType.None)
+            return;
+
+        var compTypes = ent.Comp.Reflects.ToString().Split(", ");
+
+        List<string> typeList = new(compTypes.Length);
+
+        for (var i = 0; i < compTypes.Length; i++)
+        {
+            var type = Loc.GetString(("reflect-component-" + compTypes[i]).ToLower());
+            typeList.Add(type);
+        }
+
+        var msg = ContentLocalizationManager.FormatList(typeList);
+
+        args.PushMarkup(Loc.GetString("reflect-component-examine", ("value", value), ("type", msg)));
+    }
+    #endregion
+}

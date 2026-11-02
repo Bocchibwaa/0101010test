@@ -1,0 +1,136 @@
+
+# Jumpsuits
+# Grey
+- type: loadout
+  id: GreyJumpsuit
+  equipment:
+    jumpsuit: ClothingUniformJumpsuitColorGrey
+
+
+- type: loadout
+  id: GreyJumpskirt
+  equipment:
+    jumpsuit: ClothingUniformJumpskirtColorGrey
+
+# <Trauma> To prevent the no loadout orphans test from failing, all currently orphans must be commented.
+# Rainbow
+# - type: loadout
+#   id: RainbowJumpsuit
+#   effects:
+#   - !type:GroupLoadoutEffect
+#     proto: GreyTider
+#   equipment:
+#     jumpsuit: ClothingUniformColorRainbow
+
+# Rainbow Jumpskirt
+# - type: loadout
+#   id: RainbowJumpskirt
+#   effects:
+#   - !type:GroupLoadoutEffect
+#     proto: GreyTider
+#   equipment:
+#     jumpsuit: ClothingUniformJumpskirtColorRainbow
+
+# Ancient
+# - type: loadout
+#   id: AncientJumpsuit
+#   effects:
+#   - !type:GroupLoadoutEffect
+#     proto: GreyTider
+#   equipment:
+#     jumpsuit: ClothingUniformJumpsuitAncient
+
+# Greytide Time
+# - type: loadoutEffectGroup
+#   id: GreyTider
+#   effects:
+#   - !type:JobRequirementLoadoutEffect
+#     requirement:
+#       !type:RoleTimeRequirement
+#       role: JobPassenger
+#       time: 10h # silly reward for people who play passenger a lot
+
+# Face
+# - type: loadout
+#   id: PassengerFace
+#   effects:
+#   - !type:GroupLoadoutEffect
+#     proto: GreyTider
+#   equipment:
+#     mask: ClothingMaskGas
+
+# - type: loadoutEffectGroup
+#   id: MasterGrey
+#   effects:
+#   - !type:JobRequirementLoadoutEffect
+#     requirement:
+#       !type:RoleTimeRequirement
+#       role: JobPassenger
+#       time: 20h # fun mantle for the most experienced greytiders
+
+# Head of Greytide (for grey mantle)
+# - type: loadout
+#   id: Mantle
+#   equipment:
+#     neck: ClothingNeckMantle
+#   effects:
+#   - !type:GroupLoadoutEffect
+#     proto: MasterGrey
+
+# Gloves
+# - type: loadout
+#   id: PassengerGloves
+#   effects:
+#   - !type:GroupLoadoutEffect
+#     proto: GreyTider
+#   equipment:
+#     gloves: ClothingHandsGlovesFingerlessInsulated
+
+# Neck
+# - type: startingGear
+#   id: Mantle
+#   equipment:
+#     neck: ClothingNeckMantle
+
+# </Trauma>
+
+# Back
+- type: loadout
+  id: CommonBackpack
+  equipment:
+    back: ClothingBackpack
+
+- type: loadout
+  id: CommonSatchel
+  equipment:
+    back: ClothingBackpackSatchel
+
+- type: loadout
+  id: CommonDuffel
+  equipment:
+    back: ClothingBackpackDuffel
+
+# Outerclothing
+- type: loadout
+  id: PassengerWintercoat
+  equipment:
+    outerClothing: ClothingOuterWinterCoat
+
+# Shoes
+- type: loadout
+  id: BlackShoes
+  equipment:
+    shoes: ClothingShoesColorBlack
+
+- type: loadout
+  id: WinterBoots
+  equipment:
+    shoes: ClothingShoesBootsWinter
+
+
+# service jumpsuit - putting it here because frontier's only service jumpsuits are hydroponics and general lmao # goob change btw
+
+- type: loadout
+  id: ServiceMJ
+  equipment:
+    jumpsuit: ClothingUniformJumpsuitMilitaryService

@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.FixedPoint;
+
+namespace Content.Goobstation.Shared.Changeling;
+
+[Prototype]
+public sealed partial class ReagentStingConfigurationPrototype : IPrototype
+{
+    [IdDataField]
+    public string ID { get; private set; } = default!;
+
+    [DataField(required: true)]
+    public Dictionary<string, FixedPoint2> Reagents = new();
+}

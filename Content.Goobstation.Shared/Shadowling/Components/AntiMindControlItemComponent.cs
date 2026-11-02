@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+
+namespace Content.Goobstation.Shared.Shadowling.Components;
+
+/// <summary>
+/// This is used for the Anti Mind Control device
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+public sealed partial class AntiMindControlItemComponent : Component
+{
+    /// <summary>
+    /// Indicates how long the duration of the item use lasts for.
+    /// </summary>
+    [DataField]
+    public TimeSpan Duration = TimeSpan.FromSeconds(3);
+}

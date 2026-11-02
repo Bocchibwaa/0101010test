@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+## This is for Nyano and Delta V tags
+
+- type: Tag
+  id: Skirt
+
+- type: Tag
+  id: PreventLabel

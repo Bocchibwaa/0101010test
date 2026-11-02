@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: CleanerDispenser
+  id: CapsaicinDispenser
+  name: capsaicin dispenser
+  description: A wallmount dispenser capable of dispensing capsaicin. Refill your pepperspray here.
+  components:
+  - type: Sprite
+    layers:
+    - state: pepperdispenser
+      sprite: _Trauma/Structures/Wallmounts/walldispenser.rsi
+    - state: fill-1
+      map: ["enum.SolutionContainerLayers.Fill"]
+      visible: false
+  - type: Solution
+    solution:
+      maxVol: 2000
+      reagents:
+      - ReagentId: OleoresinCapsaicin
+        Quantity: 2000

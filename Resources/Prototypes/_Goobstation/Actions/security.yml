@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionActivateAutoinjector
+  name: Activate Auto-injector
+  description: Activate your auto injector to administer chemicals into your bloodstream.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Actions/modsuit.rsi
+    layers:
+    - state: stim
+  - type: Action
+    checkCanInteract: false
+    checkConsciousness: false
+    itemIconStyle: NoItem
+    useDelay: 70
+  - type: InstantAction
+    event: !type:ActionActivateAutoInjectorEvent

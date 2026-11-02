@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Medical.Shared.Surgery.Tools;
+
+namespace Content.Goobstation.Shared.Surgery.Steps.Parts;
+
+public sealed partial class TissueSampleSystem : EntitySystem
+{
+    [Dependency] private SurgeryToolExamineSystem _toolExamine = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<TissueSampleComponent, SurgeryToolExaminedEvent>(_toolExamine.OnExamined);
+    }
+}

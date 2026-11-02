@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionMouseCall
+  name: Mousecall
+  description: Call nearby mice to your location.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Actions/call.rsi
+    layers:
+    - state: icon
+  - type: Action
+    useDelay: 5
+  - type: InstantAction
+    event: !type:MobCallActionEvent

@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Clothing.Components;
+using Content.Shared.Damage.Systems;
+using Robust.Shared.Timing;
+
+namespace Content.Goobstation.Shared.Clothing.Systems
+{
+    public sealed partial class DamageOverTimeSystem : EntitySystem
+    {
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private DamageableSystem _damageSys = default!;
+
+        public override void Update(float frameTime)
+        {
+            if (!_timing.IsFirstTimePredicted)
+                return;
+
+            var currentTime = _timing.CurTime;
+            var query = EntityQueryEnumerator<DamageOverTimeComponent>();
+            while (query.MoveNext(out var uid, out var component))
+            {
+                if (currentTime < component.NextTickTime)
+                    continue;
+                component.NextTickTime = currentTime + component.Interval;
+                _damageSys.TryChangeDamage(uid,
+                    component.Damage * component.Multiplier,
+                    ignoreResistances: component.IgnoreResistances,
+                    targetPart: component.TargetBodyPart,
+                    splitDamage: component.Split);
+                component.Multiplier += component.MultiplierIncrease;
+                Dirty(uid, component);
+            }
+        }
+    }
+}

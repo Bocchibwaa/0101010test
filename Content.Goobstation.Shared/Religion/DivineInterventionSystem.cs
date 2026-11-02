@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Common.Religion;
+using Content.Trauma.Shared.CosmicCult;
+using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Inventory;
+using Content.Shared.Popups;
+using Robust.Shared.Audio.Systems;
+
+namespace Content.Goobstation.Shared.Religion;
+
+/// <summary>
+/// Handles "Spell Denial", these methods are largely targeted towards TargetActionEvents, however,
+/// may also have other edge-cases.
+/// </summary>
+public sealed partial class DivineInterventionSystem : EntitySystem
+{
+    [Dependency] private InventorySystem _inventory = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private EntityQuery<DivineInterventionComponent> _divineQuery = default!;
+
+    /// <summary>
+    /// The bare minimum, no flavor -
+    /// used for spells that do not necessarily require players to be notified of an immunity event
+    /// </summary>
+    private bool ShouldDeny(EntityUid target, out EntityUid? denyingItem)
+    {
+        denyingItem = null;
+
+        foreach (var held in _hands.EnumerateHeld(target))
+        {
+            if (!_divineQuery.HasComp(held))
+                continue;
+
+            denyingItem = held;
+            return true;
+        }
+
+        var slots = _inventory.GetSlotEnumerator(target, SlotFlags.WITHOUT_POCKET);
+        while (slots.NextItem(out var item, out var slot))
+        {
+            if (!_divineQuery.TryComp(item, out var comp))
+                continue;
+
+            if ((slot.SlotFlags & comp.ValidSpellDenialSlots) == 0x0)
+                continue;
+
+            denyingItem = item;
+            return true;
+        }
+
+        return false;
+    }
+    //Overload Method
+    public bool ShouldDeny(EntityUid target) => ShouldDeny(target, out _);
+
+    [SubscribeLocalEvent]
+    public void OnCosmicAbilityAttempt(ref CosmicAbilityAttemptEvent args)
+    {
+        if (!ShouldDeny(args.Target, out var denyingItem))
+            return;
+
+        args.Cancelled = true;
+        if (args.PlayEffects && denyingItem is { } item) DenialEffects(item, args.Target);
+    }
+
+    #region Flavour
+    /// <summary>
+    /// Handles denial flavour (VFX/SFX/POPUPS)
+    /// </summary>
+    private void DenialEffects(EntityUid uid, EntityUid? entNullable, DivineInterventionComponent? comp = null)
+    {
+        if (_net.IsClient
+            || entNullable is not { } ent
+            || !Resolve(uid, ref comp))
+            return;
+
+        _popupSystem.PopupEntity(Loc.GetString(comp.DenialString), ent, PopupType.MediumCaution);
+        _audio.PlayPvs(comp.DenialSound, ent);
+        Spawn(comp.EffectProto, Transform(ent).Coordinates);
+    }
+    #endregion
+
+    #region EntityTargetActionEvent Spells
+    /// <summary>
+    /// Handles EntityTargetActionEvent spells.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnTouchSpellAttempt(ref BeforeCastTouchSpellEvent args)
+    {
+        var target = args.Target;
+        if (ShouldDeny(target, out var denyingItem)
+            && denyingItem != null
+            && Exists(denyingItem.Value))
+        {
+            args.Cancelled = true;
+            if (args.DoEffects)
+                DenialEffects(denyingItem.Value, target);
+        }
+    }
+
+    /// <summary>
+    /// Used where dependency is possible i.e. GoobMod Magic.
+    /// </summary>
+    public bool TouchSpellDenied(EntityUid uid, bool doEffects = true)
+    {
+        var ev = new BeforeCastTouchSpellEvent(uid, doEffects);
+        RaiseLocalEvent(uid, ref ev, true);
+
+        return ev.Cancelled;
+    }
+
+    #endregion
+}

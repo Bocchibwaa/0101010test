@@ -1,0 +1,92 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Wraith.Components;
+using Content.Goobstation.Shared.Wraith.Events;
+using Content.Goobstation.Shared.ListViewSelector;
+using Content.Shared.Chemistry.Components;
+using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Popups;
+
+namespace Content.Goobstation.Shared.Wraith.Systems;
+public sealed partial class DefileSystem : EntitySystem
+{
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedSolutionContainerSystem _solution = default!;
+    [Dependency] private SharedUserInterfaceSystem _ui = default!;
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<DefileComponent, DefileEvent>(OnDefile);
+        SubscribeLocalEvent<DefileComponent, MapInitEvent>(OnMapInit);
+        SubscribeLocalEvent<DefileComponent, ListViewItemSelectedMessage>(OnDefileSelected);
+    }
+
+    private void OnMapInit(Entity<DefileComponent> ent, ref MapInitEvent args)
+    {
+        foreach (var reagent in ent.Comp.Reagents)
+        {
+            var reagentEntry = new ListViewSelectorEntry(reagent.Key.ToString(), reagent.Key.ToString());
+            ent.Comp.ReagentsEntryList.Add(reagentEntry);
+        }
+        Dirty(ent);
+    }
+
+    private void OnDefile(Entity<DefileComponent> ent, ref DefileEvent args)
+    {
+        if (args.Target == ent.Owner)
+        {
+            _ui.SetUiState(ent.Owner, ListViewSelectorUiKey.Key, new ListViewSelectorState(ent.Comp.ReagentsEntryList));
+            _ui.TryToggleUi(ent.Owner, ListViewSelectorUiKey.Key, args.Performer);
+        }
+        else
+        {
+            if (!TryInjectReagents(args.Target, ent))
+                return;
+
+            _popup.PopupEntity(Loc.GetString("wraith-poison-success", ("target", ent.Owner)), ent.Owner, ent.Owner);
+            args.Handled = true;
+        }
+    }
+
+    private void OnDefileSelected(Entity<DefileComponent> ent, ref ListViewItemSelectedMessage args)
+    {
+        if (!ent.Comp.Reagents.TryGetValue(args.SelectedItem.Id, out var amount))
+            return;
+
+        ent.Comp.ReagentSelected = args.SelectedItem.Id;
+        ent.Comp.ReagentSelectedAmount = amount;
+        Dirty(ent);
+
+        _ui.CloseUi(ent.Owner, ListViewSelectorUiKey.Key);
+    }
+
+    #region Helper
+    private bool TryInjectReagents(EntityUid target, Entity<DefileComponent> ent)
+    {
+        if (!ent.Comp.ReagentSelected.HasValue)
+            return false;
+
+        var solution = new Solution();
+        solution.AddReagent(ent.Comp.ReagentSelected, ent.Comp.ReagentSelectedAmount);
+
+        if (!_solution.TryGetSolution(target, "drink", out var targetSolution) &&
+            !_solution.TryGetSolution(target, "food", out targetSolution))
+            return false;
+
+        if (!TryComp<SolutionComponent>(targetSolution.Value, out var solComp))
+            return false;
+
+        // Ensure capacity is large enough before injecting
+        var sol = solComp.Solution;
+        var needed = solution.Volume + sol.Volume;
+        if (needed > sol.MaxVolume)
+        {
+            sol.MaxVolume = needed;
+            Dirty(targetSolution.Value, solComp);
+        }
+
+        return _solution.TryAddSolution(targetSolution.Value, solution);
+    }
+    #endregion
+}

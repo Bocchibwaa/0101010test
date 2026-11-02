@@ -1,0 +1,122 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Server.Cargo.Components;
+using Content.Server.Cargo.Systems;
+using Content.Server.Chat.Systems;
+using Content.Shared.GameTicking;
+using Content.Shared.GameTicking.Rules;
+using Content.Shared.Cargo;
+using Content.Shared.Cargo.Components;
+using Content.Shared.Dataset;
+using Content.Shared.GameTicking.Components;
+using Content.Shared.Station.Components;
+using Content.Shared.Station.Systems;
+using Robust.Shared.Random;
+
+namespace Content.Goobstation.Server.Pirates.GameTicking.Rules;
+
+public sealed partial class PendingPirateRuleSystem : GameRuleSystem<PendingPirateRuleComponent>
+{
+    [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private IRobustRandom _rand = default!;
+    [Dependency] private GameTicker _ticker = default!;
+    [Dependency] private StationSystem _station = default!;
+    [Dependency] private CargoSystem _cargo = default!;
+
+    private static readonly EntProtoId PirateSpawnRule = "PiratesSpawn";
+
+    protected override void ActiveTick(EntityUid uid, PendingPirateRuleComponent pending, GameRuleComponent rule, float frameTime)
+    {
+        pending.PirateSpawnTimer += frameTime;
+        if (pending.PirateSpawnTimer < pending.PirateSpawnTime)
+            return;
+
+        // remove spawned order.
+        if (!AllEntityQuery<BecomesStationComponent, StationMemberComponent>().MoveNext(out var eqData, out _, out _))
+        {
+            // No station found, end the rule
+            _ticker.EndGameRule((uid, rule));
+            return;
+        }
+
+        var station = _station.GetOwningStation(eqData);
+        if (station == null || !TryComp<StationBankAccountComponent>(station, out var bank))
+        {
+            // Invalid station or no bank account, end the rule
+            _ticker.EndGameRule((uid, rule));
+            return;
+        }
+
+        if (_cargo.TryGetOrderDatabase(station, out var cargoDb) && pending.Order != null)
+        {
+            _cargo.RemoveOrder(station.Value, bank.PrimaryAccount, pending.Order.OrderId, cargoDb);
+        }
+
+        SendAnnouncement((uid, pending), AnnouncementType.Arrival);
+        _ticker.StartGameRule(PirateSpawnRule);
+        _ticker.EndGameRule((uid, rule));
+    }
+
+    protected override void Started(EntityUid uid, PendingPirateRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
+    {
+        base.Started(uid, component, gameRule, args);
+
+        // get station
+        if (!AllEntityQuery<BecomesStationComponent, StationMemberComponent>().MoveNext(out var eqData, out _, out _))
+            return;
+
+        var station = _station.GetOwningStation(eqData);
+        if (station == null)
+            return;
+
+        var announcer = component.LocAnnouncer;
+
+        if (_cargo.TryGetOrderDatabase(station, out var cargoDb))
+        {
+            var price = 25000;
+            if (!TryComp<StationBankAccountComponent>(station, out var bank))
+                return;
+
+            var balance = _cargo.GetBalanceFromAccount((station.Value, bank), bank.PrimaryAccount);
+            price = _rand.Next((int) (balance * 0.75f), (int) (balance * 1.25f));
+
+            var orderId = CargoSystem.GenerateOrderId(cargoDb) + 1984;
+
+            var name = Loc.GetString($"pirates-ransom-{announcer}-name");
+            var reason = Loc.GetString($"pirates-ransom-{announcer}-desc", ("num", price));
+            var requester = Loc.GetString($"pirates-announcer-{announcer}");
+
+            /* TODO: update this dogshit
+            var ransom = new CargoOrderData(orderId, component.RansomPrototype, 1, requester, reason, bank.PrimaryAccount);
+
+            component.Order = ransom;
+
+            _cargo.TryAddOrder(station.Value, bank.PrimaryAccount, ransom, cargoDb);
+            */
+        }
+
+        SendAnnouncement((uid, component), AnnouncementType.Threat);
+    }
+
+    public void SendAnnouncement(Entity<PendingPirateRuleComponent> pprule, AnnouncementType atype)
+    {
+        var announcer = pprule.Comp.LocAnnouncer;
+
+        if (pprule.Comp.LocAnnouncers != null)
+            announcer = _rand.Pick(ProtoMan.Index<DatasetPrototype>(pprule.Comp.LocAnnouncers).Values);
+
+        var type = atype.ToString().ToLower();
+        var announcement = Loc.GetString($"pirates-announcement-{announcer}-{type}");
+
+        // announcer at the end because shitcode
+        announcer = Loc.GetString($"pirates-announcer-{announcer}");
+
+        _chat.DispatchGlobalAnnouncement(announcement, announcer, colorOverride: Color.Orange);
+    }
+
+    public enum AnnouncementType
+    {
+        // should match with the localization strings
+        Threat, Arrival, Paid, Cancelled, NotEnough
+    }
+}

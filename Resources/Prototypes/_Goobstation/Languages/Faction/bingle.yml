@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: language
+  id: Bingle
+  speech:
+    fontId: Eatday
+    boldFontId: Eatday
+    color: "#8d3333"
+  obfuscation:
+    !type:PhraseObfuscation
+    proportion: 0.66
+    minPhrases: 1
+    maxPhrases: 6
+    replacement:
+    - Bingle
+    - Bongle
+    - BINGLE
+    - Bong
+    - Bing
+    - BONGLE

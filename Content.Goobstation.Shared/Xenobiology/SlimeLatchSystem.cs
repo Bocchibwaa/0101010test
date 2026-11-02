@@ -1,0 +1,278 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Xenobiology.Components;
+using Content.Goobstation.Shared.Xenobiology.Components.Equipment;
+using Content.Medical.Common.Targeting;
+using Content.Shared.ActionBlocker;
+using Content.Shared.Damage.Systems;
+using Content.Shared.DoAfter;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Components;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Movement.Events;
+using Content.Shared.Movement.Pulling.Components;
+using Content.Shared.Movement.Pulling.Events;
+using Content.Shared.Nutrition.Components;
+using Content.Shared.Nutrition.EntitySystems;
+using Content.Shared.Popups;
+using Content.Trauma.Common.Throwing;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Containers;
+using Robust.Shared.Timing;
+
+namespace Content.Goobstation.Shared.Xenobiology;
+
+// This handles any actions that slime mobs may have.
+public sealed partial class SlimeLatchSystem : EntitySystem
+{
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private ActionBlockerSystem _actionBlocker = default!;
+    [Dependency] private SatiationSystem _satiation = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private SharedTransformSystem _xform = default!;
+    [Dependency] private EntityQuery<SatiationComponent> _satiationQuery = default!;
+    [Dependency] private EntityQuery<SlimeComponent> _slimeQuery = default!;
+    [Dependency] private EntityQuery<XenoVacuumTankComponent> _tankQuery = default!;
+
+    private TimeSpan _updateDelay = TimeSpan.FromSeconds(1);
+    private TimeSpan _nextUpdate;
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var now = _timing.CurTime;
+        if (now < _nextUpdate)
+            return;
+
+        _nextUpdate = now + _updateDelay;
+
+        var query = EntityQueryEnumerator<SlimeDamageOvertimeComponent>();
+        while (query.MoveNext(out var uid, out var comp))
+        {
+            if (_mobState.IsDead(uid) ||
+                // incase some bullshit doesnt clean it up properly
+                comp.SourceEntityUid is not { } source ||
+                !_slimeQuery.TryComp(source, out var slime) ||
+                slime.LatchedTarget != uid)
+            {
+                RemCompDeferred(uid, comp);
+                continue;
+            }
+
+            UpdateHunger((uid, comp), source);
+        }
+    }
+
+    private void UpdateHunger(Entity<SlimeDamageOvertimeComponent> ent, EntityUid source)
+    {
+        _damageable.ChangeDamage(ent.Owner, ent.Comp.Damage, ignoreResistances: true, targetPart: TargetBodyPart.All);
+
+        if (_satiationQuery.TryComp(source, out var satiation))
+        {
+            var addedHunger = (float) ent.Comp.Damage.GetTotal();
+            _satiation.ModifyValue((source, satiation), SatiationSystem.Hunger, addedHunger);
+        }
+    }
+
+    [SubscribeLocalEvent]
+    private void OnMobStateChangedSOD(Entity<SlimeDamageOvertimeComponent> ent, ref MobStateChangedEvent args)
+    {
+        if (args.NewMobState != MobState.Dead || ent.Comp.SourceEntityUid is not {} source)
+            return;
+
+        if (_slimeQuery.TryComp(source, out var slime))
+            Unlatch((source, slime));
+    }
+
+    [SubscribeLocalEvent]
+    private void OnMobStateChangedSlime(Entity<SlimeComponent> ent, ref MobStateChangedEvent args)
+    {
+        if (args.NewMobState == MobState.Dead)
+            Unlatch(ent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnPullAttempt(Entity<SlimeComponent> ent, ref PullAttemptEvent args)
+    {
+        if (IsLatched(ent) && args.PullerUid != ent.Owner) // slimes can't be pulled when latched
+        {
+            args.Cancelled = true;
+            return;
+        }
+
+        Unlatch(ent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnBeingThrownAttempt(Entity<SlimeComponent> ent, ref BeingThrownAttemptEvent args)
+    {
+        // can't just shove a slime off, use the doafter
+        args.Cancelled |= IsLatched(ent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnUpdateCanMove(Entity<SlimeComponent> ent, ref UpdateCanMoveEvent args)
+    {
+        if (IsLatched(ent))
+            args.Cancel();
+    }
+
+    [SubscribeLocalEvent]
+    private void OnRemovedFromContainer(Entity<SlimeComponent> ent, ref EntGotRemovedFromContainerMessage args)
+    {
+        // this check is probably useless but jic
+        if (!_tankQuery.HasComp(args.Container.Owner))
+            return;
+
+        Unlatch(ent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnInsertedIntoContainer(Entity<SlimeComponent> ent, ref EntGotInsertedIntoContainerMessage args)
+    {
+        if (!_tankQuery.HasComp(args.Container.Owner))
+            return;
+
+        Unlatch(ent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnLatchAttempt(Entity<SlimeComponent> ent, ref SlimeLatchEvent args)
+    {
+        // TODO: just subscribe for SlimeComponent bruh
+        var user = args.Performer;
+        if (TerminatingOrDeleted(args.Target))
+            return;
+
+        if (IsLatched(ent))
+        {
+            Unlatch(ent);
+            return;
+        }
+
+        if (CanLatch(ent, args.Target))
+        {
+            StartSlimeLatchDoAfter(ent, args.Target);
+            return;
+        }
+
+        // improvement space (tm)
+    }
+
+    private bool StartSlimeLatchDoAfter(Entity<SlimeComponent> ent, EntityUid target)
+    {
+        if (_mobState.IsDead(target))
+        {
+            var targetDeadPopup = Loc.GetString("slime-latch-fail-target-dead", ("ent", target));
+            _popup.PopupEntity(targetDeadPopup, ent, ent);
+
+            return false;
+        }
+
+        if (ent.Comp.Stomach.Count >= ent.Comp.MaxContainedEntities)
+        {
+            var maxEntitiesPopup = Loc.GetString("slime-latch-fail-max-entities", ("ent", target));
+            _popup.PopupEntity(maxEntitiesPopup, ent, ent);
+
+            return false;
+        }
+
+        var attemptPopup = Loc.GetString("slime-latch-attempt", ("slime", ent), ("ent", target));
+        _popup.PopupEntity(attemptPopup, ent, ent, PopupType.MediumCaution);
+
+        var doAfterArgs = new DoAfterArgs(EntityManager, ent, ent.Comp.LatchDoAfterDuration, new SlimeLatchDoAfterEvent(), ent, target)
+        {
+            BreakOnDamage = true,
+            BreakOnMove = true,
+        };
+
+        EnsureComp<BeingLatchedComponent>(target);
+        _doAfter.TryStartDoAfter(doAfterArgs);
+        return true;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnSlimeLatchDoAfter(Entity<SlimeComponent> ent, ref SlimeLatchDoAfterEvent args)
+    {
+        if (args.Target is not { } target)
+            return;
+
+        if (args.Handled || args.Cancelled)
+        {
+            RemCompDeferred<BeingLatchedComponent>(target);
+            return;
+        }
+
+        Latch(ent, target);
+        args.Handled = true;
+    }
+
+    #region Helpers
+
+    public bool IsLatched(Entity<SlimeComponent> ent)
+        => ent.Comp.LatchedTarget.HasValue;
+
+    public bool IsLatched(Entity<SlimeComponent> ent, EntityUid target)
+        => ent.Comp.LatchedTarget == target;
+
+    public bool CanLatch(Entity<SlimeComponent> ent, EntityUid target)
+    {
+        return !(IsLatched(ent) // already latched
+            || _mobState.IsDead(target) // target dead
+            || !_actionBlocker.CanInteract(ent, target) // can't reach
+            || !HasComp<MobStateComponent>(target)); // make any mob work
+    }
+
+    public bool NpcTryLatch(Entity<SlimeComponent> ent, EntityUid target)
+    {
+        if (!CanLatch(ent, target))
+            return false;
+
+        return StartSlimeLatchDoAfter(ent, target);
+    }
+
+    public void Latch(Entity<SlimeComponent> ent, EntityUid target)
+    {
+        if (IsLatched(ent))
+            Unlatch(ent);
+
+        _xform.SetCoordinates(ent, Transform(target).Coordinates);
+        _xform.SetParent(ent, target);
+
+        ent.Comp.LatchedTarget = target;
+        Dirty(ent);
+
+        _actionBlocker.UpdateCanMove(ent.Owner);
+
+        EnsureComp(target, out SlimeDamageOvertimeComponent comp);
+        comp.SourceEntityUid = ent;
+        Dirty(target, comp);
+
+        _audio.PlayPredicted(ent.Comp.EatSound, ent, ent);
+        _popup.PopupEntity(Loc.GetString("slime-action-latch-success", ("slime", ent), ("target", target)), ent, ent, PopupType.SmallCaution);
+
+        // We also need to set a new state for the slime when it's consuming,
+        // this will be easy however it's important to take MobGrowthSystem into account... possibly we should use layers?
+    }
+
+    public void Unlatch(Entity<SlimeComponent> ent)
+    {
+        if (ent.Comp.LatchedTarget is not { } target)
+            return;
+
+        RemCompDeferred<BeingLatchedComponent>(target);
+        RemCompDeferred<SlimeDamageOvertimeComponent>(target);
+
+        _xform.SetParent(ent, _xform.GetParentUid(target)); // deparent it. probably.
+        ent.Comp.LatchedTarget = null;
+        Dirty(ent);
+        _actionBlocker.UpdateCanMove(ent.Owner);
+    }
+
+    #endregion
+}

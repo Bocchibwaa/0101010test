@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Robust.Shared.Random;
+using System.Linq;
+
+namespace Content.Lavaland.Shared.EntityShapes.Shapes;
+
+/// <summary>
+/// Represents a simple shape out of two diagonal lines
+/// combined, similar to how Bishop chess piece moves.
+/// </summary>
+public sealed partial class BishopEntityShape : EntityShape
+{
+    protected override List<Vector2> GetShapeImplementation(IRobustRandom rand, IPrototypeManager proto)
+    {
+        return ShapeHelpers.MakeCrossDiagonal(Offset, Size, StepSize).ToList();
+    }
+}

@@ -1,0 +1,22 @@
+- type: vendingMachineInventory
+  id: ChangInventory
+  startingInventory:
+    FoodCondimentPacketSoy: 5
+    FoodSnackCookieFortune: 5
+    DrinkRamen: 3
+    DrinkHellRamen: 3
+    FoodSnackChowMein: 3
+    FoodSnackDanDanNoodles: 3
+    PairedChopsticks: 3
+  contrabandInventory:
+    FoodBakedDumplings: 2
+    FoodSoupMiso: 2
+  # <Trauma>
+    FoodRiceBoiled: 1
+    FoodRiceEgg: 2
+    RiceSeeds: 2
+    ClothingHeadHatCasa: 1
+  emaggedInventory:
+    BoxMRE: 2
+    ClothingOuterDogi: 1
+  # </Trauma>

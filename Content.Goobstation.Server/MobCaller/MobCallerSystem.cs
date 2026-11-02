@@ -1,0 +1,144 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Server.NPC;
+using Content.Server.NPC.Systems;
+using Content.Server.Power.EntitySystems;
+using Content.Shared.Examine;
+using Content.Shared.Mobs.Systems;
+using Robust.Shared.Map;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Random;
+using Robust.Shared.Timing;
+using System.Linq;
+
+namespace Content.Goobstation.Server.MobCaller;
+
+public sealed partial class MobCallerSystem : EntitySystem
+{
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private NPCSystem _npc = default!;
+    [Dependency] private PowerReceiverSystem _power = default!;
+    [Dependency] private SharedMapSystem _map = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IRobustRandom _random = default!;
+
+    [SubscribeLocalEvent]
+    private void OnExamined(Entity<MobCallerComponent> ent, ref ExaminedEvent args)
+    {
+        var occluded = false;
+        // prevent evil spam examine ddos even though GetSpawnDirections() takes 0.3ms or so worstcase
+        if (ent.Comp.LastExamineRaycast + ent.Comp.ExamineRaycastSpacing > _timing.CurTime)
+        {
+            occluded = ent.Comp.CachedExamineResult;
+        }
+        else
+        {
+            occluded = !(GetSpawnDirections((ent, ent.Comp, Transform(ent))).Any());
+            ent.Comp.CachedExamineResult = occluded;
+            ent.Comp.LastExamineRaycast = _timing.CurTime;
+        }
+        // tell the user if we're not working due to not being exposed to space
+        if (occluded)
+            args.PushMarkup(Loc.GetString("mob-caller-occluded"));
+    }
+
+    public override void Update(float frameTime)
+    {
+        var query = EntityQueryEnumerator<MobCallerComponent>();
+
+        while (query.MoveNext(out var uid, out var caller))
+        {
+            var xform = Transform(uid);
+
+            if (caller.NeedPower && !_power.IsPowered(uid)
+                || caller.NeedAnchored && !xform.Anchored
+            )
+                continue;
+
+            caller.SpawnAccumulator += TimeSpan.FromSeconds(frameTime);
+            if (caller.SpawnAccumulator < caller.SpawnSpacing)
+                continue;
+
+            caller.SpawnAccumulator -= caller.SpawnSpacing;
+
+            // prune spawned entities list
+            // has to be for-loop and not foreach since we may modify it on the fly
+            for (var i = 0; i < caller.SpawnedEntities.Count; i++)
+            {
+                var mob = caller.SpawnedEntities[i];
+                if (TerminatingOrDeleted(mob) || _mobState.IsDead(mob))
+                {
+                    caller.SpawnedEntities.RemoveAt(i);
+                    i--;
+                    continue;
+                }
+            }
+            // check happens after we increment accumulator, this is intentional
+            if (caller.SpawnedEntities.Count >= caller.MaxAlive)
+                continue;
+
+            // choose a direction to spawn the mob in
+            var candidates = GetSpawnDirections((uid, caller, xform));
+            if (candidates.Count == 0)
+                continue;
+
+            // we chose a direction so pick a spawn position
+            var chosenDir = _random.Pick(candidates);
+            var spawnOffset = chosenDir.ToVec() * _random.NextFloat(caller.MinDistance, caller.MaxDistance);
+            var spawnPos = _transform.GetMapCoordinates(xform).Offset(spawnOffset);
+
+            // if we would somehow spawn it on a grid, don't
+            if (_map.TryFindGridAt(spawnPos, out _, out _))
+                continue;
+
+            // spawn the mob and have it follow us
+            var spawned = Spawn(caller.SpawnProto, spawnPos);
+            caller.SpawnedEntities.Add(spawned);
+            _npc.SetBlackboard(spawned, NPCBlackboard.FollowTarget, new EntityCoordinates(uid, Vector2.Zero));
+        }
+    }
+
+    /// <summary>
+    /// Get a list of unoccluded directions.
+    /// </summary>
+    public List<Angle> GetSpawnDirections(Entity<MobCallerComponent, TransformComponent> ent)
+    {
+        var candidates = new List<Angle>();
+        var center = _transform.GetMapCoordinates(ent.Comp2);
+        for (var i = 0; i < ent.Comp1.SpawnDirections; i++)
+        {
+            var dir = Angle.FromDegrees(360f * (float)i / ent.Comp1.SpawnDirections);
+            if (CheckDir(dir))
+                candidates.Add(dir);
+
+            bool CheckDir(Angle dir)
+            {
+                var stepVec = dir.ToVec();
+
+                // raycast to ensure there's continuously space from OcclusionDistance to GridOcclusionDistance
+                var gridStepVec = stepVec * ent.Comp1.GridOcclusionFidelity;
+                var steps = (int)MathF.Ceiling((ent.Comp1.GridOcclusionDistance - ent.Comp1.OcclusionDistance) / ent.Comp1.GridOcclusionFidelity);
+                var checkPos = center.Offset(stepVec * ent.Comp1.OcclusionDistance);
+                for (var j = 0; j < steps; j++)
+                {
+                    // space isn't continuous, discard direction
+                    if (_map.TryFindGridAt(checkPos, out _, out _))
+                        return false;
+
+                    checkPos = checkPos.Offset(gridStepVec);
+                }
+
+                // now also check that there's no obstructions in that direction before the continuous space
+                var ray = new CollisionRay(center.Position, stepVec, (int)ent.Comp1.OcclusionMask);
+                var rayCastResults = _physics.IntersectRay(ent.Comp2.MapID, ray, ent.Comp1.OcclusionDistance, ent);
+
+                return !rayCastResults.Any();
+            }
+        }
+
+        return candidates;
+    }
+}

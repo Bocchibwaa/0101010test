@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.DoAfter;
+using Content.Shared.Ensnaring;
+using Content.Shared.Ensnaring.Components;
+using Content.Shared.EntityEffects;
+
+namespace Content.Trauma.Shared.EntityEffects;
+
+/// <summary>
+/// Removes bolas from the target entity.
+/// </summary>
+public sealed partial class RemoveSnares : EntityEffectBase<RemoveSnares>
+{
+    public override string? EntityEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
+        => Loc.GetString("entity-effect-guidebook-remove-snares", ("chance", Probability));
+}
+
+public sealed partial class RemoveSnaresEffectSystem : EntityEffectSystem<EnsnareableComponent, RemoveSnares>
+{
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+
+    protected override void Effect(Entity<EnsnareableComponent> ent, ref EntityEffectEvent<RemoveSnares> args)
+    {
+        if (ent.Comp.Container is not { } container)
+            return;
+
+        var user = args.User ?? ent.Owner;
+
+        // snare api is dogshit and i cbf to improve it
+        foreach (var bola in container.ContainedEntities)
+        {
+            _doAfter.TryStartDoAfter(new DoAfterArgs(EntityManager, user, 0, new EnsnareableDoAfterEvent(), user, user, bola));
+            _transform.DropNextTo(bola, user);
+        }
+    }
+}

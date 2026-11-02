@@ -1,0 +1,1253 @@
+// <Trauma>
+using Content.Goobstation.Common.Weapons;
+using Content.Lavaland.Common.Weapons;
+using Content.Shared.Coordinates;
+using Content.Trauma.Common.Heretic;
+using Content.Trauma.Common.MartialArts;
+using Content.Trauma.Common.Weapons;
+using Robust.Shared.Physics.Components;
+// </Trauma>
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Numerics;
+using Content.Shared.ActionBlocker;
+using Content.Shared.Actions.Events;
+using Content.Shared.Administration.Components;
+using Content.Shared.Administration.Logs;
+using Content.Shared.CombatMode;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Events;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Database;
+using Content.Shared.EntityEffects;
+using Content.Shared.FixedPoint;
+using Content.Shared.Hands;
+using Content.Shared.Hands.Components;
+using Content.Shared.Hands.EntitySystems;
+using Content.Shared.IdentityManagement;
+using Content.Shared.Interaction;
+using Content.Shared.Inventory;
+using Content.Shared.Inventory.VirtualItem;
+using Content.Shared.Item.ItemToggle.Components;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Physics;
+using Content.Shared.Popups;
+using Content.Shared.StatusEffect;
+using Content.Shared.Weapons.Melee.Components;
+using Content.Shared.Weapons.Melee.Events;
+using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Events;
+using Content.Shared.Weapons.Ranged.Systems;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
+using Robust.Shared.Timing;
+using ItemToggleMeleeWeaponComponent = Content.Shared.Item.ItemToggle.Components.ItemToggleMeleeWeaponComponent;
+
+namespace Content.Shared.Weapons.Melee;
+
+public abstract partial class SharedMeleeWeaponSystem : EntitySystem
+{
+    [Dependency] protected IGameTiming Timing = default!;
+    //[Dependency] private INetManager _netMan = default!; // Trauma - now unused
+    //[Dependency] private IRobustRandom _random = default!; // Trauma - now unused
+    [Dependency] protected ISharedAdminLogManager AdminLogger = default!;
+    [Dependency] protected ActionBlockerSystem Blocker = default!;
+    [Dependency] protected DamageableSystem Damageable = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private InventorySystem _inventory = default!;
+    [Dependency] private MeleeSoundSystem _meleeSound = default!;
+    [Dependency] protected MobStateSystem MobState = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] protected SharedCombatModeSystem CombatMode = default!;
+    [Dependency] protected SharedMapSystem Maps = default!;
+    [Dependency] protected SharedInteractionSystem Interaction = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] protected SharedPopupSystem PopupSystem = default!;
+    [Dependency] protected SharedTransformSystem TransformSystem = default!;
+    [Dependency] private SharedStaminaSystem _stamina = default!;
+    [Dependency] private DamageExamineSystem _damageExamine = default!;
+    [Dependency] private SharedEntityEffectsSystem _effects = default!;
+
+    [Dependency] private EntityQuery<DamageableComponent> _damageQuery = default!;
+
+    public const int AttackMask = (int) (CollisionGroup.MobMask | CollisionGroup.Opaque); // WD EDIT: private -> public
+
+    /// <summary>
+    /// Maximum amount of targets allowed for a wide-attack.
+    /// </summary>
+    public const int MaxTargets = 5;
+
+    /// <summary>
+    /// If an attack is released within this buffer it's assumed to be full damage.
+    /// </summary>
+    public const float GracePeriod = 0.05f;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        InitializeTrauma(); // Trauma
+
+        SubscribeLocalEvent<MeleeWeaponComponent, HandSelectedEvent>(OnMeleeSelected);
+        SubscribeLocalEvent<MeleeWeaponComponent, ShotAttemptedEvent>(OnMeleeShotAttempted);
+        SubscribeLocalEvent<MeleeWeaponComponent, GunShotEvent>(OnMeleeShot);
+        SubscribeLocalEvent<MeleeWeaponComponent, DamageExamineEvent>(OnMeleeExamineDamage);
+        SubscribeLocalEvent<BonusMeleeDamageComponent, GetMeleeDamageEvent>(OnGetBonusMeleeDamage);
+        SubscribeLocalEvent<BonusMeleeDamageComponent, GetHeavyDamageModifierEvent>(OnGetBonusHeavyDamageModifier);
+        SubscribeLocalEvent<BonusMeleeAttackRateComponent, GetMeleeAttackRateEvent>(OnGetBonusMeleeAttackRate);
+        SubscribeLocalEvent<ItemToggleMeleeWeaponComponent, ItemToggledEvent>(OnItemToggle);
+
+        SubscribeAllEvent<HeavyAttackEvent>(OnHeavyAttack);
+        SubscribeAllEvent<LightAttackEvent>(OnLightAttack);
+        SubscribeAllEvent<DisarmAttackEvent>(OnDisarmAttack);
+        SubscribeAllEvent<StopAttackEvent>(OnStopAttack);
+
+#if DEBUG
+        SubscribeLocalEvent<MeleeWeaponComponent, MapInitEvent>(OnMapInit);
+    }
+
+    private void OnMapInit(EntityUid uid, MeleeWeaponComponent component, MapInitEvent args)
+    {
+        if (component.NextAttack > Timing.CurTime)
+            Log.Warning($"Initializing a map that contains an entity that is on cooldown. Entity: {ToPrettyString(uid)}");
+#endif
+    }
+
+    [SubscribeLocalEvent]
+    private void EntityEffectMeleeHit(Entity<EntityEffectMeleeComponent> ent, ref MeleeHitEvent args)
+    {
+        foreach (var entity in args.HitEntities)
+        {
+            _effects.ApplyEffects(entity, ent.Comp.Effects, 1f, args.User);
+        }
+    }
+
+    private void OnMeleeShotAttempted(EntityUid uid, MeleeWeaponComponent comp, ref ShotAttemptedEvent args)
+    {
+        if (comp.NextAttack > Timing.CurTime)
+            args.Cancel();
+    }
+
+    private void OnMeleeShot(EntityUid uid, MeleeWeaponComponent component, ref GunShotEvent args)
+    {
+        if (!TryComp<GunComponent>(uid, out var gun))
+            return;
+
+        if (gun.NextFire > component.NextAttack)
+        {
+            component.NextAttack = gun.NextFire;
+            DirtyField(uid, component, nameof(MeleeWeaponComponent.NextAttack));
+        }
+    }
+
+    private void OnMeleeExamineDamage(EntityUid uid, MeleeWeaponComponent component, ref DamageExamineEvent args)
+    {
+        if (component.Hidden)
+            return;
+
+        var damageSpec = GetDamage(uid, args.User, component);
+
+        if (damageSpec.Empty)
+            return;
+
+        _damageExamine.AddDamageExamine(args.Message, Damageable.ApplyUniversalAllModifiers(damageSpec), Loc.GetString("damage-melee"));
+
+        AddExtraDamageExamine(component, damageSpec, args.Message); // Trauma
+    }
+    private void OnMeleeSelected(EntityUid uid, MeleeWeaponComponent component, HandSelectedEvent args)
+    {
+        var attackRate = GetAttackRate(uid, args.User, component);
+        if (attackRate.Equals(0f))
+            return;
+
+        if (!component.ResetOnHandSelected)
+            return;
+
+        if (Paused(uid))
+            return;
+
+        // If someone swaps to this weapon then reset its cd.
+        var curTime = Timing.CurTime;
+        var minimum = curTime + TimeSpan.FromSeconds(1 / attackRate);
+
+        if (minimum < component.NextAttack)
+            return;
+
+        component.NextAttack = minimum;
+        ResetUndamagedSwingsCount((uid, component));
+        DirtyField(uid, component, nameof(MeleeWeaponComponent.NextAttack));
+    }
+
+    private void OnGetBonusMeleeDamage(EntityUid uid, BonusMeleeDamageComponent component, ref GetMeleeDamageEvent args)
+    {
+        if (component.BonusDamage != null)
+            args.Damage += component.BonusDamage;
+        if (component.DamageModifierSet != null)
+            args.Modifiers.Add(component.DamageModifierSet);
+    }
+
+    private void OnGetBonusHeavyDamageModifier(EntityUid uid, BonusMeleeDamageComponent component, ref GetHeavyDamageModifierEvent args)
+    {
+        args.DamageModifier += component.HeavyDamageFlatModifier;
+        args.Multipliers *= component.HeavyDamageMultiplier;
+    }
+
+    private void OnGetBonusMeleeAttackRate(EntityUid uid, BonusMeleeAttackRateComponent component, ref GetMeleeAttackRateEvent args)
+    {
+        args.Rate += component.FlatModifier;
+        args.Multipliers *= component.Multiplier;
+    }
+
+    private void OnStopAttack(StopAttackEvent msg, EntitySessionEventArgs args)
+    {
+        var user = args.SenderSession.AttachedEntity;
+
+        if (user == null)
+            return;
+
+        if (!TryGetWeapon(user.Value, out var weaponUid, out var weapon) ||
+            weaponUid != GetEntity(msg.Weapon))
+        {
+            return;
+        }
+
+        if (!weapon.Attacking)
+            return;
+
+        weapon.Attacking = false;
+        DirtyField(weaponUid, weapon, nameof(MeleeWeaponComponent.Attacking));
+    }
+
+    private void OnLightAttack(LightAttackEvent msg, EntitySessionEventArgs args)
+    {
+        if (args.SenderSession.AttachedEntity is not {} user
+            || TerminatingOrDeleted(user)) // Goob change
+            return;
+
+        if (!TryGetWeapon(user, out var weaponUid, out var weapon) ||
+            weaponUid != GetEntity(msg.Weapon))
+        {
+            return;
+        }
+
+        AttemptAttack(user, weaponUid, weapon, msg, args.SenderSession);
+    }
+
+    private void OnHeavyAttack(HeavyAttackEvent msg, EntitySessionEventArgs args)
+    {
+        // <Goob> - rewrote weapon finding logic
+        var weapon = GetEntity(msg.Weapon);
+        if (args.SenderSession.AttachedEntity is not {} user
+            || TerminatingOrDeleted(user)
+            || TerminatingOrDeleted(weapon)) // Goobstation Change
+            return;
+
+        if (!TryGetWeapon(user, out var weaponUid, out var weaponComp)
+            || weaponUid != weapon
+            || !weaponComp.CanWideSwing) // Goobstation Change
+            return;
+
+        AttemptAttack(user, weaponUid, weaponComp, msg, args.SenderSession);
+        // </Goob>
+    }
+
+    private void OnDisarmAttack(DisarmAttackEvent msg, EntitySessionEventArgs args)
+    {
+        if (args.SenderSession.AttachedEntity is not {} user
+            || TerminatingOrDeleted(user)) // Goob
+            return;
+
+        if (TryGetWeapon(user, out var weaponUid, out var weapon))
+            AttemptAttack(user, weaponUid, weapon, msg, args.SenderSession);
+    }
+
+    /// <summary>
+    /// Gets the total damage a weapon does, including modifiers like wielding and enablind/disabling
+    /// </summary>
+    public DamageSpecifier GetDamage(EntityUid uid, EntityUid user, MeleeWeaponComponent? component = null)
+    {
+        if (!Resolve(uid, ref component, false))
+            return new DamageSpecifier();
+
+        var ev = new GetMeleeDamageEvent(uid, new(component.Damage * Damageable.UniversalMeleeDamageModifier), new(), user, component.ResistanceBypass);
+        RaiseLocalEvent(uid, ref ev);
+        // <Trauma> - raise an event on the user too for strength augments, knowledge, etc
+        // only consider if the user is punching or holding a weapon
+        // non-held weapons are stuff like mechs which don't take physical effort to use, so don't apply strength etc
+        if (uid == user || _hands.IsHolding(user, uid))
+        {
+            var userEv = new GetUserMeleeDamageEvent(uid, ev.Damage, ev.Modifiers);
+            RaiseLocalEvent(user, ref userEv);
+            // this currently does nothing since they are classes, but it's futureproofing for struct DamageSpecifier.
+            ev.Damage = userEv.Damage;
+            ev.Modifiers = userEv.Modifiers;
+        }
+        // </Trauma>
+
+        return DamageSpecifier.ApplyModifierSets(ev.Damage, ev.Modifiers);
+    }
+
+    public float GetAttackRate(EntityUid uid, EntityUid user, MeleeWeaponComponent? component = null)
+    {
+        if (!Resolve(uid, ref component))
+            return 0;
+
+        var ev = new GetMeleeAttackRateEvent(uid, component.AttackRate, 1, user);
+        RaiseLocalEvent(uid, ref ev);
+        if (user != uid) // Goobstation
+            RaiseLocalEvent(user, ref ev);
+
+        return ev.Rate * ev.Multipliers;
+    }
+
+    public FixedPoint2 GetHeavyDamageModifier(EntityUid uid, EntityUid user, MeleeWeaponComponent? component = null)
+    {
+        if (!Resolve(uid, ref component))
+            return FixedPoint2.Zero;
+
+        var ev = new GetHeavyDamageModifierEvent(uid, component.ClickDamageModifier, 1, user);
+        RaiseLocalEvent(uid, ref ev);
+
+        return ev.DamageModifier * ev.Multipliers;
+    }
+
+    public bool GetResistanceBypass(EntityUid uid, EntityUid user, MeleeWeaponComponent? component = null)
+    {
+        if (!Resolve(uid, ref component))
+            return false;
+
+        var ev = new GetMeleeDamageEvent(uid, new(component.Damage * Damageable.UniversalMeleeDamageModifier), new(), user, component.ResistanceBypass);
+        RaiseLocalEvent(uid, ref ev);
+
+        return ev.ResistanceBypass;
+    }
+
+    public bool TryGetWeapon(EntityUid entity, out EntityUid weaponUid, [NotNullWhen(true)] out MeleeWeaponComponent? melee)
+    {
+        weaponUid = default;
+        melee = null;
+
+        var ev = new GetMeleeWeaponEvent();
+        RaiseLocalEvent(entity, ev);
+        if (ev.Handled)
+        {
+            if (TryComp(ev.Weapon, out melee))
+            {
+                weaponUid = ev.Weapon.Value;
+                return true;
+            }
+
+            return false;
+        }
+
+        // Use inhands entity if we got one.
+        if (_hands.TryGetActiveItem(entity, out var held))
+        {
+            // Make sure the entity is a weapon AND it doesn't need
+            // to be equipped to be used (E.g boxing gloves).
+            if (TryComp(held, out melee) &&
+                !melee.MustBeEquippedToUse)
+            {
+                // <Lavaland>
+                var relay = new GetRelayMeleeWeaponEvent();
+                RaiseLocalEvent(weaponUid, ref relay);
+                if (relay.Handled && TryComp<MeleeWeaponComponent>(relay.Found, out var relayMelee))
+                {
+                    weaponUid = relay.Found.Value;
+                    melee = relayMelee;
+                    return true;
+                }
+                // </Lavaland>
+
+                weaponUid = held.Value;
+                return true;
+            }
+
+            if (!HasComp<VirtualItemComponent>(held))
+                return false;
+        }
+
+        // Use hands clothing if applicable.
+        if (_inventory.TryGetSlotEntity(entity, "gloves", out var gloves) &&
+            TryComp<MeleeWeaponComponent>(gloves, out var glovesMelee))
+        {
+            weaponUid = gloves.Value;
+            melee = glovesMelee;
+            return true;
+        }
+
+        // Use our own melee
+        if (TryComp(entity, out melee))
+        {
+            weaponUid = entity;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void AttemptLightAttackMiss(EntityUid user, EntityUid weaponUid, MeleeWeaponComponent weapon, EntityCoordinates coordinates)
+    {
+        AttemptAttack(user, weaponUid, weapon, new LightAttackEvent(null, GetNetEntity(weaponUid), GetNetCoordinates(coordinates)), null);
+    }
+
+    public bool AttemptLightAttack(EntityUid user, EntityUid weaponUid, MeleeWeaponComponent weapon, EntityUid target,
+        bool canParry = true) // Trauma - added CanParry
+    {
+        if (!TryComp(target, out TransformComponent? targetXform))
+            return false;
+
+        return AttemptAttack(user, weaponUid, weapon, new LightAttackEvent(GetNetEntity(target), GetNetEntity(weaponUid), GetNetCoordinates(targetXform.Coordinates), canParry: canParry), null); // Trauma - added canParry
+    }
+
+    public bool AttemptDisarmAttack(EntityUid user, EntityUid weaponUid, MeleeWeaponComponent weapon, EntityUid target)
+    {
+        if (!TryComp(target, out TransformComponent? targetXform))
+            return false;
+
+        return AttemptAttack(user, weaponUid, weapon, new DisarmAttackEvent(GetNetEntity(target), GetNetCoordinates(targetXform.Coordinates)), null);
+    }
+
+    /// <summary>
+    /// Called when a windup is finished and an attack is tried.
+    /// </summary>
+    /// <returns>True if attack successful</returns>
+    public bool AttemptAttack(EntityUid user, EntityUid weaponUid, MeleeWeaponComponent weapon, AttackEvent attack, ICommonSession? session) // Trauma - made public
+    {
+        var curTime = Timing.CurTime;
+
+        if (weapon.NextAttack > curTime)
+            return false;
+
+        if (!CombatMode.IsInCombatMode(user))
+            return false;
+
+        EntityUid? target = null;
+        switch (attack)
+        {
+            case LightAttackEvent light:
+                if (light.Target != null && !TryGetEntity(light.Target, out target))
+                {
+                    // Target was lightly attacked & deleted.
+                    return false;
+                }
+
+                // <Trauma>
+                if (TryComp(target, out TargetInteractionRelayComponent? relay) && relay.RelayMelee &&
+                    Exists(relay.RelayEntity) && relay.RelayEntity.Value != target)
+                {
+                    return AttemptAttack(user,
+                        weaponUid,
+                        weapon,
+                        new LightAttackEvent(GetNetEntity(relay.RelayEntity.Value), light.Weapon, light.Coordinates),
+                        session);
+                }
+                // </Trauma>
+
+                if (!Blocker.CanAttack(user, target, (weaponUid, weapon)))
+                    return false;
+
+                // Can't self-attack if you're the weapon
+                if (weaponUid == target)
+                    return false;
+
+                // <Trauma>
+                if (target is not { } t)
+                {
+                    if (!weapon.CanMiss)
+                        return false;
+                }
+                else
+                {
+                    if (!weapon.CanMiss && (TerminatingOrDeleted(t) || !HasComp<DamageableComponent>(t)))
+                        return false;
+
+                    var whitelist = light.IsLeftClick ? weapon.ClickAttackWhitelist : weapon.AltClickAttackWhitelist;
+                    if (_whitelist.IsWhitelistFail(whitelist, t))
+                        return false;
+                }
+                // </Trauma>
+
+                // Goobstation start
+                var specialEv = new LightAttackSpecialInteractionEvent(target, user, weapon.Range);
+                RaiseLocalEvent(weaponUid, ref specialEv);
+                if (specialEv.Cancel)
+                    return false;
+                // Goobstation end
+
+                break;
+            case DisarmAttackEvent disarm:
+                if (disarm.Target != null && !TryGetEntity(disarm.Target, out target))
+                {
+                    // Target was lightly attacked & deleted.
+                    return false;
+                }
+
+                // <Trauma>
+                if (TryComp(target, out relay) && relay.RelayMelee && Exists(relay.RelayEntity))
+                {
+                    return AttemptAttack(user,
+                        weaponUid,
+                        weapon,
+                        new DisarmAttackEvent(GetNetEntity(relay.RelayEntity.Value), disarm.Coordinates),
+                        session);
+                }
+                // </Trauma>
+
+                if (!Blocker.CanAttack(user, target, (weaponUid, weapon), true))
+                    return false;
+                break;
+            default:
+                if (!Blocker.CanAttack(user, weapon: (weaponUid, weapon)))
+                    return false;
+                break;
+        }
+
+        // Windup time checked elsewhere.
+        var fireRate = TimeSpan.FromSeconds(1f / GetAttackRate(weaponUid, user, weapon));
+        var swings = 0;
+
+        // TODO: If we get autoattacks then probably need a shotcounter like guns so we can do timing properly.
+        if (weapon.NextAttack < curTime)
+            weapon.NextAttack = curTime;
+
+        while (weapon.NextAttack <= curTime)
+        {
+            weapon.NextAttack += fireRate;
+            swings++;
+        }
+
+        DirtyField(weaponUid, weapon, nameof(MeleeWeaponComponent.NextAttack));
+
+        // Do this AFTER attack so it doesn't spam every tick
+        var ev = new AttemptMeleeEvent(user, weaponUid, weapon, attack); // Lavaland Change: WHY ARENT YOU FUCKS PASSING THE USER RAHHHHHHHHHHH
+        RaiseLocalEvent(weaponUid, ref ev);
+        RaiseLocalEvent(user, ref ev); // Shitmed Change
+
+        if (ev.Cancelled)
+        {
+            if (ev.Message != null)
+            {
+                PopupSystem.PopupEntity(ev.Message, weaponUid, user);
+            }
+
+            return false;
+        }
+        // Shitmed Change End
+
+        // Attack confirmed
+        for (var i = 0; i < swings; i++)
+        {
+            EntProtoId animation; // Goobstation - Edit
+            var spriteRotation = weapon.AnimationRotation;
+
+            switch (attack)
+            {
+                case LightAttackEvent light:
+                    DoLightAttack(user, light, weaponUid, weapon, session);
+                    break;
+                case DisarmAttackEvent disarm:
+                    if (!DoDisarm(user, disarm, weaponUid, weapon, session))
+                        return false;
+
+                    animation = weapon.DisarmAnimation; // WWDP
+                    DoLungeAnimation(user, weaponUid, weapon.Angle, TransformSystem.ToMapCoordinates(GetCoordinates(attack.Coordinates)), weapon.Range, animation, spriteRotation, weapon.FlipAnimation); // Goobstation - Edit
+                    break;
+                case HeavyAttackEvent heavy:
+                    if (!DoHeavyAttack(user, heavy, weaponUid, weapon, session))
+                        return false;
+
+                    animation = weapon.WideAnimation;
+                    spriteRotation = weapon.WideAnimationRotation;
+                    DoLungeAnimation(user, weaponUid, weapon.Angle, TransformSystem.ToMapCoordinates(GetCoordinates(attack.Coordinates)), weapon.Range, animation, spriteRotation, weapon.FlipAnimation); // Goobstation - Edit
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+        }
+
+        var attackEv = new MeleeAttackEvent(weaponUid);
+        RaiseLocalEvent(user, ref attackEv);
+
+        weapon.Attacking = true;
+        DirtyField(weaponUid, weapon, nameof(MeleeWeaponComponent.Attacking));
+        return true;
+    }
+
+    public abstract bool InRange(EntityUid user, EntityUid target, float range, ICommonSession? session, out EntityUid source); // Trauma - made public, added source
+
+    // Goob edit
+    public virtual void DoLightAttack(EntityUid user, LightAttackEvent ev, EntityUid meleeUid, MeleeWeaponComponent component, ICommonSession? session) // Goobstation - Edit
+    {
+        // If I do not come back later to fix Light Attacks being Heavy Attacks you can throw me in the spider pit -Errant
+        var damage = GetDamage(meleeUid, user, component) * GetHeavyDamageModifier(meleeUid, user, component);
+        var weapon = GetEntity(ev.Weapon); // Goobstation - Edit
+        var target = GetEntity(ev.Target);
+        var resistanceBypass = GetResistanceBypass(meleeUid, user, component);
+
+        // <Trauma> - added GetLightAttackRangeEvent and changed InRange
+        var rangeEv = new GetLightAttackRangeEvent(target, user, component.Range);
+        RaiseLocalEvent(meleeUid, ref rangeEv);
+        var range = rangeEv.Cancel ? component.Range : rangeEv.Range;
+        var source = user;
+        // Not in LOS.
+        if (target != null && !InRange(user, target.Value, range, session, out source))
+            return;
+        // </Trauma>
+
+        // For consistency with wide attacks stuff needs damageable.
+        if (Deleted(target) ||
+            !HasComp<DamageableComponent>(target) ||
+            !TryComp(target, out TransformComponent? targetXform)) // Goob edit
+        {
+            // Leave IsHit set to true, because the only time it's set to false
+            // is when a melee weapon is examined. Misses are inferred from an
+            // empty HitEntities.
+            // TODO: This needs fixing
+            if (meleeUid == user)
+            {
+                AdminLogger.Add(LogType.MeleeHit,
+                    LogImpact.Low,
+                    $"{ToPrettyString(user):actor} melee attacked (light) using their hands and missed");
+            }
+            else
+            {
+                AdminLogger.Add(LogType.MeleeHit,
+                    LogImpact.Low,
+                    $"{ToPrettyString(user):actor} melee attacked (light) using {ToPrettyString(meleeUid):tool} and missed");
+            }
+            var missEvent = new MeleeHitEvent(new HashSet<EntityUid>(), user, meleeUid, damage, null,
+                GetCoordinates(ev.Coordinates)); // Trauma
+            RaiseLocalEvent(meleeUid, missEvent, true); // Trauma - broadcast
+            _meleeSound.PlaySwingSound(user, meleeUid, component);
+            DoLungeAnimation(user, weapon, component.Angle, TransformSystem.ToMapCoordinates(ev.Coordinates), range, component.MissAnimation, component.AnimationRotation, component.FlipAnimation, source); // Goobstation - Edit
+            return;
+        }
+
+        // <Trauma>
+        var beforeEvent = new BeforeHarmfulActionEvent(user, target.Value, HarmfulActionType.Harm, meleeUid, ev.CanParry);
+        RaiseLocalEvent(target.Value, ref beforeEvent);
+        if (beforeEvent.Cancelled)
+        {
+            DoLungeAnimation(user, weapon, component.Angle, TransformSystem.ToMapCoordinates(target.Value.ToCoordinates()), rangeEv.Range, component.Animation, component.AnimationRotation, component.FlipAnimation, source);
+            return;
+        }
+        // </Trauma>
+
+        // Sawmill.Debug($"Melee damage is {damage.Total} out of {component.Damage.Total}");
+
+        // Raise event before doing damage so we can cancel damage if the event is handled
+        var hitEvent = new MeleeHitEvent(new HashSet<EntityUid> { target.Value }, user, meleeUid, damage, null,
+            GetCoordinates(ev.Coordinates)); // Trauma
+        RaiseLocalEvent(meleeUid, hitEvent, true); // Trauma - broadcast
+
+        if (hitEvent.Handled)
+            return;
+
+        var targets = new HashSet<EntityUid>(1)
+        {
+            target.Value,
+        };
+
+        DoLungeAnimation(user, weapon, component.Angle, TransformSystem.ToMapCoordinates(target.Value.ToCoordinates()), rangeEv.Range, component.Animation, component.AnimationRotation, component.FlipAnimation, source); // Goobstation - Edit
+        // We skip weapon -> target interaction, as forensics system applies DNA on hit
+        Interaction.DoContactInteraction(user, weapon);
+
+        // If the user is using a long-range weapon, this probably shouldn't be happening? But I'll interpret melee as a
+        // somewhat messy scuffle. See also, heavy attacks.
+        Interaction.DoContactInteraction(user, target);
+
+        // For stuff that cares about it being attacked.
+        var attackedEvent = new AttackedEvent(meleeUid, user, targetXform.Coordinates);
+        RaiseLocalEvent(target.Value, attackedEvent);
+        var modifiedDamage = DamageSpecifier.ApplyModifierSets(damage + hitEvent.BonusDamage + attackedEvent.BonusDamage, hitEvent.ModifiersList);
+        // <Goob>
+        modifiedDamage = DamageSpecifier.ApplyModifierSets(modifiedDamage, attackedEvent.ModifiersList);
+        modifiedDamage.Flags |= DamageSpecifier.DamageFlags.PreciseHit;
+        var comboEv = new ComboAttackPerformedEvent(user, target.Value, meleeUid, ComboAttackType.Harm);
+        RaiseLocalEvent(user, ref comboEv);
+        // </Goob>
+
+        if (Damageable.TryChangeDamage(target.Value, modifiedDamage, out var damageResult, origin:user, ignoreResistances:resistanceBypass,
+            partMultiplier: component.ClickPartDamageMultiplier)) // Shitmed
+        {
+            // If the target has stamina and is taking blunt damage, they should also take stamina damage based on their blunt to stamina factor
+            if (damageResult.DamageDict.TryGetValue("Blunt", out var bluntDamage))
+            {
+                _stamina.TakeStaminaDamage(target.Value, (bluntDamage * component.BluntStaminaDamageFactor).Float(), visual: false, source: user, with: meleeUid == user ? null : meleeUid);
+            }
+
+            if (meleeUid == user)
+            {
+                AdminLogger.Add(LogType.MeleeHit,
+                    LogImpact.Medium,
+                    $"{ToPrettyString(user):actor} melee attacked (light) {ToPrettyString(target.Value):subject} using their hands and dealt {damageResult.GetTotal():damage} damage");
+            }
+            else
+            {
+                AdminLogger.Add(LogType.MeleeHit,
+                    LogImpact.Medium,
+                    $"{ToPrettyString(user):actor} melee attacked (light) {ToPrettyString(target.Value):subject} using {ToPrettyString(meleeUid):tool} and dealt {damageResult.GetTotal():damage} damage");
+            }
+
+        }
+
+        _meleeSound.PlayHitSound(target.Value, user, GetHighestDamageSound(modifiedDamage, ProtoMan), hitEvent.HitSoundOverride, component);
+
+        if (!TerminatingOrDeleted(target.Value))
+        {
+            if (damageResult.GetTotal() > FixedPoint2.Zero)
+            {
+                DoDamageEffect(targets, user, targetXform);
+                ResetUndamagedSwingsCount((meleeUid, component));
+            }
+            else
+            {
+                UndamagedAttack((meleeUid, component), target.Value, user);
+            }
+        }
+    }
+
+    protected abstract void DoDamageEffect(HashSet<EntityUid> targets, EntityUid? user,  TransformComponent targetXform);
+
+    private bool DoHeavyAttack(EntityUid user, HeavyAttackEvent ev, EntityUid meleeUid, MeleeWeaponComponent component, ICommonSession? session)
+    {
+        // TODO: This is copy-paste as fuck with DoPreciseAttack
+        if (!TryComp(user, out TransformComponent? userXform))
+            return false;
+
+        var targetMap = TransformSystem.ToMapCoordinates(GetCoordinates(ev.Coordinates));
+
+        if (targetMap.MapId != userXform.MapID)
+            return false;
+
+        var userPos = TransformSystem.GetWorldPosition(userXform);
+        var direction = targetMap.Position - userPos;
+        var distance = Math.Min(component.Range, direction.Length());
+
+        var damage = GetDamage(meleeUid, user, component);
+        var resistanceBypass = GetResistanceBypass(meleeUid, user, component);
+        var entities = GetEntitySet(ev.Entities);
+
+        if (entities.Count == 0)
+        {
+            if (meleeUid == user)
+            {
+                AdminLogger.Add(LogType.MeleeHit,
+                    LogImpact.Low,
+                    $"{ToPrettyString(user):actor} melee attacked (heavy) using their hands and missed");
+            }
+            else
+            {
+                AdminLogger.Add(LogType.MeleeHit,
+                    LogImpact.Low,
+                    $"{ToPrettyString(user):actor} melee attacked (heavy) using {ToPrettyString(meleeUid):tool} and missed");
+            }
+            var missEvent = new MeleeHitEvent(new HashSet<EntityUid>(), user, meleeUid, damage, direction,
+                GetCoordinates(ev.Coordinates)); // Trauma
+            RaiseLocalEvent(meleeUid, missEvent, true); // Trauma - broadcast
+
+            // immediate audio feedback
+            _meleeSound.PlaySwingSound(user, meleeUid, component);
+
+            return true;
+        }
+
+        // Naughty input
+        if (entities.Count > MaxTargets)
+        {
+            entities = entities.Take(MaxTargets).ToHashSet();
+        }
+
+        // Validate client
+        entities.RemoveWhere(entity => TerminatingOrDeleted(entity) ||
+                                       !ArcRaySuccessful(entity,
+                                        userPos,
+                                        direction.ToWorldAngle(),
+                                        component.Angle,
+                                        distance,
+                                        userXform.MapID,
+                                        user,
+                                        session));
+
+        var targets = new HashSet<EntityUid>();
+        foreach (var entity in entities)
+        {
+            if (entity == user ||
+                !_damageQuery.HasComponent(entity))
+                continue;
+
+            // <Trauma>
+            var beforeEvent = new BeforeHarmfulActionEvent(user, entity, HarmfulActionType.Harm, meleeUid);
+            RaiseLocalEvent(entity, ref beforeEvent);
+            if (beforeEvent.Cancelled)
+                continue;
+            // </Trauma>
+
+            targets.Add(entity);
+        }
+
+        // Sawmill.Debug($"Melee damage is {damage.Total} out of {component.Damage.Total}");
+
+        // Raise event before doing damage so we can cancel damage if the event is handled
+        var hitEvent = new MeleeHitEvent(targets, user, meleeUid, damage, direction, GetCoordinates(ev.Coordinates)); // Goob edit
+        RaiseLocalEvent(meleeUid, hitEvent, true); // Goob station - broadcast
+
+        if (hitEvent.Handled)
+            return true;
+
+        var weapon = GetEntity(ev.Weapon);
+
+        Interaction.DoContactInteraction(user, weapon);
+
+        // For stuff that cares about it being attacked.
+        foreach (var target in targets)
+        {
+            // We skip weapon -> target interaction, as forensics system applies DNA on hit
+
+            // If the user is using a long-range weapon, this probably shouldn't be happening? But I'll interpret melee as a
+            // somewhat messy scuffle. See also, light attacks.
+            Interaction.DoContactInteraction(user, target);
+        }
+
+        var appliedDamage = new DamageSpecifier();
+        var filteredTargets = new HashSet<EntityUid>();
+
+        foreach (var entity in targets)
+        {
+            // We raise an attack attempt here as well,
+            // primarily because this was an untargeted wideswing: if a subscriber to that event cared about
+            // the potential target (such as for pacifism), they need to be made aware of the target here.
+            // In that case, just continue.
+            if (!Blocker.CanAttack(user, entity, (weapon, component)))
+            {
+                filteredTargets.Add(entity);
+                continue;
+            }
+
+            var attackedEvent = new AttackedEvent(meleeUid, user, GetCoordinates(ev.Coordinates));
+            RaiseLocalEvent(entity, attackedEvent);
+            var modifiedDamage = DamageSpecifier.ApplyModifierSets(damage + hitEvent.BonusDamage + attackedEvent.BonusDamage, hitEvent.ModifiersList);
+            // <Goob>
+            modifiedDamage = DamageSpecifier.ApplyModifierSets(modifiedDamage, attackedEvent.ModifiersList);
+            foreach (var type in modifiedDamage.DamageDict.Keys)
+            {
+                if (!modifiedDamage.WoundSeverityMultipliers.TryAdd(type, component.HeavyAttackWoundMultiplier))
+                    modifiedDamage.WoundSeverityMultipliers[type] *= component.HeavyAttackWoundMultiplier;
+            }
+            var comboEv = new ComboAttackPerformedEvent(user, entity, meleeUid, ComboAttackType.HarmLight);
+            RaiseLocalEvent(user, ref comboEv);
+            // </Goob>
+
+            var damageResult = Damageable.ChangeDamage(entity, modifiedDamage, origin: user, ignoreResistances: resistanceBypass,
+                partMultiplier: component.HeavyPartDamageMultiplier); // Shitmed
+
+            if (damageResult.GetTotal() > FixedPoint2.Zero)
+            {
+                // If the target has stamina and is taking blunt damage, they should also take stamina damage based on their blunt to stamina factor
+                if (damageResult.DamageDict.TryGetValue("Blunt", out var bluntDamage))
+                {
+                    _stamina.TakeStaminaDamage(entity, (bluntDamage * component.BluntStaminaDamageFactor).Float(), visual: false, source: user, with: meleeUid == user ? null : meleeUid);
+                }
+
+                appliedDamage += damageResult;
+
+                if (meleeUid == user)
+                {
+                    AdminLogger.Add(LogType.MeleeHit,
+                        LogImpact.Medium,
+                        $"{ToPrettyString(user):actor} melee attacked (heavy) {ToPrettyString(entity):subject} using their hands and dealt {damageResult.GetTotal():damage} damage");
+                }
+                else
+                {
+                    AdminLogger.Add(LogType.MeleeHit,
+                        LogImpact.Medium,
+                        $"{ToPrettyString(user):actor} melee attacked (heavy) {ToPrettyString(entity):subject} using {ToPrettyString(meleeUid):tool} and dealt {damageResult.GetTotal():damage} damage");
+                }
+            }
+
+            if (TerminatingOrDeleted(entity))
+                filteredTargets.Add(entity);
+        }
+
+        targets.ExceptWith(filteredTargets);
+
+        if (entities.Count != 0)
+        {
+            var target = entities.First();
+            _meleeSound.PlayHitSound(target, user, GetHighestDamageSound(appliedDamage, ProtoMan), hitEvent.HitSoundOverride, component);
+        }
+
+        if (targets.Count > 0)
+        {
+            if (appliedDamage.GetTotal() > FixedPoint2.Zero)
+            {
+                DoDamageEffect(targets, user, Transform(targets.First()));
+                ResetUndamagedSwingsCount((meleeUid, component));
+            }
+            else
+            {
+                UndamagedAttack((meleeUid, component), targets.First(), user);
+            }
+        }
+
+        // goob edit - stunmeta
+        if (TryComp<StaminaComponent>(user, out var stamina) && entities.Count != 0)
+        {
+            // <Trauma>
+            var staminaDamage = component.HeavyStaminaCost * entities.Count;
+            AdjustStaminaDamage(user, ref staminaDamage);
+            // </Trauma>
+            // make it not immediate to prevent annoying stamcrits
+            _stamina.TakeStaminaDamage(user, staminaDamage, stamina, visual: false, immediate: false);
+        }
+
+        return true;
+    }
+
+    public HashSet<EntityUid> ArcRayCast(Vector2 position, Angle angle, Angle arcWidth, float range, MapId mapId, EntityUid ignore) // Goob edit
+    {
+        // <Trauma> - if the user is in a mech, ignore that mech for raycasts. the user can't collide inside the mech anyway
+        if (_relayQuery.CompOrNull(ignore)?.RelayEntity is {} relayed)
+            ignore = relayed;
+        // </Trauma>
+        // TODO: This is pretty sucky.
+        var widthRad = arcWidth;
+        var increments = 1 + 35 * (int) Math.Ceiling(widthRad / (2 * Math.PI));
+        var increment = widthRad / increments;
+        var baseAngle = angle - widthRad / 2;
+
+        var resSet = new HashSet<EntityUid>();
+
+        for (var i = 0; i < increments; i++)
+        {
+            var castAngle = new Angle(baseAngle + increment * i);
+            var res = _physics.IntersectRay(mapId,
+                new CollisionRay(position,
+                    castAngle.ToWorldVec(),
+                    AttackMask),
+                range,
+                ignore,
+                false)
+                .Where(x => !_tag.HasTag(x.HitEntity, WideSwingIgnore)) // Goobstation
+                .ToList();
+
+            if (res.Count != 0)
+            {
+                // If there's exact distance overlap, we simply have to deal with all overlapping objects to avoid selecting randomly.
+                var resChecked = res.Where(x => x.Distance.Equals(res[0].Distance));
+                foreach (var r in resChecked)
+                {
+                    if (Interaction.InRangeUnobstructed(ignore, r.HitEntity, range + 0.1f, overlapCheck: false))
+                        resSet.Add(r.HitEntity);
+                }
+            }
+        }
+
+        return resSet;
+    }
+
+    protected virtual bool ArcRaySuccessful(EntityUid targetUid,
+        Vector2 position,
+        Angle angle,
+        Angle arcWidth,
+        float range,
+        MapId mapId,
+        EntityUid ignore,
+        ICommonSession? session)
+    {
+        // Only matters for server.
+        return true;
+    }
+
+
+    public static string? GetHighestDamageSound(DamageSpecifier modifiedDamage, IPrototypeManager protoManager)
+    {
+        var groups = modifiedDamage.GetDamagePerGroup(protoManager);
+
+        // Use group if it's exclusive, otherwise fall back to type.
+        if (groups.Count == 1)
+        {
+            return groups.Keys.First();
+        }
+
+        var highestDamage = FixedPoint2.Zero;
+        string? highestDamageType = null;
+
+        foreach (var (type, damage) in modifiedDamage.DamageDict)
+        {
+            if (damage <= highestDamage)
+                continue;
+
+            highestDamageType = type;
+        }
+
+        return highestDamageType;
+    }
+
+    private float CalculateDisarmChance(EntityUid disarmer, EntityUid disarmed, EntityUid? inTargetHand, CombatModeComponent disarmerComp)
+    {
+        if (HasComp<DisarmProneComponent>(disarmer))
+            return 1.0f;
+
+        if (HasComp<DisarmProneComponent>(disarmed))
+            return 0.0f;
+
+        var chance = 1 - disarmerComp.BaseDisarmFailChance;
+
+        if (inTargetHand != null && TryComp<DisarmMalusComponent>(inTargetHand, out var malus))
+            chance *= 1 - malus.Malus; // Goob - Shove Rework edit
+
+        if (TryComp<ShovingComponent>(disarmer, out var shoving))
+            chance *= 1 + shoving.DisarmBonus; // Goob - Shove Rework edit
+
+        return chance;
+
+    }
+
+    private bool DoDisarm(EntityUid user, DisarmAttackEvent ev, EntityUid meleeUid, MeleeWeaponComponent component, ICommonSession? session)
+    {
+        if (!ev.Target.HasValue)
+            return true; // Trauma - still do the animation if you missed a shove
+
+        var target = GetEntity(ev.Target.Value);
+
+        if (Deleted(target))
+            return true; // Trauma - still do the animation
+
+        if (user == target) // Goobstation
+        {
+            _meleeSound.PlaySwingSound(user, meleeUid, component);
+            var selfComboEv = new ComboAttackPerformedEvent(user, user, meleeUid, ComboAttackType.Disarm);
+            RaiseLocalEvent(user, ref selfComboEv);
+            return false;
+        }
+
+        if (!TryComp<CombatModeComponent>(user, out var combatMode))
+            return false;
+
+        if (!InRange(user, target, component.Range, session, out _)) // Trauma - out _
+            return false;
+
+        // <Trauma>
+        var beforeEvent = new BeforeHarmfulActionEvent(user, target, HarmfulActionType.Disarm);
+        RaiseLocalEvent(target, ref beforeEvent);
+        if (beforeEvent.Cancelled)
+            return true; // play animation anyway
+
+        var comboEv = new ComboAttackPerformedEvent(user, target, meleeUid, ComboAttackType.Disarm);
+        RaiseLocalEvent(user, ref comboEv);
+        // </Trauma>
+
+        PhysicalShove(user, target);
+        Interaction.DoContactInteraction(user, target);
+
+        if (MobState.IsIncapacitated(target))
+            return true;
+
+        if (!TryComp<PhysicsComponent>(target, out var targetPhysicsComponent))
+            return false;
+
+        if (!TryComp<HandsComponent>(target, out var targetHandsComponent))
+        {
+            if (!TryComp<StatusEffectsComponent>(target, out var status) ||
+                !status.AllowedEffects.Contains("KnockedDown"))
+            {
+                return true;
+            }
+        }
+
+        if (!InRange(user, target, component.Range, session, out _)) // Trauma - out _
+        {
+            return false;
+        }
+
+        EntityUid? inTargetHand = null;
+
+        if (_hands.TryGetActiveItem(target, out var activeHeldEntity))
+        {
+            inTargetHand = activeHeldEntity.Value;
+        }
+
+        var attemptEvent = new DisarmAttemptEvent(target, user, inTargetHand);
+        if (inTargetHand != null)
+        {
+            RaiseLocalEvent(inTargetHand.Value, ref attemptEvent);
+        }
+
+        RaiseLocalEvent(target, ref attemptEvent);
+
+        if (attemptEvent.Cancelled)
+            return true;
+
+        var chance = CalculateDisarmChance(user, target, inTargetHand, combatMode);
+
+        _audio.PlayPredicted(combatMode.DisarmSuccessSound,
+            user, user,
+            AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
+        AdminLogger.Add(LogType.DisarmedAction,
+            $"{ToPrettyString(user):user} used disarm on {ToPrettyString(target):target}");
+
+        var staminaDamage = CalculateShoveStaminaDamage(user, target);
+
+        var eventArgs = new DisarmedEvent(target,user,chance)
+        {
+            StaminaDamage = staminaDamage,
+        };
+        RaiseLocalEvent(target, ref eventArgs);
+
+        if (!eventArgs.Handled)
+        {
+            ShoveOrDisarmPopup(false);
+            return true;
+        }
+
+        ShoveOrDisarmPopup(true);
+
+        return true;
+
+        // Goob - Shove Rework edit (moved to function)
+        void ShoveOrDisarmPopup(bool disarm)
+        {
+            var filterOther = Filter.PvsExcept(user, entityManager: EntityManager);
+            var msgPrefix = "disarm-action-";
+
+            if (!disarm)
+                msgPrefix = "disarm-action-shove-";
+
+            var msgOther = Loc.GetString(
+                msgPrefix + "popup-message-other-clients",
+                ("performerName", Identity.Entity(user, EntityManager)),
+                ("targetName", Identity.Entity(target, EntityManager)));
+
+            var msgUser = Loc.GetString(msgPrefix + "popup-message-cursor", ("targetName", Identity.Entity(target, EntityManager)));
+
+            PopupSystem.PopupPredicted(msgOther, target, null, filterOther, false);
+            PopupSystem.PopupClient(msgUser, user);
+        }
+    }
+
+    private void DoLungeAnimation(EntityUid user, EntityUid weapon, Angle angle, MapCoordinates coordinates, float length, string? animation, Angle spriteRotation, bool flipAnimation, EntityUid? source = null) // Trauma - added source
+    {
+        // TODO: Assert that offset eyes are still okay.
+        if (!TryComp(source ?? user, out TransformComponent? userXform)) // Trauma - source
+            return;
+
+        var invMatrix = TransformSystem.GetInvWorldMatrix(userXform);
+        var localPos = Vector2.Transform(coordinates.Position, invMatrix);
+
+        if (localPos.LengthSquared() <= 0f)
+            return;
+
+        localPos = userXform.LocalRotation.RotateVec(localPos);
+
+        // We'll play the effect just short visually so it doesn't look like we should be hitting but actually aren't.
+        const float bufferLength = 0.2f;
+        var visualLength = length - bufferLength;
+
+        if (localPos.Length() > visualLength)
+            localPos = localPos.Normalized() * visualLength;
+
+        DoLunge(user, weapon, angle, localPos, animation, spriteRotation, flipAnimation, source: source);
+    }
+
+    public abstract void DoLunge(EntityUid user, EntityUid weapon, Angle angle, Vector2 localPos, string? animation, Angle spriteRotation, bool flipAnimation, bool predicted = true, EntityUid? source = null); // Trauma - added source
+
+    /// <summary>
+    /// Used to update the MeleeWeapon component on item toggle.
+    /// </summary>
+    private void OnItemToggle(EntityUid uid, ItemToggleMeleeWeaponComponent itemToggleMelee, ItemToggledEvent args)
+    {
+        if (!TryComp(uid, out MeleeWeaponComponent? meleeWeapon))
+            return;
+
+        if (args.Activated)
+        {
+            if (itemToggleMelee.ActivatedDamage != null)
+            {
+                //Setting deactivated damage to the weapon's regular value before changing it.
+                itemToggleMelee.DeactivatedDamage ??= meleeWeapon.Damage;
+                meleeWeapon.Damage = itemToggleMelee.ActivatedDamage;
+                DirtyField(uid, meleeWeapon, nameof(MeleeWeaponComponent.Damage));
+            }
+
+            if (meleeWeapon.HitSound?.Equals(itemToggleMelee.ActivatedSoundOnHit) != true)
+            {
+                meleeWeapon.HitSound = itemToggleMelee.ActivatedSoundOnHit;
+                DirtyField(uid, meleeWeapon, nameof(MeleeWeaponComponent.HitSound));
+            }
+
+            if (itemToggleMelee.ActivatedSoundOnHitNoDamage != null)
+            {
+                //Setting the deactivated sound on no damage hit to the weapon's regular value before changing it.
+                itemToggleMelee.DeactivatedSoundOnHitNoDamage ??= meleeWeapon.NoDamageSound;
+                meleeWeapon.NoDamageSound = itemToggleMelee.ActivatedSoundOnHitNoDamage;
+                DirtyField(uid, meleeWeapon, nameof(MeleeWeaponComponent.NoDamageSound));
+            }
+
+            if (itemToggleMelee.ActivatedSoundOnSwing != null)
+            {
+                //Setting the deactivated sound on no damage hit to the weapon's regular value before changing it.
+                itemToggleMelee.DeactivatedSoundOnSwing ??= meleeWeapon.SwingSound;
+                meleeWeapon.SwingSound = itemToggleMelee.ActivatedSoundOnSwing;
+                DirtyField(uid, meleeWeapon, nameof(MeleeWeaponComponent.SwingSound));
+            }
+
+            if (itemToggleMelee.DeactivatedSecret)
+            {
+                meleeWeapon.Hidden = false;
+            }
+        }
+        else
+        {
+            if (itemToggleMelee.DeactivatedDamage != null)
+            {
+                meleeWeapon.Damage = itemToggleMelee.DeactivatedDamage;
+                DirtyField(uid, meleeWeapon, nameof(MeleeWeaponComponent.Damage));
+            }
+
+            meleeWeapon.HitSound = itemToggleMelee.DeactivatedSoundOnHit;
+            DirtyField(uid, meleeWeapon, nameof(MeleeWeaponComponent.HitSound));
+
+            if (itemToggleMelee.DeactivatedSoundOnHitNoDamage != null)
+            {
+                meleeWeapon.NoDamageSound = itemToggleMelee.DeactivatedSoundOnHitNoDamage;
+                DirtyField(uid, meleeWeapon, nameof(MeleeWeaponComponent.NoDamageSound));
+            }
+
+            if (itemToggleMelee.DeactivatedSoundOnSwing != null)
+            {
+                meleeWeapon.SwingSound = itemToggleMelee.DeactivatedSoundOnSwing;
+                DirtyField(uid, meleeWeapon, nameof(MeleeWeaponComponent.SwingSound));
+            }
+
+            if (itemToggleMelee.DeactivatedSecret)
+            {
+                meleeWeapon.Hidden = true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Updates <see cref="MeleeWeaponComponent.UndamagedSwings"/> and triggers a message if it meets <see cref="MeleeWeaponComponent.UndamagedAlertThreshold"/>.
+    /// </summary>
+    /// <param name="ent">The weapon entity tracking swings.</param>
+    /// <param name="target">The target entity that was hit without damage.</param>
+    /// <param name="user">The user swinging the weapon.</param>
+    protected virtual void UndamagedAttack(Entity<MeleeWeaponComponent> ent, EntityUid target, EntityUid user) { }
+
+    /// <summary>
+    /// Resets the <see cref="MeleeWeaponComponent.UndamagedSwings"/>; necessary to not trigger undamaged attacks messages too often.
+    /// </summary>
+    /// <param name="ent">The weapon entity tracking swings.</param>
+    protected virtual void ResetUndamagedSwingsCount(Entity<MeleeWeaponComponent> ent) { }
+}

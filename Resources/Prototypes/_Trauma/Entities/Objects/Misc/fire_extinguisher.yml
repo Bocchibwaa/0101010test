@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: FireExtinguisher
+  id: HolyFireExtinguisher
+  name: holy fire extinguisher
+  description: Based on fire extinguisher technology, the holy fire extinguisher is meant for chaplains to combat the hordes of demons.
+  components:
+  - type: Sprite
+    sprite: _Trauma/Objects/Misc/holy_fire_extinguisher.rsi
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Holywater
+        Quantity: 100

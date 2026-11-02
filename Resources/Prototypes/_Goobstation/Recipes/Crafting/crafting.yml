@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# random bits and bobs used to craft other items
+
+- type: construction
+  id: HexNutDouble
+  graph: HexNutDouble
+  category: construction-category-misc
+  targetNode: stack
+  objectType: Item
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    MetalworkingKnowledge: 1
+    FabricationKnowledge: 1
+  useQuality: false
+
+- type: construction
+  id: ScrewDouble
+  graph: ScrewDouble
+  category: construction-category-misc
+  targetNode: stack
+  objectType: Item
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    MetalworkingKnowledge: 1
+    FabricationKnowledge: 1
+  useQuality: false

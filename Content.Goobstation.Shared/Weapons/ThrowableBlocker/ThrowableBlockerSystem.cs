@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using System.Linq;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Inventory;
+using Content.Shared.Item.ItemToggle;
+using Content.Shared.Nutrition.EntitySystems;
+using Content.Shared.Popups;
+using Content.Shared.Projectiles;
+using Content.Shared.Throwing;
+using Content.Shared.Weapons.Reflect;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
+
+namespace Content.Goobstation.Shared.Weapons.ThrowableBlocker;
+
+public sealed partial class ThrowableBlockerSystem : EntitySystem
+{
+    [Dependency] private ItemToggleSystem _toggle = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private INetManager _net = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.SubscribeWithRelay<ReflectComponent, ThrowHitByEvent>(
+            OnThrowHit, baseEvent: false);
+    }
+
+    private void OnThrowHit(Entity<ReflectComponent> ent, ref ThrowHitByEvent args)
+    {
+        var thrown = args.Thrown;
+
+        if (!TryComp(thrown, out ThrowableBlockedComponent? blockedComp))
+            return;
+
+        var blocked = _hands
+            .EnumerateHeld(ent.Owner)
+            .FirstOrDefault(e => HasComp<ThrowableBlockerComponent>(e) && _toggle.IsActivated(e));
+
+        if (blocked == default)
+            return;
+
+        var blockerComp = Comp<ThrowableBlockerComponent>(blocked);
+
+        args.Handled = true;
+
+        if (_net.IsServer)
+        {
+            _popup.PopupEntity(Loc.GetString("throwable-blocker-blocked"), ent);
+            _audio.PlayPvs(blockerComp.BlockSound, ent);
+        }
+
+        switch (blockedComp.Behavior)
+        {
+            case BlockBehavior.KnockOff:
+                Knockoff(thrown);
+                break;
+            case BlockBehavior.Damage:
+                Knockoff(thrown);
+                _damageable.TryChangeDamage(thrown, blockedComp.Damage);
+                break;
+            case BlockBehavior.Destroy when _net.IsServer:
+                Del(thrown);
+                break;
+        }
+    }
+
+    private void Knockoff(EntityUid entity)
+    {
+        if (!TryComp(entity, out PhysicsComponent? physics) || physics.LinearVelocity.LengthSquared() <= 0f)
+            return;
+
+        _physics.SetLinearVelocity(entity, -physics.LinearVelocity / 3f, body: physics);
+    }
+}

@@ -1,0 +1,333 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: MarkerBase
+  id: SpawnPointGhostBlob
+  name: Blob spawner
+  suffix: DEBUG, Ghost Role Spawner
+  categories: [DoNotMap]
+  components:
+  - type: GhostRoleMobSpawner
+    prototype: CoreBlobTile
+  - type: GhostRole
+    name: ghost-role-information-blob-name
+    description: ghost-role-information-blob-description
+    rules: ghost-role-information-blob-rules
+    mindRoles:
+    - MindRoleGhostRoleSoloAntagonist
+    raffle:
+      settings: default
+  - type: Sprite
+    sprite: Markers/jobs.rsi
+    layers:
+    - state: green
+    - sprite: _Goobstation/Blob/Mobs/blob.rsi
+      state: blob_nuke_overlay
+
+- type: entity
+  parent: BaseBlob
+  id: CoreBlobTile
+  name: Core Blob
+  description: The most important organ of the blob. By destroying the core, the infection will cease.
+  components:
+  - type: TemperatureDamage
+    heatDamage:
+      types:
+        Heat: 5
+    coldDamage: {}
+    coldDamageThreshold: 0
+  - type: Flammable
+    fireSpread: true
+    damage:
+      types:
+        Heat: 1
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 200
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: BlobTile
+    tile: Core
+  - type: BlobCore
+    actionPrototypes:
+    - ActionSwapBlobChem
+    - ActionTeleportBlobToCore
+    - ActionCreateBlobFactory
+    - ActionCreateBlobResource
+    - ActionCreateBlobNode
+    - ActionCreateBlobbernaut
+    - ActionSplitBlobCore
+    - ActionSwapBlobCore
+    - ActionDowngradeBlob
+  - type: BlobNode
+  - type: BlobResource
+    pointsPerPulsed: 5
+  - type: Sprite
+    sprite: _Goobstation/Blob/Mobs/blob.rsi
+    drawdepth: BlobTiles
+    layers:
+      - map: [ "enum.DamageStateVisualLayers.Base" ]
+        state: blob_core
+      - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
+        state: blob_core_glow
+#        shader: unshaded
+      - state: blob_core_overlay
+  - type: WarpPoint
+    location: location-blob-core
+  - type: GhostRole
+    prob: 1
+    name: ghost-role-information-blob-name
+    description: ghost-role-information-blob-description
+    rules: ghost-role-information-blob-rules
+    mindRoles:
+    - MindRoleGhostRoleSoloAntagonist
+    reregister: false
+    raffle:
+      settings: default
+  - type: GhostTakeoverAvailable
+
+- type: entity
+  parent: BaseBlob
+  id: NormalBlobTile
+  name: Regular Tile Blob
+  description: An ordinary part of the blob required for the construction of more advanced tiles.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TemperatureDamage
+    heatDamage:
+      types:
+        Heat: 5
+    coldDamage: {}
+    coldDamageThreshold: 0
+  - type: Flammable
+    fireSpread: true
+    damage:
+      types:
+        Heat: 1
+  - type: BlobTile
+    tile: Normal
+  - type: Destructible
+    thresholds:
+      - trigger:
+          !type:DamageTrigger
+          damage: 25
+        behaviors:
+          - !type:DoActsBehavior
+            acts: [ "Destruction" ]
+  - type: Sprite
+    sprite: _Goobstation/Blob/Mobs/blob.rsi
+    drawdepth: BlobTiles
+    layers:
+      - map: [ "enum.DamageStateVisualLayers.Base" ]
+        state: blob
+#      Vanila vs new type, idk
+#  - type: SlowContacts
+#    walkSpeedModifier: 0.3
+#    sprintSpeedModifier: 0.3
+#    ignoreWhitelist:
+#      components:
+#      - BlobMob
+#  - type: DamageContacts
+#    damage:
+#      types:
+#        Poison: 1.5
+#        Piercing: 1.5
+#    ignoreWhitelist:
+#      components:
+#      - BlobMob
+#  - type: Fixtures
+#    fixtures:
+#      fix1:
+#        density: 7
+#        shape:
+#          !type:PhysShapeAabb
+#          bounds: "-0.5,-0.5,0.5,0.5"
+#        layer:
+#          - BlobTileLayer
+#        mask:
+#          - BlobTileMask
+
+- type: entity
+  parent: BaseBlob
+  id: FactoryBlobTile
+  name: Blob Factory
+  description: Spawns Blob Drops and Blobbernauts over time.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TemperatureDamage
+    heatDamage:
+      types:
+        Heat: 5
+    coldDamage: {}
+    coldDamageThreshold: 0
+  - type: Flammable
+    fireSpread: true
+    damage:
+      types:
+        Heat: 1
+  - type: BlobTile
+    tile: Factory
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 200
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: BlobFactory
+    accumulateToSpawn: 10
+  - type: Sprite
+    sprite: _Goobstation/Blob/Mobs/blob.rsi
+    drawdepth: BlobTiles
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base" ]
+      state: blob_special
+    - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
+      state: blob_glow_special
+      #shader: unshaded
+
+- type: entity
+  parent: BaseBlob
+  id: ResourceBlobTile
+  name: Resource Blob
+  description: Produces biomass for the greater blob organism.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TemperatureDamage
+    heatDamage:
+      types:
+        Heat: 5
+    coldDamage: {}
+    coldDamageThreshold: 0
+  - type: Flammable
+    fireSpread: true
+    damage:
+      types:
+        Heat: 1
+  - type: BlobTile
+    tile: Resource
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 90
+      behaviors:
+        - !type:DoActsBehavior
+          acts: [ "Destruction" ]
+  - type: BlobResource
+  - type: Sprite
+    sprite: _Goobstation/Blob/Mobs/blob.rsi
+    drawdepth: BlobTiles
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base" ]
+      state: blob_special
+    - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
+      state: blob_glow_special
+      #shader: unshaded
+    - state: blob_resource_overlay
+
+- type: entity
+  parent: BaseBlob
+  id: NodeBlobTile
+  name: Blob Node
+  description: A mini version of the core that allows you to place special blob tiles around itself.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TemperatureDamage
+    heatDamage:
+      types:
+        Heat: 5
+    coldDamage: {}
+    coldDamageThreshold: 0
+  - type: Flammable
+    fireSpread: true
+    damage:
+      types:
+        Heat: 1
+  - type: BlobTile
+    tile: Node
+  - type: Destructible
+    thresholds:
+    - trigger: !type:DamageTrigger
+        damage: 200
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: BlobNode
+  - type: Sprite
+    sprite: _Goobstation/Blob/Mobs/blob.rsi
+    drawdepth: BlobTiles
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base" ]
+      state: blob_node
+    - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
+      state: blob_node_glow
+      #shader: unshaded
+    - state: blob_node_overlay
+
+- type: entity
+  parent: BaseBlob
+  id: StrongBlobTile
+  name: Strong Blob Tile
+  description: A reinforced version of the regular tile. It does not allow air to pass through and protects against brute damage.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Airtight
+  - type: BlobTile
+    tile: Strong
+  - type: Destructible
+    thresholds:
+    - trigger: !type:DamageTrigger
+        damage: 150
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: Sprite
+    sprite: _Goobstation/Blob/Mobs/blob.rsi
+    drawdepth: BlobTiles
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base" ]
+      state: blob_shield
+    - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
+      state: blob_glow
+      #shader: unshaded
+
+- type: entity
+  parent: BaseBlob
+  id: ReflectiveBlobTile
+  name: Blob Reflective Tile
+  description: It reflects lasers, but does not protect against brute damage as well.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Airtight
+  - type: BlobTile
+    tile: Reflective
+  - type: Destructible
+    thresholds:
+    - trigger: !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: Damageable
+    damageModifierSet: BlobReflective
+  - type: Injurable
+    damageContainer: Blob
+  - type: Reflect
+    reflectProb: 1
+    spread: 20
+    reflects:
+    - Energy
+  - type: Sprite
+    sprite: _Goobstation/Blob/Mobs/blob.rsi
+    drawdepth: BlobTiles
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base" ]
+      state: blob_shield
+    - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
+      state: blob_glow
+      shader: unshaded

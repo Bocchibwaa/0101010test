@@ -1,0 +1,12 @@
+- type: shader
+  id: DogVision
+  kind: source
+  path: "/Textures/Nyanotrasen/Shaders/dogvision.swsl"
+
+- type: shader
+  id: Holographic # Goobstation
+  kind: source
+  path: "/Textures/Nyanotrasen/Shaders/holographic.swsl" # Goobstation
+  params:
+    textureHeight: 32
+    hue: 0.64

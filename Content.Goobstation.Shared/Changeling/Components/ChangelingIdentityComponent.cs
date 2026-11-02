@@ -1,0 +1,224 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Preferences;
+using Content.Shared.StatusIcon;
+using Content.Trauma.Common.Genetics.Mutations;
+using Robust.Shared.Audio;
+
+namespace Content.Goobstation.Shared.Changeling.Components;
+
+[RegisterComponent, NetworkedComponent]
+[AutoGenerateComponentState]
+public sealed partial class ChangelingIdentityComponent : Component
+{
+    #region Prototypes
+
+    [DataField("soundMeatPool")]
+    public List<SoundSpecifier?> SoundPool = new()
+    {
+        new SoundPathSpecifier("/Audio/Effects/gib1.ogg"),
+        new SoundPathSpecifier("/Audio/Effects/gib2.ogg"),
+        new SoundPathSpecifier("/Audio/Effects/gib3.ogg"),
+    };
+
+    [DataField("soundShriek")]
+    public SoundSpecifier ShriekSound = new SoundPathSpecifier("/Audio/_Goobstation/Changeling/Effects/changeling_shriek.ogg");
+
+    [DataField("shriekPower")]
+    public float ShriekPower = 2.5f;
+
+    [DataField("armorTransform")]
+    public SoundSpecifier ArmourSound = new SoundPathSpecifier("/Audio/_Goobstation/Changeling/Effects/armour_transform.ogg");
+    [DataField("armorStrip")]
+    public SoundSpecifier ArmourStripSound = new SoundPathSpecifier("/Audio/_Goobstation/Changeling/Effects/armour_strip.ogg");
+
+    public readonly List<EntProtoId> BaseChangelingActions = new()
+    {
+        "ActionEvolutionMenu",
+        "ActionAbsorbDNA",
+        "ActionStingExtractDNA",
+        "ActionChangelingTransformCycle",
+        "ActionChangelingTransform",
+        "ActionEnterStasis",
+        "ActionExitStasis"
+    };
+
+    /// <summary>
+    ///     The status icon corresponding to the Changlings.
+    /// </summary>
+
+    [DataField, ViewVariables(VVAccess.ReadOnly)]
+    public ProtoId<StatusIconPrototype> StatusIcon { get; set; } = "HivemindFaction";
+
+    #endregion
+
+    [DataField]
+    public bool IsInStasis = false;
+
+    [DataField]
+    public bool StrainedMusclesActive = false;
+
+    [DataField]
+    public bool IsInLesserForm = false;
+
+    [DataField]
+    public bool IsInLastResort = false;
+
+    [DataField]
+    public bool ChameleonActive = false;
+
+    public bool VoidAdaptActive = false;
+
+    // have to use NetEntity for these because generator is broken for collections?
+
+    [DataField, AutoNetworkedField]
+    public List<NetEntity>? ActiveArmor;
+
+    [DataField, AutoNetworkedField]
+    public Dictionary<string, NetEntity> Equipment = new();
+
+    /// <summary>
+    ///     The default stasis time (in s).
+    /// </summary>
+    public readonly int DefaultStasisTime = 15;
+
+    /// <summary>
+    ///     The typical longest time that stasis can last (in s).
+    /// </summary>
+    public readonly int MaxStasisTime = 45;
+
+    /// <summary>
+    ///     The time a changeling must stay in stasis upon taking catastrophic damage (in s).
+    /// </summary>
+    public readonly int CatastrophicStasisTime = 60;
+
+    /// <summary>
+    ///     Time in seconds the changeling must spend in stasis.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float StasisTime;
+
+    /// <summary>
+    ///     Current amount of chemicals changeling currently has.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Chemicals = 100.0f;
+
+    /// <summary>
+    ///     Maximum amount of chemicals changeling can have.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float MaxChemicals = 100.0f;
+
+    /// <summary>
+    ///     Total evolution points gained by the changeling.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float TotalEvolutionPoints;
+
+    /// <summary>
+    ///     Bonus chemicals regeneration. In case
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float BonusChemicalRegen = 0.0f;
+
+    /// <summary>
+    ///     Chemicals regeneration rate multiplier from certain abilities.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float ChemicalRegenMultiplier = 1.0f;
+
+    /// <summary>
+    ///     Cooldown between chem regen events.
+    /// </summary>
+    public TimeSpan UpdateTimer = TimeSpan.Zero;
+    public float UpdateCooldown = 1f;
+
+    /// <summary>
+    ///     All of the DNA that the changeling had extracted in their lifetime.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadOnly)]
+    public List<TransformData> AbsorbedHistory = new();
+
+    /// <summary>
+    ///     The DNA that the changeling has stored up.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadOnly)]
+    public List<TransformData> AbsorbedDNA = new();
+
+    /// <summary>
+    ///     Index of <see cref="AbsorbedDNA"/>. Used for switching forms.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadOnly)]
+    public int AbsorbedDNAIndex = 0;
+
+    /// <summary>
+    ///     Maximum amount of DNA a changeling can absorb.
+    /// </summary>
+    [DataField]
+    public int MaxAbsorbedDNA = 5;
+
+    /// <summary>
+    ///     The id of the fake mindshield implant
+    /// </summary>
+    [DataField]
+    public EntProtoId FakeMindShieldId = "FakeMindShieldImplant";
+
+    /// <summary>
+    ///     Total absorbed DNA. Counts towards objectives.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public int TotalAbsorbedEntities = 0;
+
+    /// <summary>
+    ///     Total absorbed changelings. Used as a 'bonus' for its respective objective.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public int TotalChangelingsAbsorbed = 0;
+
+    /// <summary>
+    ///     Total stolen DNA. Counts towards objectives.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public int TotalStolenDNA = 0;
+
+    [DataField, ViewVariables(VVAccess.ReadOnly)]
+    public TransformData? CurrentForm;
+
+    [ViewVariables(VVAccess.ReadOnly)]
+    public TransformData? SelectedForm;
+}
+
+[DataDefinition]
+public sealed partial class TransformData
+{
+    /// <summary>
+    ///     Entity's name.
+    /// </summary>
+    [DataField]
+    public string Name;
+
+    /// <summary>
+    ///     Entity's fingerprint, if it exists.
+    /// </summary>
+    [DataField]
+    public string? Fingerprint;
+
+    /// <summary>
+    ///     Entity's DNA.
+    /// </summary>
+    [DataField("dna")]
+    public string DNA;
+
+    /// <summary>
+    ///     Entity's humanoid appearance component.
+    /// </summary>
+    [DataField]
+    public HumanoidCharacterProfile Profile;
+
+    /// <summary>
+    /// Mutations to set for the changeling when transforming.
+    /// </summary>
+    [DataField]
+    public MutatableData Mutations;
+}

@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: damageModifierSet
+  id: Hierophant
+  coefficients:
+    Ballistic: 0.1 # No bullets
+    Heat: 0.5 # No lasers

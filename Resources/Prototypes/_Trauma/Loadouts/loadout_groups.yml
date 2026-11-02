@@ -1,0 +1,184 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# PDA
+
+- type: loadoutGroup
+  id: HoPPDA
+  name: loadout-group-hop-id
+  minLimit: 1
+  maxLimit: 1
+  loadouts:
+  - HoPPDA
+  - AltHoPPDA
+- type: loadoutGroup
+  id: CaptainPDA
+  name: loadout-group-captain-id
+  minLimit: 1
+  maxLimit: 1
+  loadouts:
+  - CaptainPDA
+  - AltCaptainPDA
+
+- type: loadoutGroup
+  id: NanotrasenRepresentativePDA
+  name: loadout-group-ntr-id
+  minLimit: 1
+  maxLimit: 1
+  loadouts:
+  - NanotrasenRepresentativePDA
+  - AltNanotrasenRepresentativePDA
+
+# Geneticist
+
+- type: loadoutGroup
+  id: GeneticistJumpsuit
+  name: loadout-group-geneticist-jumpsuit
+  loadouts:
+  - GeneticistJumpsuit
+  - GeneticistJumpskirt
+  - ScientistJumpsuit
+  - ScientistJumpskirt
+  - ResearchMJ
+
+- type: loadoutGroup
+  id: GeneticistBackpack
+  name: loadout-group-geneticist-backpack
+  loadouts:
+  - GeneticistBackpack
+  - GeneticistSatchel
+  - GeneticistDuffel
+  - GeneticistMessenger
+
+- type: loadoutGroup
+  id: GeneticistOuterClothing
+  name: loadout-group-geneticist-outerclothing
+  minLimit: 0
+  loadouts:
+  - GeneticistLabCoat
+  - GeneticistWinterCoat
+  - RegularLabCoat
+  - ScienceLabCoat
+  - ScienceWintercoat
+
+#Exclusive items
+- type: loadoutGroup
+  id: ExclusiveItems
+  name: loadout-group-exclusive
+  minLimit: 0
+  hideLocked: true # don't need to see other peoples items silly
+  loadouts:
+  - CybersunFlippo
+  - PatreonTia
+  - PatreonTenshi
+  - PatreonTurboTracker
+  - PatreonWeax
+  - PatreonTheLongQuiet
+  - PatreonOwenCarpenter
+  - PatreonGamingFungus420
+  - PatreonGribley
+  - PatreonTheGungeonologist
+  - Patreon_Bias
+  - PatreonBumblebirb
+  - PatreonEpsilonTheAnomaly
+  - PatreoniDoppel
+  - PatreonWraith_man
+  - PatreonToasterStrudels
+  - PatreonLtKRY
+  - PatreonDrOktober
+  - PatreonDaniels
+  - PatreonCatdere
+  - PatreonSuperMage
+  - PatreonDino
+  - PatreonElk77420
+
+# Bartender
+
+- type: loadoutGroup
+  id: BartenderWeapon
+  name: loadout-group-bartenderweapon
+  minLimit: 0
+  maxLimit: 1
+  loadouts:
+  - BartenderShotgunDoubleBarrelled
+  - BartenderShotgunDoubleBarrelledEngraved
+
+
+#D-Class
+#Jumpsuits
+- type: loadoutGroup
+  id: DClassJumpsuit
+  name: loadout-group-dclass-jumpsuit
+  loadouts:
+  - PrisonerJumpsuit
+  - PrisonerJumpskirt
+
+- type: loadoutGroup
+  id: DClassFace
+  name: loadout-group-dclass-mask
+  minLimit: 0
+  loadouts:
+  - DClassMask
+
+- type: loadoutGroup
+  id: DClassGloves
+  name: loadout-group-dclass-gloves
+  minLimit: 0
+  loadouts:
+  - DClassGloves
+
+- type: loadoutGroup
+  id: DClassBackpacks
+  name: loadout-group-backpack
+  loadouts:
+  - DClassBackpack
+  - DClassSatchel
+  - DClassDuffel
+  - DClassMessenger
+  - DClassElectropack
+
+- type: loadoutGroup
+  id: DClassNeck
+  name: loadout-group-dclass-neck
+  minLimit: 0
+  loadouts:
+  - DClassMantle
+  - OldNeckWrap
+
+- type: loadoutGroup
+  id: DClassOuterClothing
+  name: loadout-group-dclass-outerclothing
+  minLimit: 0
+  loadouts:
+  - OrangeWintercoat
+
+- type: loadoutGroup
+  id: DClassShoes
+  name: loadout-group-dclass-shoes
+  loadouts:
+  - OrangeShoes
+  - BlackShoes
+  - WinterBoots
+
+- type: loadoutGroup
+  id: DClassEnvirohelm
+  name: loadout-group-dclass-envirohelm
+  minLimit: 1
+  maxLimit: 1
+  loadouts:
+  - DClassEnvirohelm
+
+- type: loadoutGroup
+  id: DClassEnvirosuit
+  name: loadout-group-dclass-envirosuit
+  minLimit: 1
+  maxLimit: 1
+  loadouts:
+  - DClassEnvirosuit
+
+- type: loadoutGroup
+  id: DClassEnvirogloves
+  name: loadout-group-dclass-envirogloves
+  minLimit: 1
+  maxLimit: 1
+  loadouts:
+  - BlackEnvirogloves

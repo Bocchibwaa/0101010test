@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseItem
+  id: CrayonBlood
+  categories: [ HideSpawnMenu ]
+  name: bloody crayon
+  description: A bloody crayon. Looks scary. Oooo...
+  components:
+  - type: Sprite
+    sprite: Objects/Fun/crayons.rsi
+    state: red
+  - type: Item
+    sprite: Objects/Fun/crayons.rsi
+    size: Tiny
+    heldPrefix: bloody
+  - type: Crayon
+    color: '#a70000'
+    selectedState: like
+  - type: UserInterface
+    interfaces:
+      enum.CrayonUiKey.Key:
+        type: CrayonBoundUserInterface
+  - type: BloodCrayon
+    wpConsume: -5
+  - type: Tag
+    tags:
+    - Write
+    - Crayon
+    - CrayonRed
+    - Recyclable
+    - Trash
+  - type: SpaceGarbage
+  - type: Unremoveable # no dropping your magic crayon

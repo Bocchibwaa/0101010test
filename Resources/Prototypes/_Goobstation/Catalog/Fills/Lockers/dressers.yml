@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  id: DresserNanorepFilled
+  parent: Dresser
+  suffix: Filled, Nanorep
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:NestedSelector
+        tableId: DresserNanorepFilled
+
+- type: entityTable
+  id: DresserNanorepFilled
+  table: !type:AllSelector
+    children:
+    - id: ClothingUniformJumpskirtNanotrasenRepresentative
+    - id: ClothingUniformJumpsuitNanotrasenRepresentative
+    - id: ClothingHeadHatTophat
+    - id: ClothingNeckScarfStripedCentcom
+    - id: ClothingHandsGlovesColorWhite

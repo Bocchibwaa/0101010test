@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.NameModifier.Components;
+using Content.Shared.Nutrition.Components;
+using Content.Shared.Nutrition.EntitySystems;
+
+namespace Content.Goobstation.Shared.Nutrition.EntitySystems;
+
+public sealed partial class FoodSequenceSpriteSystem : SharedFoodSequenceSystem
+{
+    /* Trauma
+    Can't work anymore because Sprite is clientside...
+    private EntityQuery<NameModifierComponent> _modifierQuery;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        _modifierQuery = GetEntityQuery<NameModifierComponent>();
+
+        SubscribeLocalEvent<FoodSequenceElementComponent, ComponentStartup>(OnComponentStartup);
+    }
+
+    private void OnComponentStartup(Entity<FoodSequenceElementComponent> ent, ref ComponentStartup args)
+    {
+        if (ent.Comp.Entries.Count != 0)
+            return;
+
+        var layer = new FoodSequenceVisualLayer();
+
+        var meta = MetaData(ent);
+        var name = _modifierQuery.CompOrNull(ent)?.BaseName ?? meta.EntityName;
+        defaultEntry.Name = name.Replace(" ", string.Empty);
+        defaultEntry.Proto = meta.EntityPrototype?.ID;
+
+        ent.Comp.Entries.Add("default", defaultEntry);
+    }
+    */
+}

@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: emote # Mono
+  id: Bagawk
+  name: chat-emote-name-bagawk
+  category: Vocal
+  available: false
+  icon: _Goobstation/Interface/Emotes/caw.png
+  whitelist:
+    components:
+    - Vocal
+  blacklist:
+    components:
+    - BorgChassis
+  chatMessages: ["chat-emote-msg-bagawk"]
+  chatTriggers:
+  - bagawk
+  - bagawks
+  - bawk
+  - bawks
+
+- type: emote
+  id: Gulp
+  name: chat-emote-name-gulp
+  category: Vocal
+  icon: _Goobstation/Interface/Emotes/gulp.png
+  whitelist:
+    components:
+    - Vocal
+  blacklist:
+   components:
+   - BorgChassis
+  chatMessages: ["chat-emote-msg-gulp"]
+  chatTriggers:
+    - gulps
+    - gulp
+
+- type: emote
+  id: Surprised
+  name: chat-emote-name-surprised
+  category: Vocal
+  icon: _Goobstation/Interface/Emotes/surprised.png
+  whitelist:
+    components:
+    - Vocal
+  chatMessages: ["chat-emote-msg-surprised"]
+  chatTriggers:
+    - looks surprised
+    - is surprised
+    - exclamation marks
+    - exclamation mark

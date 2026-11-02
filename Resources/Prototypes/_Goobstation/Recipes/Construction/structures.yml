@@ -1,0 +1,83 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: construction
+  parent: BaseStructure
+  id: WallDirectional
+  graph: WallDirectional
+  targetNode: wallDirectional
+  canRotate: true
+  canBuildInImpassable: true
+  theory:
+    WallsKnowledge: 0
+  practical:
+    MetalworkingKnowledge: 1
+
+- type: construction
+  parent: BaseStructure
+  id: SolarPanel
+  graph: SolarPanel
+  targetNode: solarassembly
+  theory:
+    ElectronicsKnowledge: 0
+
+# Barricades
+
+- type: construction
+  parent: BaseStructure
+  id: BarricadeSteel
+  graph: BarricadeSteel
+  targetNode: base
+  canRotate: true
+  canBuildInImpassable: true
+  theory:
+    FabricationKnowledge: 0
+    WallsKnowledge: 0
+  practical:
+    WallsKnowledge: 1 # good cading is hard
+    MetalworkingKnowledge: 4
+
+- type: construction
+  parent: BarricadeSteel
+  id: BarricadeSteelFolding
+  targetNode: folding
+
+- type: construction
+  parent: BarricadeSteel
+  id: BarricadePlasteel
+  graph: BarricadePlasteel
+  theory:
+    FabricationKnowledge: 1
+    WallsKnowledge: 0
+  practical:
+    WallsKnowledge: 2
+    MetalworkingKnowledge: 4
+
+- type: construction
+  parent: BarricadePlasteel
+  id: BarricadePlasteelFolding
+  targetNode: folding
+
+# Airlocks
+
+- type: construction
+  parent: Airlock
+  id: AirlockSealed
+  targetNode: sealedAirlock
+  theory:
+    AirlocksKnowledge: 1
+  practical:
+    MechanicsKnowledge: 2
+
+- type: construction
+  parent: AirlockSealed
+  id: AirlockSealedGlass
+  targetNode: sealedGlassAirlock
+
+# Misc
+
+- type: construction
+  parent: SolidSecretDoor
+  id: ReinforcedSecretDoor
+  name: recipes-secret-door-reinforced-name
+  graph: ReinforcedSecretDoor
+  targetNode: ReinforcedSecretDoor

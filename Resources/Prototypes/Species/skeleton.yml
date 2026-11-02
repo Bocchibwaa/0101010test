@@ -1,0 +1,18 @@
+- type: species
+  id: Skeleton
+  name: species-name-skeleton
+  roundStart: false
+  prototype: MobSkeletonPerson
+  defaultSkinTone: "#fff9e2"
+  maleFirstNames: NamesSkeletonFirst
+  femaleFirstNames: NamesSkeletonFirst
+  dollPrototype: AppearanceSkeletonPerson
+  skinColoration: TintedHues
+  knowledge: Plasmaman # Trauma
+  defaultSoundsBySex:
+  - Skeleton
+  - Skeleton
+  - Skeleton
+  voices:
+  - Skeleton
+  - Skeleton

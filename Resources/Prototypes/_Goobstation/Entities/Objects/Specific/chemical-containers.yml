@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: Jug
+  suffix: holy water
+  id: JugHolyWater
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Label
+    localizedLabel: reagent-name-holywater
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Holywater
+        Quantity: 200
+
+- type: entity
+  parent: Jug
+  suffix: salicylic acid
+  id: JugSalicylicAcid
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Label
+    localizedLabel: reagent-name-salicylic-acid
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: SalicylicAcid
+        Quantity: 200
+
+- type: entity
+  parent: Jug
+  suffix: oxandrolone
+  id: JugOxandrolone
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Label
+    localizedLabel: reagent-name-oxandrolone
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Oxandrolone
+        Quantity: 200

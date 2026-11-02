@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reagent
+  id: ThickSmoke
+  name: reagent-name-thick-smoke
+  desc: reagent-desc-thick-smoke
+  color: "#28005B"
+  physicalDesc: reagent-physical-desc-thick
+  metabolisms:
+    Bloodstream:
+      conditions:
+      - !type:WhitelistCondition
+        blacklist:
+          components:
+          - Wizard
+          - Apprentice
+        guidebookText: entity-condition-not-wizard-or-apprentice
+      effects:
+      - !type:Emote
+        emote: Cough
+        showInChat: true
+        probability: 0.2
+      - !type:DropItems
+        probability: 0.2
+
+- type: reagent
+  id: Mugwort
+  parent: BaseDrink
+  group: Unknown
+  name: reagent-name-mugwort
+  desc: reagent-desc-mugwort
+  color: "#7EB626"
+  physicalDesc: reagent-physical-desc-magical
+  flavor: tea
+  metamorphicSprite:
+    sprite: Objects/Consumable/Drinks/greenteaglass.rsi
+    state: icon_empty
+  metamorphicMaxFillLevels: 4
+  metamorphicFillBaseName: fill-
+  metamorphicChangeColor: false
+  metabolisms:
+    Bloodstream:
+      conditions:
+      - !type:WhitelistCondition
+        whitelist:
+          components:
+          - Wizard
+          - Apprentice
+        guidebookText: entity-condition-wizard-or-apprentice
+      effects:
+      - !type:ModifyBloodLevel
+        amount: 3
+      - !type:EvenHealthChange
+        damage:
+          Burn: -5
+          Toxin: -5
+          Airloss: -5
+          Brute: -5
+          Genetic: -5
+      - !type:ModifyBleed
+        amount: -1.5
+      - !type:CleanBloodstream
+        excluded: [Mugwort]
+        cleanseRate: 6
+      - !type:ModifyStatusEffect
+        effectProto: StatusEffectSeeingRainbow
+        time: 100
+        type: Remove

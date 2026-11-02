@@ -1,0 +1,15 @@
+<Control
+    xmlns="https://spacestation14.io"
+    xmlns:cc="clr-namespace:Content.Client.Administration.UI.CustomControls"
+    Margin="4"
+    MinSize="50 50">
+    <GridContainer
+        Columns="3">
+        <!-- <Trauma> - they're all dangerous -->
+        <cc:CommandButton Command="startround" Text="{Loc administration-ui-round-tab-start-round}" Dangerous="True"/>
+        <cc:CommandButton Command="endround" Text="{Loc administration-ui-round-tab-end-round}" Dangerous="True"/>
+        <cc:CommandButton Command="restartround" Text="{Loc administration-ui-round-tab-restart-round}" Dangerous="True"/>
+        <cc:CommandButton Command="restartroundnow" Text="{Loc administration-ui-round-tab-restart-round-now}" Dangerous="True"/>
+        <!-- </Trauma> -->
+    </GridContainer>
+</Control>

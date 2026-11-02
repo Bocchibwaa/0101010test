@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: Holopad
+  id: HolopadCommandNTR
+  suffix: NTR
+  components:
+  - type: Label
+    localizedLabel: holopad-command-ntr
+
+- type: entity
+  parent: HolopadBluespace
+  id: HolopadCentComm
+  suffix: Centcomm
+  components:
+  - type: Label
+    localizedLabel: holopad-centcomm

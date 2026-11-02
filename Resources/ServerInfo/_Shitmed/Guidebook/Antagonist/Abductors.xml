@@ -1,0 +1,82 @@
+<Document>
+  # Abductors
+
+  <Box>
+    <GuideEntityEmbed Entity="MobLoneAbductor"/>
+    <GuideEntityEmbed Entity="MobAbductorAgent"/>
+    <GuideEntityEmbed Entity="MobAbductorScientist"/>
+  </Box>
+  Abductors are an alien society set on cataloging and experimenting on the sectors personnel.
+  Its important to note: Abductors, unlike most antagonists are [color=red]NOT set on killing people[/color] and are rather purely interested in completing their experiments.
+
+  Abductors cannot be understood by humans, however they can communicate with eachother through telepathy.
+
+  ## Abductors
+  There are three types of abductors; lone abductors, scientists, and agents.
+  - [color=#a4885c]Lone abductors[/color] are a solo abductor, and will not have support or allies.
+  - [color=#a4885c]Scientists[/color] are group abductors, and need to support the agent by toggling their armor and experimenting on crew.
+  - [color=#a4885c]Agents[/color] are group abductors, and work to kidnap crew for the scientist to experiment on.
+  - Any abductor can fill anothers role in the event of an unfortunate death.
+
+  ## Abduction
+
+  <Box>
+    <GuideEntityEmbed Entity="Wonderprod"/>
+
+    <GuideEntityEmbed Entity="WeaponAlien"/>
+
+    <GuideEntityEmbed Entity="AbductorGizmo"/>
+  </Box>
+
+  Abductors begin on their ship. Once you are ready, FTL somewhere near the station.
+  Using the [color=#a149bf]"Human Observation Console"[/color] you can seek out victims who are alone and [color=lightblue]warp[/color] near them to begin abduction.
+
+  The wonderprod is the primary tool of an Abductor. It has three modes you will use for abduction:
+  - [color=yellow]{Stun}[/color] Stuns the victim for roughly 5 seconds, after being hit twice.
+  - [color=pink]{Restrain}[/color] binds the victims hands in weak cable cuffs.
+  - [color=blue]{Sleep}[/color] Induces a sleep-like state in the victim, and inflicts ion damage on anything that cannot be slept. Use this to deal with naughty borgs.
+
+  Once a target is immobilized you can use the [italic]gizmo[/italic] to implant them with a nano tracker, return to your ship using the [color=lightblue]return action[/color], then use the gizmo on your [color=#a149bf]Abductor Console[/color].
+
+  If you are being overwhelmed, always remember you can return to your ship at any point!
+
+  ## Experimentation
+
+  <Box>
+    <GuideEntityEmbed Entity="AbductorConsole"/>
+    <GuideEntityEmbed Entity="AbductorExperimentator"/>
+    <GuideEntityEmbed Entity="AbductorTaskTablet"/>
+  </Box>
+
+  Once you have linked the most recent nano tracker to the console, select [bold]{ATTRACT}[/bold] to warp your victim to your ship.
+
+  Now that you have your victim aboard, its recommended you:
+  - Buckle them to your surgical table.
+  - Change out their cuffs for a higher grade of handcuffs provided on the ship.
+  - Remove any of their belongings that could damage you or the secrecy of the experiment.
+
+  Once you are comfortable, scan the subject with your [color=#a149bf]experiment tablet[/color].
+  You will have a list of tasks to complete, work through them and once you do each step hit [bold]Submit[/bold].
+
+  Regardless of random tasks, you will have to replace the subject's heart with one of your glands.
+  You don't need to remove their clothes to do surgery or wear PPE, unlike normal surgeons.
+
+  Finally, drag the victim whom you have completed your experiments on into the [color=#a149bf]Return Pod[/color] to confirm the results of the experiment on the [color=#a149bf]Abductor Console[/color] and send them back where you found them.
+
+  ## Abductor Tools
+
+  <Box>
+    <GuideEntityEmbed Entity="Silencer"/>
+    <GuideEntityEmbed Entity="EnergyScalpelAbductor"/>
+    <GuideEntityEmbed Entity="CrowbarAbductor"/>
+  </Box>
+
+  Abductors have access to more advanced tools than normal surgeons or engineers. Their surgical tools are faster than advanced surgical tools, and from their normal tools, the multitool's alternative mode is able to be used to hijack doors.
+
+  You also have access to a silencer, which prevents the crew from speaking when they are hit with it.
+
+  ## Getting rid of an Abductor
+  Like [textlink="Changelings" link="Changelings"], Abductors are not protected by [textlink="corporate law" link="SpaceLaw"] and are able to be executed freely.
+
+  Also, an abductor's ship is a physical object in the world, anyone with access to a space-faring ship such as [textlink="salvage" link="Salvage"] can bump into them in space and dismantle their ship.
+</Document>

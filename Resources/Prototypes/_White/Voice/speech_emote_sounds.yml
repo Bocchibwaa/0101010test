@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: emoteSounds
+  parent: BaseMobEmotes
+  id: Xenomorph
+  params:
+    variation: 0.125
+  sounds:
+    Scream:
+      collection: XenomorphScreams
+      params:
+        volume: -12
+    Laugh:
+      collection: XenomorphLaugh
+      params:
+        volume: -12
+    Sneeze:
+      collection: XenomorphCoughs
+      params:
+        volume: -12
+    Cough:
+      collection: XenomorphCoughs
+      params:
+        volume: -12
+    CatMeow:
+      collection: CatMeows
+    CatHisses:
+      collection: CatHisses
+    MonkeyScreeches:
+      collection: MonkeyScreeches
+    Yawn:
+      collection: XenomorphHiss
+      params:
+        volume: -12
+    Snore:
+      collection: XenomorphSnores
+      params:
+        volume: -12
+    Sigh:
+      collection: XenomorphBreathe
+    Crying:
+      collection: MaleCry
+    Whistle:
+      collection: Whistles

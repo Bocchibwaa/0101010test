@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Wraith.Components;
+using Content.Goobstation.Shared.Wraith.Events;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Emag.Systems;
+using Content.Shared.Humanoid;
+using Content.Shared.Popups;
+using Content.Shared.Silicons.Laws;
+using Content.Shared.Silicons.Laws.Components;
+
+namespace Content.Goobstation.Shared.Wraith.Systems;
+public sealed partial class DecaySystem : EntitySystem
+{
+    [Dependency] private EmagSystem _emag = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedStaminaSystem _stamina = default!;
+    [Dependency] private SharedSiliconLawSystem _siliconLaw = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<DecayComponent, DecayEvent>(OnDecay);
+    }
+
+    private void OnDecay(Entity<DecayComponent> ent, ref DecayEvent args)
+    {
+        if (HasComp<HumanoidProfileComponent>(args.Target))
+        {
+            _stamina.TakeOvertimeStaminaDamage(args.Target, ent.Comp.StaminaDamageAmount);
+            _popup.PopupEntity(Loc.GetString("wraith-decay-human-alert"), args.Target, args.Target);
+            args.Handled = true;
+            return;
+        }
+
+        if (TryComp<SiliconLawBoundComponent>(args.Target, out var lawBound) &&
+            TryComp<IonStormTargetComponent>(args.Target, out var ionStormTarget))
+        {
+            _siliconLaw.TriggerIonStorm((args.Target, lawBound, ionStormTarget));
+
+            _emag.TryEmagEffect(ent.Owner, ent.Owner, args.Target, ent.Comp.Emag);
+
+            args.Handled = true;
+            return;
+        }
+
+        if (_emag.TryEmagEffect(ent.Owner, ent.Owner, args.Target, ent.Comp.Emag))
+        {
+            args.Handled = true;
+            return;
+        }
+
+        _popup.PopupEntity(Loc.GetString("wraith-decay-nothing"), ent.Owner, ent.Owner);
+    }
+}

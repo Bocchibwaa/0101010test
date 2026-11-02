@@ -1,0 +1,20 @@
+- type: species
+  id: Vox
+  name: species-name-vox
+  roundStart: true
+  prototype: MobVox
+  dollPrototype: AppearanceVox
+  skinColoration: VoxFeathers
+  defaultSkinTone: "#6c741d"
+  maleFirstNames: NamesVox
+  femaleFirstNames: NamesVox
+  naming: First
+  sexes:
+  - Unsexed
+  knowledge: Vox # Trauma
+  defaultSoundsBySex:
+  - UnisexVox
+  - UnisexVox
+  - UnisexVox
+  voices:
+  - UnisexVox

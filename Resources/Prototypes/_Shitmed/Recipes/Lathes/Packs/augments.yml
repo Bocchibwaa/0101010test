@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: latheRecipePack
+  id: PowerAugments
+  recipes:
+  - AugmentPowerCellSlotCasing
+  - AugmentRechargerCasing
+
+- type: latheRecipePack
+  id: ToolAugments
+  recipes:
+  - AugmentToolPanelCasing
+  - AugmentUtilityPanelElectronics
+  - AugmentBotanyPanelElectronics
+  - AugmentSurgeryPanelElectronics

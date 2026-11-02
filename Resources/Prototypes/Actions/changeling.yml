@@ -1,0 +1,23 @@
+- type: entity
+  parent: BaseAction
+  id: ActionRetractableItemArmblade
+  name: Armblade
+  description: Shed your flesh and reform it into a fleshy blade. Can be toggled when unconscious.
+  components:
+  - type: Action
+    useDelay: 2
+    itemIconStyle: BigAction
+  - type: Sprite
+    sprite: Interface/Actions/changeling.rsi
+    layers:
+    - state: armblade
+  - type: InstantAction
+    event: !type:OnRetractableItemActionEvent
+  - type: RetractableItemAction
+    spawnedPrototype: Armblade
+    summonSounds:
+      collection: gib # Placeholder
+    retractSounds:
+      collection: gib # Placeholder
+
+# Trauma - all removed

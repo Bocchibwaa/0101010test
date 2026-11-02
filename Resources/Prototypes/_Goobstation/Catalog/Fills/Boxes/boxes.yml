@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  name: reverse bear trap pack
+  parent: BoxCardboard
+  id: BoxReverseBearTrap
+  description: A box full of completely legal stuff.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: ReverseBearTrap
+        - id: ReverseBearTrapKey
+  - type: Sprite
+    sprite: _Goobstation/Objects/Storage/boxes.rsi
+
+- type: entity
+  name: autoinjector cartridge box
+  parent: BoxCardboard
+  id: BoxAutoinjectorCartidges
+  description: A box with autoinjector cartridges.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: CartridgeSaline
+          amount: 3
+        - id: CartridgeBicaridine
+          amount: 3
+        - id: CartridgeDermaline
+          amount: 3
+  - type: Sprite
+    sprite: _Goobstation/Objects/Storage/boxes.rsi

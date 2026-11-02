@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Wraith.Components;
+using Content.Goobstation.Shared.Wraith.Components.Mobs;
+using Content.Goobstation.Shared.Wraith.Events;
+using Content.Server.Actions;
+using Content.Server.Mind;
+using Content.Trauma.Common.RadialSelector;
+using Robust.Server.GameObjects;
+
+namespace Content.Goobstation.Server.Wraith.Systems;
+
+public sealed partial class SummonVoidCreatureSystem : EntitySystem
+{
+    [Dependency] private UserInterfaceSystem _ui = default!;
+    [Dependency] private ActionsSystem _actions = default!;
+    [Dependency] private TransformSystem _transform = default!;
+    [Dependency] private MindSystem _mind = default!;
+
+    private CompName _minionName;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        _minionName = Factory.CompName<WraithMinionComponent>();
+    }
+
+    [SubscribeLocalEvent]
+    private void OnMapInit(Entity<SummonVoidCreatureComponent> ent, ref MapInitEvent args) =>
+        _actions.AddAction(ent.Owner, ref ent.Comp.ActionEnt, ent.Comp.ActionId);
+
+    [SubscribeLocalEvent]
+    private void OnShutdown(Entity<SummonVoidCreatureComponent> ent, ref ComponentShutdown args) =>
+        _actions.RemoveAction(ent.Owner, ent.Comp.ActionEnt);
+
+    [SubscribeLocalEvent]
+    private void OnSummonVoidCreature(Entity<SummonVoidCreatureComponent> ent, ref SummonVoidCreatureEvent args)
+    {
+        SpawnAtPosition(ent.Comp.SummonId, Transform(ent.Owner).Coordinates);
+
+        args.Handled = true;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnChooseVoidCreature(Entity<ChooseVoidCreatureComponent> ent, ref ChooseVoidCreatureEvent args)
+    {
+        _ui.TryToggleUi(ent.Owner, RadialSelectorUiKey.Key, ent.Owner);
+        _ui.SetUiState(ent.Owner, RadialSelectorUiKey.Key, new RadialSelectorState(ent.Comp.AvailableSummons));
+    }
+
+    [SubscribeLocalEvent]
+    private void OnSummonVoidCreatureSelected(Entity<ChooseVoidCreatureComponent> ent, ref RadialSelectorSelectedMessage args)
+    {
+        if (args.SelectedItem is not { } proto
+            || !ProtoMan.Resolve(proto, out var summon)
+            || !summon.HasComp(_minionName)
+            || !_mind.TryGetMind(ent.Owner, out var mindUid, out var mind))
+            return;
+
+        var coordinates = _transform.GetMoverCoordinates(ent.Owner);
+        var newForm = Spawn(proto, coordinates);
+
+        _mind.TransferTo(mindUid, newForm, mind: mind);
+        _mind.UnVisit(mindUid, mind);
+
+        CopyComps(ent.Owner, newForm);
+        RemComp<ChooseVoidCreatureComponent>(newForm);
+
+        _ui.CloseUi(ent.Owner, RadialSelectorUiKey.Key, args.Actor);
+        Del(ent.Owner);
+    }
+}

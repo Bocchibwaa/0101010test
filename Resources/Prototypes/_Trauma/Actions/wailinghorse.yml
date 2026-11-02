@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  id: BloodCrawlActionWailing
+  parent: BaseAction
+  name: Wailing Crawl
+  description: Find your way closer to the wounded.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Trauma/Actions/wailing.rsi
+    layers:
+    - state: wailingteleport
+  - type: Action
+    useDelay: 4
+  - type: InstantAction
+    event: !type:BloodCrawlEvent
+
+- type: entity
+  parent: BaseAction
+  id: Wailing
+  name: Wail
+  description: Throw them away from you.
+  components:
+  - type: Sprite
+    sprite: _Trauma/Actions/wailing.rsi
+    layers:
+    - state: wailing
+  - type: Action
+    raiseOnUser: true
+    checkCanInteract: false
+    useDelay: 30
+    itemIconStyle: BigAction
+    sound:
+      path: /Audio/_Trauma/Actions/screamAbility.ogg
+  - type: InstantAction
+    event: !type:RepulseEvent

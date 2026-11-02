@@ -1,0 +1,15 @@
+# for important antag roles (nukie reinforcements, ninja, etc.)
+- type: ghostRoleRaffleSettings
+  id: default
+  settings:
+    initialDuration: 25 # Trauma - was 45
+    joinExtendsDurationBy: 0 # Trauma - was 2
+    maxDuration: 25 # Trauma - was 45
+
+# for roles that don't matter too much or are available plentifully (e.g. space carp)
+- type: ghostRoleRaffleSettings
+  id: short
+  settings:
+    initialDuration: 10 # Trauma - was 15
+    joinExtendsDurationBy: 0
+    maxDuration: 10 # Trauma - was 15

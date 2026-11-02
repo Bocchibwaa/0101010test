@@ -1,0 +1,204 @@
+<BoxContainer
+    Visible="False"
+    HorizontalExpand="True"
+    xmlns="https://spacestation14.io"
+    xmlns:ui="clr-namespace:Content.Client.Shuttles.UI"
+    xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls">
+    <ui:ShuttleNavControl
+        Name="NavRadar"
+        MouseFilter="Stop"
+        VerticalAlignment="Stretch"
+        VerticalExpand="True"
+        HorizontalExpand="True"
+        Margin="5 4 10 5"/>
+    <!-- Nav controls -->
+    <BoxContainer
+        Name="RightDisplayNav"
+        VerticalAlignment="Top"
+        HorizontalAlignment="Right"
+        VerticalExpand="True"
+        MinWidth="256"
+        MaxWidth="256"
+        Margin="5 0 5 5"
+        Orientation="Vertical">
+        <controls:StripeBack MinSize="48 48">
+            <Label
+                Name="NavDisplayLabel"
+                Text="{Loc 'shuttle-console-display-label'}"
+                VerticalExpand="True"
+                HorizontalAlignment="Center"/>
+        </controls:StripeBack>
+        <GridContainer
+            Columns="2"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Top"
+            HorizontalExpand="True"
+            Margin="3"
+            Name="ReadonlyDisplay">
+            <Label Text="{Loc 'shuttle-console-position'}" />
+            <Label Name="GridPosition" Text="0.0, 0.0" HorizontalExpand="True" Align="Right" />
+            <Label Text="{Loc 'shuttle-console-orientation'}" />
+            <Label Name="GridOrientation" Text="0.0" HorizontalExpand="True" Align="Right" />
+            <Label Text="{Loc 'shuttle-console-linear-velocity'}" />
+            <Label Name="GridLinearVelocity" Text="0.0, 0.0" HorizontalExpand="True" Align="Right" />
+            <Label Text="{Loc 'shuttle-console-angular-velocity'}" />
+            <Label Name="GridAngularVelocity" Text="0.0" HorizontalExpand="True" Align="Right" />
+        </GridContainer>
+        <controls:StripeBack MinSize="48 48">
+            <Label
+                Name="NavSettingsLabel"
+                Text="{Loc 'shuttle-console-nav-settings'}"
+                VerticalExpand="True"
+                HorizontalAlignment="Center"/>
+        </controls:StripeBack>
+        <Button
+            Name="IFFToggle"
+            Text="{Loc 'shuttle-console-iff-toggle'}"
+            TextAlign="Center"
+            ToggleMode="True"/>
+        <!-- <Trauma> -->
+        <Button Name="IFFShuttleToggle"
+            Text="{Loc 'shuttle-console-iffshuttles-toggle'}"
+            TextAlign="Center"
+            ToggleMode="True"/>
+        <!-- </Trauma> -->
+
+        <controls:StripeBack MinSize="48 48">
+            <Label Text="{Loc 'shuttle-console-nav-legend'}"
+                VerticalExpand="True"
+                HorizontalAlignment="Center" />
+        </controls:StripeBack>
+
+        <!-- Cargo Dock Toggle -->
+        <Button Name="CargoDockToggle"
+            HorizontalAlignment="Stretch"
+            ToggleMode="True">
+            <BoxContainer Orientation="Horizontal" Margin="0 2">
+                <TextureRect
+                    Stretch="KeepAspectCentered"
+                    TexturePath="/Textures/Interface/NavMap/beveled_square.png"
+                    Modulate="LightYellow"
+                    SetSize="20 20"
+                    Margin="10 0 5 0"/>
+                <Label
+                    Text="{Loc 'shuttle-console-nav-cargo-dock'}"
+                    VerticalExpand="True"
+                    HorizontalAlignment="Center" />
+            </BoxContainer>
+        </Button>
+
+        <!-- Arrivals Dock Toggle -->
+        <Button Name="ArrivalDockToggle"
+            HorizontalAlignment="Stretch"
+            ToggleMode="True">
+            <BoxContainer Orientation="Horizontal" Margin="0 2">
+                <TextureRect
+                    Stretch="KeepAspectCentered"
+                    TexturePath="/Textures/Interface/NavMap/beveled_square.png"
+                    Modulate="Red"
+                    SetSize="20 20"
+                    Margin="10 0 5 0"/>
+                <Label
+                    Text="{Loc 'shuttle-console-nav-arrivals-dock'}"
+                    VerticalExpand="True"
+                    HorizontalAlignment="Center" />
+            </BoxContainer>
+        </Button>
+
+        <!-- Other Dock Toggle -->
+        <Button Name="DockToggle"
+            HorizontalAlignment="Stretch"
+            ToggleMode="True">
+            <BoxContainer Orientation="Horizontal" Margin="0 2">
+                <TextureRect
+                    Stretch="KeepAspectCentered"
+                    TexturePath="/Textures/Interface/NavMap/beveled_square.png"
+                    Modulate="Magenta"
+                    SetSize="20 20"
+                    Margin="10 0 5 0"/>
+                <Label VerticalAlignment="Center" Text="{Loc 'shuttle-console-nav-other-dock'}"/>
+            </BoxContainer>
+        </Button>
+        <!-- <Trauma> -->
+        <!-- Inertia dampener controls-->
+        <BoxContainer Name="DampenerModeButtons"
+                Orientation="Horizontal"
+                HorizontalAlignment="Stretch"
+                HorizontalExpand="True"
+                Align="Center"
+                Margin="0 0 0 3">
+            <Button Name="DampenerOff"
+                Text="{Loc 'shuttle-console-inertia-dampener-off'}"
+                TextAlign="Center"
+                ToggleMode="True"
+                MinWidth="85"
+                StyleClasses="OpenRight"
+                Margin="0"/>
+            <Button Name="DampenerOn"
+                Text="{Loc 'shuttle-console-inertia-dampener-dampen'}"
+                TextAlign="Center"
+                ToggleMode="True"
+                MinWidth="85"
+                StyleClasses="OpenBoth"
+                Margin="0"/>
+            <Button Name="AnchorOn"
+                Text="{Loc 'shuttle-console-inertia-dampener-anchor'}"
+                TextAlign="Center"
+                ToggleMode="True"
+                MinWidth="85"
+                StyleClasses="OpenLeft"
+                Margin="0"/>
+        </BoxContainer>
+        <!-- <Trauma> -->
+        <!-- IFF search -->
+        <BoxContainer Orientation="Vertical" HorizontalExpand="True" Name="IffSearchBox">
+            <Label Text="{Loc 'shuttle-console-iff-search'}"/>
+            <LineEdit Name="IffSearchCriteria" Access="Public" HorizontalExpand="True"/>
+        </BoxContainer>
+
+        <!-- Maximum IFF Distance -->
+        <BoxContainer Orientation="Vertical" HorizontalExpand="True" Name="MaximumIFFDistanceBox">
+            <Label Text="{Loc 'shuttle-console-maximum-iff-distance'}"/>
+            <SliderIntInput Name="MaximumIFFDistanceValue"
+                Access="Public"
+                MinValue="0"
+                MaxValue="3000"
+                Value="3000"
+                HorizontalExpand="True"/>
+        </BoxContainer>
+
+        <!-- Network Port Buttons -->
+        <BoxContainer Orientation="Vertical" HorizontalExpand="True">
+            <controls:StripeBack MinSize="48 48" Margin="0 5 0 0">
+                <Label Text="{Loc 'shuttle-console-network-ports'}"
+                    VerticalExpand="False"
+                    HorizontalAlignment="Center"/>
+            </controls:StripeBack>
+
+            <PanelContainer>
+                <ScrollContainer HorizontalExpand="True" MinHeight="150" MaxHeight="150">
+                    <BoxContainer Orientation="Vertical" HorizontalExpand="True" Name="NetworkPortsBox">
+                        <Button Name="DeviceButton1"
+                            Text="{Loc 'shuttle-console-device-button-1'}"
+                            TextAlign="Center"
+                            Margin="0 2 0 2"/>
+                        <Button Name="DeviceButton2"
+                            Text="{Loc 'shuttle-console-device-button-2'}"
+                            TextAlign="Center"
+                            Margin="0 2 0 2"/>
+                        <Button Name="DeviceButton3"
+                            Text="{Loc 'shuttle-console-device-button-3'}"
+                            TextAlign="Center"
+                            Margin="0 2 0 2"/>
+                        <Button Name="DeviceButton4"
+                            Text="{Loc 'shuttle-console-device-button-4'}"
+                            TextAlign="Center"
+                            ToolTip="{Loc 'shuttle-console-network-connect-tooltip'}"
+                            Margin="0 2 0 2"/>
+                    </BoxContainer>
+                </ScrollContainer>
+            </PanelContainer>
+        </BoxContainer>
+        <!-- </Trauma> -->
+    </BoxContainer>
+</BoxContainer>

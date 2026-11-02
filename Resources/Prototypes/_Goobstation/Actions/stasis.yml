@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionChronoBlink
+  name: Temporary shift
+  description: Changes your coordinates, allowing you to teleport to nearby locations
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Actions/chronoblink.rsi
+    layers:
+    - state: effect
+  - type: Action
+    useDelay: 15
+    itemIconStyle: NoItem
+    sound:
+      path: /Audio/Magic/blink.ogg
+      params:
+        volume: 5
+  - type: TargetAction
+    checkCanAccess: false
+    range: 0
+  - type: WorldTargetAction
+    event: !type:TeleportActionEvent

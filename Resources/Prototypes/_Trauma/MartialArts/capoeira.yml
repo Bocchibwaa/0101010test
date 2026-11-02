@@ -1,0 +1,152 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: combo
+  id: PushKick
+  attacks:
+  - Grab
+  - Harm
+  - Harm
+  userConditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-prone
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit3.ogg
+  - !type:TakeStaminaDamage
+    amount: -30
+    scaling: false
+  - !type:ApplyMartialArtModifier
+    type: MoveSpeed
+    multiplier: 1.2
+    duration: 10
+    scaling: false
+  opponentEffects:
+  - !type:HealthChange
+    useTargeting: false
+    ignoreResistances: false
+    damage:
+      flags: MartialArtCombo
+      types:
+        Blunt: 5
+  - !type:ModifyStatusEffect
+    effectProto: PushKickVulnerabilityStatusEffect
+    type: Update
+    time: 6
+  - !type:StopPull
+  - !type:GrabThrow
+    speed: 7
+    dropItems: false
+    knockdown: false
+
+- type: combo
+  id: CircleKick
+  attacks:
+  - Disarm
+  - Disarm
+  - Harm
+  userConditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-prone
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit2.ogg
+  - !type:TakeStaminaDamage
+    amount: -40
+    scaling: false
+  - !type:ApplyMartialArtModifier
+    type: MoveSpeed
+    multiplier: 1.2
+    duration: 10
+    scaling: false
+  opponentEffects:
+  - !type:HealthChange
+    useTargeting: false
+    ignoreResistances: false
+    damage:
+      flags: MartialArtCombo
+      types:
+        Blunt: 15
+  - !type:ModifyStatusEffect
+    effectProto: CircleKickSlowdownStatusEffect
+    type: Update
+    time: 2
+
+- type: combo
+  id: SweepKick
+  attacks:
+  - Harm
+  - Harm
+  - Disarm
+  userConditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-prone
+  - !type:MovingCondition
+    minVelocity: 2
+    failMessage: capoeira-fail-low-velocity
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit1.ogg
+  - !type:TakeStaminaDamage
+    amount: -60
+    scaling: false
+  - !type:ApplyMartialArtModifier
+    multiplier: 1.5
+    duration: 5
+    scaling: false
+  opponentEffects:
+  - !type:HealthChange
+    useTargeting: false
+    ignoreResistances: false
+    damage:
+      flags: MartialArtCombo
+      types:
+        Blunt: 10
+  - !type:ModifyKnockdown
+    time: 1
+    drop: true
+  - !type:TakeStaminaDamage
+    amount: 10
+
+- type: combo
+  id: SpinKick
+  attacks:
+  - Grab
+  - Harm
+  - Disarm
+  - Harm
+  userConditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-prone
+  - !type:MovingCondition
+    minVelocity: 2
+    failMessage: capoeira-fail-low-velocity
+  conditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-target-down
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit1.ogg
+  - !type:TakeStaminaDamage
+    amount: -100
+    scaling: false
+  - !type:ApplyMartialArtModifier
+    multiplier: 1.5
+    duration: 5
+    scaling: false
+  - !type:RaiseNetworkEvents
+    events:
+    - !type:AnimationFlipEmoteEvent
+  opponentEffects:
+  - !type:HealthChange
+    useTargeting: false
+    ignoreResistances: false
+    damage:
+      flags: MartialArtCombo
+      types:
+        Blunt: 25
+  - !type:ModifyKnockdown
+    time: 2
+    drop: true
+  - !type:TakeStaminaDamage
+    amount: 15
+  - !type:StopPull

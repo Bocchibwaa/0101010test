@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: latheRecipe
+  abstract: true
+  id: BaseRedAlert
+  requiredAlerts:
+  - Red
+  - Gamma
+  - DeltaBlob
+  - DeltaDelam
+  - DeltaNuke
+  - DeltaSling
+  - Omicron
+  - Octarine
+
+- type: latheRecipe
+  abstract: true
+  id: BaseBlueAlert
+  requiredAlerts:
+  - Blue
+  - Red
+  - Gamma
+  - DeltaBlob
+  - DeltaDelam
+  - DeltaNuke
+  - DeltaSling
+  - Omicron
+  - Octarine

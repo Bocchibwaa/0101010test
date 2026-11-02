@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: OrganCyberneticHandLeft
+  id: SmartlinkLeftHand
+  name: SmartLink left hand
+  description: A cybernetic left hand that allows its wearer to shoot "smart" bullets from any weapon.
+  components:
+  - type: Sprite
+    sprite: _EinsteinEngines/Mobs/Species/Cybernetics/morpheus/morpheus_main.rsi
+  - type: VisualOrgan
+    data:
+      sprite: _EinsteinEngines/Mobs/Species/Cybernetics/morpheus/morpheus_main.rsi
+  - type: SmartLinkArm
+
+- type: entity
+  parent: OrganCyberneticHandRight
+  id: SmartlinkRightHand
+  name: SmartLink right hand
+  description: A cybernetic right hand that allows its wearer to shoot "smart" bullets from any weapon.
+  components:
+  - type: Sprite
+    sprite: _EinsteinEngines/Mobs/Species/Cybernetics/morpheus/morpheus_main.rsi
+  - type: VisualOrgan
+    data:
+      sprite: _EinsteinEngines/Mobs/Species/Cybernetics/morpheus/morpheus_main.rsi
+  - type: SmartLinkArm
+
+- type: entity
+  parent: OrganCyberneticHandLeft
+  id: RecoilAbsorberLeftHand
+  name: recoil absorbing left hand
+  description: A cybernetic left hand that absorbs most of ranged weapons recoil.
+  components:
+  - type: Sprite
+    sprite: _EinsteinEngines/Mobs/Species/Cybernetics/wardtakahashi/wardtakahashi_main.rsi
+  - type: VisualOrgan
+    data:
+      sprite: _EinsteinEngines/Mobs/Species/Cybernetics/wardtakahashi/wardtakahashi_main.rsi
+  - type: RecoilAbsorberArm
+
+- type: entity
+  parent: OrganCyberneticHandRight
+  id: RecoilAbsorberRightHand
+  name: recoil absorbing right hand
+  description: A cybernetic right hand that absorbs most of ranged weapons recoil.
+  components:
+  - type: Sprite
+    sprite: _EinsteinEngines/Mobs/Species/Cybernetics/wardtakahashi/wardtakahashi_main.rsi
+  - type: VisualOrgan
+    data:
+      sprite: _EinsteinEngines/Mobs/Species/Cybernetics/wardtakahashi/wardtakahashi_main.rsi
+  - type: RecoilAbsorberArm

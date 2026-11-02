@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Robust.Client.Player;
+using Robust.Shared.Enums;
+using Robust.Shared.Timing;
+
+namespace Content.Goobstation.Client.Shadowling;
+
+public sealed partial class EnthrallOverlay : Overlay
+{
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IEntityManager _entMan = default!;
+    [Dependency] private IPlayerManager _player = default!;
+
+    public override OverlaySpace Space => OverlaySpace.WorldSpace;
+    public override bool RequestScreenTexture => true;
+    private readonly ShaderInstance _shader;
+    private double _startTime = -1;
+    private double _lastsFor = 1;
+
+    public static readonly ProtoId<ShaderPrototype> EnthrallEffect = "EnthrallEffect";
+
+    public EnthrallOverlay()
+    {
+        IoCManager.InjectDependencies(this);
+        _shader = _proto.Index(EnthrallEffect).Instance().Duplicate();
+    }
+
+    public void ReceiveEnthrall(double duration)
+    {
+        _startTime = _timing.CurTime.TotalSeconds;
+        _lastsFor = duration;
+    }
+
+    protected override void Draw(in OverlayDrawArgs args)
+    {
+        if (ScreenTexture == null)
+            return;
+
+        var percentComplete = (float) ((_timing.CurTime.TotalSeconds - _startTime) / _lastsFor);
+        if (percentComplete >= 1.0f)
+            return;
+
+        var worldHandle = args.WorldHandle;
+        _shader.SetParameter("percentComplete", percentComplete);
+        _shader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
+        worldHandle.UseShader(_shader);
+        worldHandle.DrawRect(args.WorldBounds, Color.White);
+        worldHandle.UseShader(null);
+    }
+
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        if (!_entMan.TryGetComponent(_player.LocalEntity, out EyeComponent? eyeComp))
+            return false;
+
+        if (args.Viewport.Eye != eyeComp.Eye)
+            return false;
+
+        return true;
+    }
+}

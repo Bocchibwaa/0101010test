@@ -1,0 +1,19 @@
+- type: construction
+  parent: BaseWeapon
+  id: ModularGrenadeRecipe
+  graph: ModularGrenadeGraph
+  targetNode: grenade
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+    ElectronicsKnowledge: 0
+  practical:
+    MetalworkingKnowledge: 3
+    MechanicsKnowledge: 3
+  # </Trauma>
+
+- type: construction
+  parent: ModularGrenadeRecipe # Trauma
+  id: ModularMineRecipe
+  graph: ModularMineGraph
+  targetNode: mine

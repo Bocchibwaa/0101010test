@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Polymorph;
+
+namespace Content.Goobstation.Shared.Wraith.Components.Mobs;
+
+[RegisterComponent, NetworkedComponent]
+[AutoGenerateComponentState]
+public sealed partial class DiseasedRatComponent : Component
+{
+    [DataField, AutoNetworkedField]
+    public List<ProtoId<DiseasedRatFormUnlockPrototype>> DiseasedRatForms = new();
+}
+
+[Prototype]
+public sealed partial class DiseasedRatFormUnlockPrototype : IPrototype
+{
+    [IdDataField]
+    public string ID { get; private set; } = default!;
+
+    [DataField]
+    public int FilthRequired;
+
+    [DataField(serverOnly: true)]
+    public EntProtoId? Entity;
+
+    [DataField(serverOnly: true)]
+    public HashSet<ComponentTransferData>? TransferComponents = new();
+}

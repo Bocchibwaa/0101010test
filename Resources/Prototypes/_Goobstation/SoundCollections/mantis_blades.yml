@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: soundCollection
+  id: MantisBladeRetract
+  files:
+  - /Audio/_Goobstation/Weapons/MantisBlades/mantis_retract1.ogg
+  - /Audio/_Goobstation/Weapons/MantisBlades/mantis_retract2.ogg

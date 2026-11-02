@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Shadowling.Components;
+using Content.Goobstation.Shared.Shadowling.Systems;
+using Robust.Client.Player;
+using Robust.Shared.Player;
+
+namespace Content.Goobstation.Client.Shadowling;
+
+public sealed partial class EnthrallSystem : SharedEnthrallSystem
+{
+    private EnthrallOverlay _overlay = default!;
+
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<ThrallComponent, ComponentInit>(OnInit);
+
+        SubscribeLocalEvent<ThrallComponent, LocalPlayerAttachedEvent>(OnPlayerAttached);
+        SubscribeLocalEvent<ThrallComponent, LocalPlayerDetachedEvent>(OnPlayerDetached);
+
+        _overlay = new();
+    }
+
+    private void OnPlayerAttached(EntityUid uid, ThrallComponent component, LocalPlayerAttachedEvent args)
+    {
+        _overlayManager.AddOverlay(_overlay);
+    }
+
+    private void OnPlayerDetached(EntityUid uid, ThrallComponent component, LocalPlayerDetachedEvent args)
+    {
+        _overlayManager.RemoveOverlay(_overlay);
+    }
+
+    private void OnInit(EntityUid uid, ThrallComponent component, ComponentInit init)
+    {
+        if (_playerManager.LocalEntity != uid
+            || HasComp<LesserShadowlingComponent>(uid))
+            return;
+
+        _overlay.ReceiveEnthrall(5f);
+        _overlayManager.AddOverlay(_overlay);
+    }
+}

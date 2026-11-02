@@ -1,0 +1,129 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# cargo bingle
+- type: entity
+  # not being parented from the MobBingle because it breaks a lot of things. maybe change this to a pitless bingle idk
+  parent: [ SimpleSpaceMobBase, MobNightVision ]
+  id: MobBingleCargo
+  name: cargo bingle
+  description: Once a proud Bingle, now captured and forced to work 9 to 5 to repay for its crimes, you can see their tears.
+  components:
+  - type: GhostTakeoverAvailable
+  - type: GhostRole
+    name: ghost-role-cargo-bingle-name
+    description: ghost-role-cargo-bingle-desc
+    rules: ghost-role-information-familiar-rules
+    raffle:
+      settings: default
+  - type: Sprite
+    drawdepth: Mobs
+    sprite: _Goobstation/Mobs/Bingle/cargo-bingle.rsi
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base", "movement" ]
+      state: alive
+    - map: [ "enum.BingleVisual.Combat" ]
+      state: combat
+      visible: false
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      100: Dead
+  - type: MobState
+    allowedStates:
+    - Alive
+    - Dead
+  - type: DamageStateVisuals
+    states:
+      Alive:
+        Base: alive
+      Dead:
+        Base: dead
+  - type: Bloodstream
+    bloodReferenceSolution:
+      reagents:
+      - ReagentId: Nitrogen
+        Quantity: 100
+  - type: MeleeWeapon
+    soundHit:
+      path: /Audio/Weapons/Xeno/alien_claw_flesh3.ogg
+    angle: 0
+    wideAnimationRotation: 0
+    animation: WeaponArcSlash
+    damage:
+      types:
+        Blunt: 1 # yk there would be shitters that would kill people with this...
+        Structural: 5
+    bluntStaminaDamageFactor: 2.0
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 2
+    baseSprintSpeed: 4
+  - type: Stamina
+    baseCritThreshold: 120
+  - type: StaminaDamageOnHit
+    damage: 5 # shove (x2 with overtime)
+    overtime: 5
+    sound: /Audio/Weapons/egloves.ogg
+  - type: Damageable
+    damageModifierSet: Bingle
+  - type: Injurable
+    damageContainer: Biological
+  - type: FootstepModifier
+    footstepSoundCollection:
+      path: /Audio/Effects/Footsteps/slime1.ogg
+      params:
+        volume: 3
+  - type: TypingIndicator
+    proto: alien
+  - type: Speech
+    speechVerb: Bingle
+    speechSounds: Slime
+  - type: LanguageSpeaker
+    speaks:
+    - Bingle
+    understands:
+    - TauCetiBasic
+  - type: PassiveDamage #passive Healing
+    allowedStates:
+    - Alive
+    damage:
+      types:
+        Blunt: -0.17
+        Slash: -0.17
+        Piercing: -0.17
+        Ballistic: -0.17
+        Radiation: -0.17
+        Heat: -0.13
+        Cold: -0.13
+        Shock: -0.13
+        Caustic: -0.13
+        Poison: -0.5
+  - type: FlashImmunity
+    showInExamine: false
+  - type: Access
+    tags:
+    - Maintenance
+    - Cargo
+  - type: Puller
+    needsHands: false
+  - type: PointLight
+    radius: 1.2
+    energy: 2
+    color: "#4faffb"
+
+- type: entity
+  parent: BaseItem
+  id: CargoBingleSpawnCoin
+  name: strange coin
+  description: It glows with a dim blue light, you can sense life in it.
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/coins.rsi
+    state: coinDiamond_1
+  - type: GhostRole
+    name: ghost-role-cargo-bingle-name
+    description: ghost-role-cargo-bingle-desc
+    rules: ghost-role-information-familiar-rules
+    raffle:
+      settings: default
+  - type: GhostRoleMobSpawner
+    prototype: MobBingleCargo

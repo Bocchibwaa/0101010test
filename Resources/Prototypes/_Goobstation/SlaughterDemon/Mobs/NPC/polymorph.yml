@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# no demonic whisper on this one
+- type: entity
+  abstract: true
+  parent: BaseMobJaunt
+  id: BasePolymorphBloodCrawlJaunt
+  name: Unknown
+  description: You can't figure out what that is.
+  components:
+  - type: Actions
+  - type: ActionsContainer
+  - type: Sprite
+    sprite: Structures/Specific/Anomalies/Cores/flesh_core.rsi
+    state: core
+  - type: MovementSpeedModifier
+    baseSprintSpeed: 12
+    baseWalkSpeed: 8
+  - type: BloodCrawl
+    isCrawling: true
+    blood:
+    - Blood
+    - AmmoniaBlood
+    - InsectBlood
+    - CopperBlood
+  - type: Eye
+    visMask:
+    - Normal
+    - Ghost
+
+- type: entity
+  parent: BasePolymorphBloodCrawlJaunt
+  id: PolymorphBloodCrawlJaunt
+  components:
+  - type: DemonicWhisper
+  - type: ActionGrant
+    actions:
+    - DemonicWhisperAction

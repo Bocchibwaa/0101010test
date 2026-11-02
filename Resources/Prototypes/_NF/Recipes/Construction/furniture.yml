@@ -1,0 +1,650 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Seat
+- type: construction
+  id: BenchSofaMiddle
+  graph: SofasGraph
+  startNode: start
+  targetNode: BenchSofaMiddleNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSofaLeft
+  graph: SofasGraph
+  startNode: start
+  targetNode: BenchSofaLeftNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSofaRight
+  graph: SofasGraph
+  startNode: start
+  targetNode: BenchSofaRightNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSofaCorner
+  graph: SofasGraph
+  startNode: start
+  targetNode: BenchSofaCornerNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSofaCorpMiddle
+  graph: SofasGraph
+  startNode: start
+  targetNode: BenchSofaCorpMiddleNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSofaCorpLeft
+  graph: SofasGraph
+  startNode: start
+  targetNode: BenchSofaCorpLeftNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSofaCorpRight
+  graph: SofasGraph
+  startNode: start
+  targetNode: BenchSofaCorpRightNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSofaCorpCorner
+  graph: SofasGraph
+  startNode: start
+  targetNode: BenchSofaCorpCornerNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSteelMiddle
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchSteelMiddleNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    MetalworkingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSteelRight
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchSteelRightNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    MetalworkingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSteelLeft
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchSteelLeftNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    MetalworkingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchPewMiddle
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchPewMiddleNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchPewRight
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchPewRightNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchPewLeft
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchPewLeftNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchParkMiddle
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchParkMiddleNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchParkRight
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchParkRightNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchParkLeft
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchParkLeftNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSteelWhiteMiddle
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchSteelWhiteMiddleNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    MetalworkingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSteelWhiteRight
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchSteelWhiteRightNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    MetalworkingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchSteelWhiteLeft
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchSteelWhiteLeftNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    MetalworkingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchParkBambooMiddle
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchParkBambooMiddleNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchParkBambooRight
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchParkBambooRightNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BenchParkBambooLeft
+  graph: BenchesGraph
+  startNode: start
+  targetNode: BenchParkBambooLeftNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+  # </Trauma>
+
+# Decorations (bonfire, fireplace)
+- type: construction
+  id: Fireplace
+  graph: FiresGraph
+  startNode: start
+  targetNode: FireplaceNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  # </Trauma>
+
+# Banners
+- type: construction
+  id: BannerNanotrasen
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerNanotrasenNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerCargo
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerCargoNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerEngineering
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerEngineeringNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerMedical
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerMedicalNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerScience
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerScienceNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerSecurity
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerSecurityNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerBlue
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerBlueNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerRed
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerRedNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerYellow
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerYellowNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerGreen
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerGreenNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerRevolution
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerRevolutionNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  id: BannerSyndicate
+  graph: BannersGraph
+  startNode: start
+  targetNode: BannerSyndicateNode
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+    - !type:TileNotBlocked
+  # <Trauma>
+  theory:
+    FurnitureKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+  # </Trauma>

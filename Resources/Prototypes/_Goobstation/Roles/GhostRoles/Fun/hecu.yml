@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: job
+  id: HecuOperative
+  name: job-name-hecu
+  description: job-description-hecu
+  playTimeTracker: JobHecuOperative
+  setPreference: false
+  startingGear: HECUOperativeGear
+  icon: "JobIconNanotrasen"
+  supervisors: job-supervisors-centcom
+  accessGroups:
+  - AllAccess
+  access:
+  - CentralCommand
+  - NanotrasenRepresentative
+  special:
+  - !type:OrganChipsSpecial
+    chips:
+    - SkillChipERT
+  - !type:AddImplantSpecial
+    implants: [ MindShieldImplant, DeathRattleImplantCentcomm ]
+
+- type: startingGear
+  id: HECUOperativeGear
+  equipment:
+    jumpsuit: ClothingUniformHecu
+    back: ClothingBackpackMerc
+    mask: ClothingMaskGasExplorer
+    eyes: ClothingEyesGlassesMedSec
+    ears: ClothingHeadsetAltCentCom
+    gloves: ClothingHandsGlovesCombat
+    outerClothing: ClothingOuterVestWebDurathread
+    shoes: ClothingShoesBootsCombatFilled
+    head: ClothingHeadHelmetMerc
+    id: HecuPDA
+    belt: ClothingBeltMercWebbing
+    pocket2: FlashlightSeclite
+  storage:
+    back:
+    - CrowbarRed
+    - BoxZiptie
+    - MedkitCombatFilled
+    - Flash
+    belt:
+    - WeaponPistolMk58
+    - MagazinePistol
+    - MagazinePistol
+    - MagazinePistol
+    - MagazinePistol

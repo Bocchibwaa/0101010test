@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Tag;
+
+namespace Content.Goobstation.Shared.Wraith.Components;
+
+[RegisterComponent, NetworkedComponent]
+public sealed partial class SummonRotHulkComponent : Component
+{
+    /// <summary>
+    /// Unique tag that works only for entities from Trash Spawner
+    /// </summary>
+    [DataField]
+    public ProtoId<TagPrototype> TrashTag = "RotHulkTrash";
+
+    [DataField]
+    public EntProtoId RotHulkProto = "MobRotHulk";
+
+    [DataField]
+    public EntProtoId BuffRotHulkProto = "MobRotHulkBuff";
+
+    /// <summary>
+    /// The minimum amount of trash needed to spawn a hulk
+    /// </summary>
+    [DataField]
+    public int MinTrash = 5;
+
+    /// <summary>
+    /// The maximum amount of trash needed to spawn a hulk
+    /// </summary>
+    [DataField]
+    public int MaxTrash = 40;
+
+    /// <summary>
+    /// The amount of trash needed to spawn a buffed hulk
+    /// </summary>
+    [DataField]
+    public int BuffThreshold = 20;
+
+    /// <summary>
+    /// The search radius of this ability
+    /// </summary>
+    [DataField]
+    public float SearchRadius = 5f;
+}

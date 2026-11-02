@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Deathsquad
+
+- type: entity
+  parent: BaseUnknownShuttleRule
+  id: SpawnDeathsquad
+  components:
+  - type: StationEvent
+    startAnnouncement: station-event-deathsquad-enroute
+    startAudio:
+      path: /Audio/_Goobstation/StationEvents/rescue_imminent.ogg
+    reoccurrenceDelay: 30
+    duration: null
+    maxOccurrences: 1
+  - type: LoadMapRule
+    gridPath: /Maps/_Goobstation/Shuttles/consul.yml
+
+#Contractor
+- type: entity
+  parent: [ BaseAntagGhostRoleRule, BaseUnknownShuttleRule ]
+  id: ContractorSpawn
+  components:
+  - type: StationEvent
+    startAnnouncement: null
+    weight: 1
+    duration: null
+    earliestStart: 30
+    minimumPlayers: 30
+  - type: RuleGrids
+  - type: LoadMapRule
+    gridPath: /Maps/_Trauma/Shuttles/ShuttleEvent/legionnaire.yml
+  - type: AntagLoadProfileRule
+    speciesOverrideBlacklist:
+    - IPC
+    - Diona
+    - Plasmaman
+  - type: AntagObjectives
+    objectives:
+    - ContractorRansomObjective
+  - type: AntagSelection
+    agentName: ghost-role-information-contractor-name
+    antags:
+    - !type:FixedAntagCount
+      proto: Contractor

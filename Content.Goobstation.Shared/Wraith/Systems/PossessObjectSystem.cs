@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Wraith.Components;
+using Content.Goobstation.Shared.Wraith.Events;
+using Content.Shared.Mind;
+using Content.Shared.Popups;
+using Robust.Shared.Audio.Systems;
+
+namespace Content.Goobstation.Shared.Wraith.Systems;
+
+public sealed partial class PossessObjectSystem : EntitySystem
+{
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
+    [Dependency] private WraithPossessedSystem _possessed = default!;
+
+    [SubscribeLocalEvent]
+    private void OnPossess(Entity<PossessObjectComponent> ent, ref PossessObjectEvent args)
+    {
+        if (Transform(args.Target).Anchored)
+        {
+            _popup.PopupEntity("You cannot possess an anchored object!", args.Performer, args.Performer);
+            return;
+        }
+
+        if (!_mind.TryGetMind(args.Performer, out var mindId, out _))
+            return;
+
+        _popup.PopupEntity(Loc.GetString("wraith-possess"), args.Target, args.Target);
+        _audio.PlayPredicted(ent.Comp.PossessSound, args.Target, args.Target);
+
+        // Make the object possessed
+        var possession = EnsureComp<WraithPossessedComponent>(args.Target);
+        var possessedObject = (args.Target, possession);
+
+        _possessed.SetPossessionDuration(possessedObject, ent.Comp.PossessDuration);
+        _possessed.StartPossession(possessedObject, args.Performer, mindId);
+
+        args.Handled = true;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnChangeComponents(PossessObjectEvent args)
+    {
+        if (Transform(args.Target).Anchored)
+            return;
+
+        var target = args.Target;
+
+        args.Handled = true;
+
+        EntityManager.RemoveComponents(target, args.ToRemove);
+        EntityManager.AddComponents(target, args.ToAdd);
+    }
+}

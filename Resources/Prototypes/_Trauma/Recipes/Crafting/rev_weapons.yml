@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: construction
+  abstract: true
+  parent: BaseRev
+  id: BaseRevGun
+  graph: RevGuns
+  objectType: Item
+  theory:
+    RevolutionaryKnowledge: 2
+    GunsmithingKnowledge: 0
+  practical:
+    WeaponsKnowledge: 2
+    GunsmithingKnowledge: 2
+
+- type: construction
+  parent: BaseRevGun
+  id: RevLiberator
+  targetNode: liberator
+
+- type: construction
+  parent: BaseRevGun
+  id: RevResistance
+  targetNode: resistance
+
+- type: construction
+  parent: BaseRevGun
+  id: RevRPG2
+  targetNode: RPG2
+  theory:
+    RevolutionaryKnowledge: 2
+    GunsmithingKnowledge: 1
+    WeaponsKnowledge: 1
+  practical:
+    GunsmithingKnowledge: 4
+    WeaponsKnowledge: 3
+
+- type: construction
+  parent: RevRPG2
+  id: RevFlamethrower
+  targetNode: Flamethrower
+
+- type: construction
+  parent: RevRPG2
+  id: Devastator
+  targetNode: Devastator
+
+- type: construction
+  parent: RevRPG2
+  id: Proletariat
+  targetNode: Proletariat
+
+- type: construction
+  parent: BaseRevGun
+  id: RevIED
+  graph: RevIED
+  targetNode: IED
+  practical:
+    MechanicsKnowledge: 2
+    WeaponsKnowledge: 2

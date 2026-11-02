@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: weightedRandom
+  id: DiseaseBehaviorsStandard
+  weights:
+    DiseaseBehaviorCancer: 0.5
+    DiseaseBehaviorPoison: 1
+    DiseaseBehaviorBlunt: 1
+    DiseaseBehaviorVomit: 1
+    DiseaseBehaviorFeelUnwell: 1
+    DiseaseBehaviorHeadache: 1
+    DiseaseBehaviorTemperature: 1.5
+    DiseaseBehaviorCold: 1
+    DiseaseBehaviorCough: 2
+    DiseaseBehaviorHyperactive: 0.5
+    DiseaseBehaviorHealing: 0.5
+    DiseaseBehaviorRapidMutation: 0.5

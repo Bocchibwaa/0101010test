@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseWeaponBatterySmall
+  id: WeaponPlasmaCutter
+  name: plasma cutter # deadspace gameplay
+  description: A self-defense weapon that exhausts organic targets, weakening them until they collapse. Phoron rounds make it excellent at mining.
+  components:
+  - type: WeaponClass
+    class: Mining
+  - type: Sprite
+    sprite: _Goobstation/Objects/Weapons/Guns/Battery/cutter.rsi
+    state: icon
+  - type: Gun
+    fireRate: 1
+    soundGunshot:
+      path: /Audio/_Goobstation/Weapons/Guns/Gunshots/plasma_cutter.ogg
+  - type: Item
+    size: Normal
+    shape:
+    - 0,0,2,2
+  - type: Battery
+    maxCharge: 1500
+    startingCharge: 1500
+  - type: MaterialEnergy
+    materialWhiteList: [Plasma]
+  - type: BatteryAmmoProvider
+    proto: BulletPlasmaCutter
+    fireCost: 100
+  - type: Appearance
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 125
+      Glass: 75
+      Plasma: 75
+
+- type: entity
+  parent: WeaponPlasmaCutter
+  id: WeaponPlasmaCutterEmpty
+  suffix: Empty
+  components:
+  - type: Battery
+    maxCharge: 1500
+    startingCharge: 0

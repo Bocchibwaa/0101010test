@@ -1,0 +1,771 @@
+// <Trauma>
+using Content.Trauma.Common.Heretic;
+using Content.Trauma.Common.MartialArts;
+using Content.Shared.Weapons.Melee;
+// </Trauma>
+using Content.Shared.ActionBlocker;
+using Content.Shared.Administration.Logs;
+using Content.Shared.Alert;
+using Content.Shared.Buckle.Components;
+using Content.Shared.Cuffs;
+using Content.Shared.Cuffs.Components;
+using Content.Shared.Database;
+using Content.Shared.Hands;
+using Content.Shared.Hands.Components;
+using Content.Shared.Hands.EntitySystems;
+using Content.Shared.IdentityManagement;
+using Content.Shared.Input;
+using Content.Shared.Interaction;
+using Content.Shared.Inventory.VirtualItem;
+using Content.Shared.Item;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Movement.Events;
+using Content.Shared.Movement.Pulling.Components;
+using Content.Shared.Movement.Pulling.Events;
+using Content.Shared.Movement.Systems;
+using Content.Shared.Popups;
+using Content.Shared.Pulling.Events;
+using Content.Shared.Standing;
+using Content.Shared.Verbs;
+using Robust.Shared.Containers;
+using Robust.Shared.Input.Binding;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Player;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
+
+namespace Content.Shared.Movement.Pulling.Systems;
+
+/// <summary>
+/// Allows one entity to pull another behind them via a physics distance joint.
+/// </summary>
+public sealed partial class PullingSystem : EntitySystem
+{
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private ActionBlockerSystem _blocker = default!;
+    [Dependency] private AlertsSystem _alertsSystem = default!;
+    [Dependency] private MovementSpeedModifierSystem _modifierSystem = default!;
+    [Dependency] private SharedJointSystem _joints = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private SharedHandsSystem _handsSystem = default!;
+    [Dependency] private SharedInteractionSystem _interaction = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private HeldSpeedModifierSystem _clothingMoveSpeed = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedVirtualItemSystem _virtual = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        InitializeTrauma(); // Trauma
+
+        UpdatesAfter.Add(typeof(SharedPhysicsSystem));
+        UpdatesOutsidePrediction = true;
+
+        SubscribeLocalEvent<PullableComponent, MoveInputEvent>(OnPullableMoveInput);
+        SubscribeLocalEvent<PullableComponent, CollisionChangeEvent>(OnPullableCollisionChange);
+        SubscribeLocalEvent<PullableComponent, JointRemovedEvent>(OnJointRemoved);
+        SubscribeLocalEvent<PullableComponent, GetVerbsEvent<Verb>>(AddPullVerbs);
+        SubscribeLocalEvent<PullableComponent, EntGotInsertedIntoContainerMessage>(OnPullableContainerInsert);
+        SubscribeLocalEvent<PullableComponent, ModifyUncuffDurationEvent>(OnModifyUncuffDuration);
+        SubscribeLocalEvent<PullableComponent, StopBeingPulledAlertEvent>(OnStopBeingPulledAlert);
+        SubscribeLocalEvent<PullableComponent, GetInteractingEntitiesEvent>(OnGetInteractingEntities);
+
+        SubscribeLocalEvent<PullerComponent, MobStateChangedEvent>(OnStateChanged, after: [typeof(MobThresholdSystem)]);
+        SubscribeLocalEvent<PullerComponent, AfterAutoHandleStateEvent>(OnAfterState);
+        SubscribeLocalEvent<PullerComponent, EntGotInsertedIntoContainerMessage>(OnPullerContainerInsert);
+        SubscribeLocalEvent<PullerComponent, EntityUnpausedEvent>(OnPullerUnpaused);
+        SubscribeLocalEvent<PullerComponent, VirtualItemDeletedEvent>(OnVirtualItemDeleted);
+        SubscribeLocalEvent<PullerComponent, RefreshMovementSpeedModifiersEvent>(OnRefreshMovespeed);
+        SubscribeLocalEvent<PullerComponent, DropHandItemsEvent>(OnDropHandItems);
+        SubscribeLocalEvent<PullerComponent, StopPullingAlertEvent>(OnStopPullingAlert);
+
+        SubscribeLocalEvent<HandsComponent, PullStartedMessage>(HandlePullStarted);
+        SubscribeLocalEvent<HandsComponent, PullStoppedMessage>(HandlePullStopped);
+
+        SubscribeLocalEvent<PullableComponent, StrappedEvent>(OnBuckled);
+        SubscribeLocalEvent<PullableComponent, BuckledEvent>(OnGotBuckled);
+        SubscribeLocalEvent<ActivePullerComponent, TargetHandcuffedEvent>(OnTargetHandcuffed);
+
+        CommandBinds.Builder
+            .Bind(ContentKeyFunctions.ReleasePulledObject, InputCmdHandler.FromDelegate(OnReleasePulledObject, handle: false))
+            .Register<PullingSystem>();
+    }
+
+    private void OnTargetHandcuffed(Entity<ActivePullerComponent> ent, ref TargetHandcuffedEvent args)
+    {
+        if (!TryComp<PullerComponent>(ent, out var comp))
+            return;
+
+        if (comp.Pulling == null)
+            return;
+
+        if (CanPull(ent, comp.Pulling.Value, comp))
+            return;
+
+        if (!TryComp<PullableComponent>(comp.Pulling, out var pullableComp))
+            return;
+
+        TryStopPull(comp.Pulling.Value, pullableComp);
+    }
+
+    private void HandlePullStarted(EntityUid uid, HandsComponent component, PullStartedMessage args)
+    {
+        if (args.PullerUid != uid)
+            return;
+
+        if (TryComp(args.PullerUid, out PullerComponent? pullerComp) && !pullerComp.NeedsHands)
+            return;
+
+        // <Trauma>
+        if (!ShouldSpawnVirtualItems(uid, args.PulledUid))
+            return;
+        // </Trauma>
+
+        if (!_virtual.TrySpawnVirtualItemInHand(args.PulledUid, uid))
+        {
+            DebugTools.Assert("Unable to find available hand when starting pulling??");
+        }
+    }
+
+    private void HandlePullStopped(EntityUid uid, HandsComponent component, PullStoppedMessage args)
+    {
+        if (args.PullerUid != uid)
+            return;
+
+        _modifierSystem.RefreshMovementSpeedModifiers(uid); // Trauma
+
+        // Try find hand that is doing this pull.
+        // and clear it.
+        foreach (var held in _handsSystem.EnumerateHeld((uid, component)))
+        {
+            if (!TryComp(held, out VirtualItemComponent? virtualItem) || virtualItem.BlockingEntity != args.PulledUid)
+                continue;
+
+            _handsSystem.TryDrop((args.PullerUid, component), held);
+            break;
+        }
+    }
+
+    private void OnStateChanged(EntityUid uid, PullerComponent component, ref MobStateChangedEvent args)
+    {
+        if (component.Pulling == null)
+            return;
+
+        if (TryComp<PullableComponent>(component.Pulling, out var comp) && (args.NewMobState == MobState.Critical || args.NewMobState == MobState.Dead))
+        {
+            TryStopPull(component.Pulling.Value, comp);
+        }
+    }
+
+    private void OnBuckled(Entity<PullableComponent> ent, ref StrappedEvent args)
+    {
+        // Prevent people from pulling the entity they are buckled to
+        if (ent.Comp.Puller == args.Buckle.Owner && !args.Buckle.Comp.PullStrap)
+            StopPulling(ent, ent);
+    }
+
+    private void OnGotBuckled(Entity<PullableComponent> ent, ref BuckledEvent args)
+    {
+        StopPulling(ent, ent);
+    }
+
+    private void OnGetInteractingEntities(Entity<PullableComponent> ent, ref GetInteractingEntitiesEvent args)
+    {
+        if (ent.Comp.Puller != null)
+            args.InteractingEntities.Add(ent.Comp.Puller.Value);
+    }
+
+    private void OnAfterState(Entity<PullerComponent> ent, ref AfterAutoHandleStateEvent args)
+    {
+        if (ent.Comp.Pulling == null)
+            RemComp<ActivePullerComponent>(ent.Owner);
+        else
+            EnsureComp<ActivePullerComponent>(ent.Owner);
+    }
+
+    private void OnDropHandItems(EntityUid uid, PullerComponent pullerComp, DropHandItemsEvent args)
+    {
+        if (pullerComp.Pulling == null || pullerComp.NeedsHands)
+            return;
+
+        if (!TryComp(pullerComp.Pulling, out PullableComponent? pullableComp))
+            return;
+
+        TryStopPull(pullerComp.Pulling.Value, pullableComp, uid);
+    }
+
+    private void OnStopPullingAlert(Entity<PullerComponent> ent, ref StopPullingAlertEvent args)
+    {
+        if (args.Handled)
+            return;
+        if (!TryComp<PullableComponent>(ent.Comp.Pulling, out var pullable))
+            return;
+        args.Handled = TryStopPull(ent.Comp.Pulling.Value, pullable, ent);
+    }
+
+    private void OnPullerContainerInsert(Entity<PullerComponent> ent, ref EntGotInsertedIntoContainerMessage args)
+    {
+        if (ent.Comp.Pulling == null)
+            return;
+
+        if (!TryComp(ent.Comp.Pulling.Value, out PullableComponent? pulling))
+            return;
+
+        // <Goob>
+        foreach (var item in ent.Comp.GrabVirtualItems)
+        {
+            PredictedQueueDel(item);
+        }
+        // </Goob>
+
+        TryStopPull(ent.Comp.Pulling.Value, pulling, ent.Owner,
+            ignoreGrab: true); // Goob
+    }
+
+    private void OnPullableContainerInsert(Entity<PullableComponent> ent, ref EntGotInsertedIntoContainerMessage args)
+    {
+        TryStopPull(ent.Owner, ent.Comp,
+            ignoreGrab: true); // Goob
+    }
+
+    private void OnModifyUncuffDuration(Entity<PullableComponent> ent, ref ModifyUncuffDurationEvent args)
+    {
+        if (!ent.Comp.BeingPulled)
+            return;
+
+        // We don't care if the person is being uncuffed by someone else
+        if (args.User != args.Target)
+            return;
+
+        args.Duration *= 2;
+    }
+
+    private void OnStopBeingPulledAlert(Entity<PullableComponent> ent, ref StopBeingPulledAlertEvent args)
+    {
+        if (args.Handled)
+            return;
+
+        args.Handled = TryStopPull(ent, ent, ent);
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+        CommandBinds.Unregister<PullingSystem>();
+    }
+
+    private void OnPullerUnpaused(EntityUid uid, PullerComponent component, ref EntityUnpausedEvent args)
+    {
+        component.NextThrow += args.PausedTime;
+    }
+
+    private void OnVirtualItemDeleted(EntityUid uid, PullerComponent component, VirtualItemDeletedEvent args)
+    {
+        if (_timing.ApplyingState) return; // Trauma - this happens while predicting starting pulling and makes everything jank
+        // If client deletes the virtual hand then stop the pull.
+        if (component.Pulling == null)
+            return;
+
+        if (component.Pulling != args.BlockingEntity)
+            return;
+
+        if (TryComp(args.BlockingEntity, out PullableComponent? comp))
+        {
+            TryStopPull(args.BlockingEntity, comp);
+        }
+    }
+
+    private void AddPullVerbs(EntityUid uid, PullableComponent component, GetVerbsEvent<Verb> args)
+    {
+        if (!args.CanAccess || !args.CanInteract)
+            return;
+
+        // <Trauma>
+        var target = args.Target;
+        if (TryComp(target, out TargetInteractionRelayComponent? relay) && relay.RelayPulls &&
+            Exists(relay.RelayEntity))
+            target = relay.RelayEntity.Value;
+        // </Trauma>
+
+        // Are they trying to pull themselves up by their bootstraps?
+        if (args.User == target) // Trama - args.Target -> target
+            return;
+
+        //TODO VERB ICONS add pulling icon
+        if (component.Puller == args.User)
+        {
+            Verb verb = new()
+            {
+                Text = Loc.GetString("pulling-verb-get-data-text-stop-pulling"),
+                Act = () => TryStopPull(uid, component, user: args.User),
+                DoContactInteraction = false // pulling handle its own contact interaction.
+            };
+            args.Verbs.Add(verb);
+        }
+        else if (CanPull(args.User, target)) // Trauma - args.Target -> target
+        {
+            Verb verb = new()
+            {
+                Text = Loc.GetString("pulling-verb-get-data-text"),
+                Act = () => TryStartPull(args.User, target), // Trauma - args.Target -> target
+                DoContactInteraction = false // pulling handle its own contact interaction.
+            };
+            args.Verbs.Add(verb);
+        }
+    }
+
+    private void OnRefreshMovespeed(EntityUid uid, PullerComponent component, RefreshMovementSpeedModifiersEvent args)
+    {
+        // <Trauma>
+        // skip this if ApplySpeedModifier is false
+        if (!component.ApplySpeedModifier)
+            return;
+
+        var speed = component.GrabStage switch
+        {
+            GrabStage.Soft => component.SoftGrabSpeedModifier,
+            GrabStage.Hard => component.HardGrabSpeedModifier,
+            GrabStage.Suffocate => component.ChokeGrabSpeedModifier,
+            _ => 1f
+        };
+
+        var ev = new GetGrabMovespeedEvent(speed);
+        RaiseLocalEvent(uid, ref ev);
+        args.ModifySpeed(ev.Speed);
+        // </Trauma>
+
+        if (TryComp<HeldSpeedModifierComponent>(component.Pulling, out var heldMoveSpeed) && component.Pulling.HasValue)
+        {
+            var (walkMod, sprintMod) =
+                _clothingMoveSpeed.GetHeldMovementSpeedModifiers(component.Pulling.Value, heldMoveSpeed);
+            args.ModifySpeed(walkMod, sprintMod);
+            return;
+        }
+
+        args.ModifySpeed(component.WalkSpeedModifier, component.SprintSpeedModifier);
+    }
+
+    private void OnPullableMoveInput(EntityUid uid, PullableComponent component, ref MoveInputEvent args)
+    {
+        // If someone moves then break their pulling.
+        if (!component.BeingPulled)
+            return;
+
+        var entity = args.Entity;
+
+        // <Goob> - changing walking dir breaks softgrab
+        if (component.GrabStage == GrabStage.Soft)
+            TryStopPull(uid, component, user: uid);
+        // </Goob>
+
+        if (!_blocker.CanMove(entity))
+            return;
+
+        TryStopPull(uid, component, user: uid);
+    }
+
+    private void OnPullableCollisionChange(EntityUid uid, PullableComponent component, ref CollisionChangeEvent args)
+    {
+        // IDK what this is supposed to be.
+        if (!_timing.ApplyingState && component.PullJointId != null && !args.CanCollide)
+        {
+            _joints.RemoveJoint(uid, component.PullJointId);
+        }
+    }
+
+    private void OnJointRemoved(EntityUid uid, PullableComponent component, JointRemovedEvent args)
+    {
+        // Just handles the joint getting nuked without going through pulling system (valid behavior).
+
+        // Not relevant / pullable state handle it.
+        if (component.Puller != args.OtherEntity ||
+            args.Joint.ID != component.PullJointId ||
+            _timing.ApplyingState)
+        {
+            return;
+        }
+
+        if (args.Joint.ID != component.PullJointId || component.Puller == null)
+            return;
+
+        StopPulling(uid, component);
+    }
+
+    /// <summary>
+    /// Forces pulling to stop and handles cleanup.
+    /// </summary>
+    private void StopPulling(EntityUid pullableUid, PullableComponent pullableComp)
+    {
+        if (!_timing.ApplyingState)
+        {
+            // Joint shutdown
+            if (pullableComp.PullJointId != null)
+            {
+                _joints.RemoveJoint(pullableUid, pullableComp.PullJointId);
+                pullableComp.PullJointId = null;
+            }
+
+            if (TryComp<PhysicsComponent>(pullableUid, out var pullablePhysics))
+            {
+                _physics.SetFixedRotation(pullableUid, pullableComp.PrevFixedRotation, body: pullablePhysics);
+            }
+        }
+
+        var oldPuller = pullableComp.Puller;
+        if (oldPuller != null)
+            RemComp<ActivePullerComponent>(oldPuller.Value);
+
+        pullableComp.PullJointId = null;
+        pullableComp.Puller = null;
+        // <Goob>
+        pullableComp.GrabStage = GrabStage.No;
+        pullableComp.GrabEscapeChance = 1f;
+        _blocker.UpdateCanMove(pullableUid);
+        // </Goob>
+
+        Dirty(pullableUid, pullableComp);
+
+        // No more joints with puller -> force stop pull.
+        if (TryComp<PullerComponent>(oldPuller, out var pullerComp))
+        {
+            var pullerUid = oldPuller.Value;
+            _alertsSystem.ClearAlert(pullerUid, pullerComp.PullingAlert);
+            pullerComp.Pulling = null;
+            // <Trauma>
+            pullerComp.GrabStage = GrabStage.No;
+            var virtItems = pullerComp.GrabVirtualItems;
+            foreach (var item in virtItems)
+            {
+                PredictedQueueDel(item);
+            }
+
+            virtItems.Clear();
+            // </Trauma>
+            Dirty(oldPuller.Value, pullerComp);
+
+            // Messaging
+            var message = new PullStoppedMessage(pullerUid, pullableUid);
+            _modifierSystem.RefreshMovementSpeedModifiers(pullerUid);
+            _adminLogger.Add(LogType.Action, LogImpact.Low, $"{ToPrettyString(pullerUid):user} stopped pulling {ToPrettyString(pullableUid):target}");
+
+            RaiseLocalEvent(pullerUid, message);
+            RaiseLocalEvent(pullableUid, message);
+        }
+
+        _alertsSystem.ClearAlert(pullableUid, pullableComp.PulledAlert);
+    }
+
+    public bool IsPulled(EntityUid uid, PullableComponent? component = null)
+    {
+        return Resolve(uid, ref component, false) && component.BeingPulled;
+    }
+
+    public bool IsPulling(EntityUid puller, PullerComponent? component = null)
+    {
+        return Resolve(puller, ref component, false) && component.Pulling != null;
+    }
+
+    public EntityUid? GetPuller(EntityUid puller, PullableComponent? component = null)
+    {
+        return !Resolve(puller, ref component, false) ? null : component.Puller;
+    }
+
+    public EntityUid? GetPulling(EntityUid puller, PullerComponent? component = null)
+    {
+        return !Resolve(puller, ref component, false) ? null : component.Pulling;
+    }
+
+    private void OnReleasePulledObject(ICommonSession? session)
+    {
+        if (session?.AttachedEntity is not { Valid: true } player)
+        {
+            return;
+        }
+
+        if (!TryComp(player, out PullerComponent? pullerComp) ||
+            !TryComp(pullerComp.Pulling, out PullableComponent? pullableComp))
+        {
+            return;
+        }
+
+        TryStopPull(pullerComp.Pulling.Value, pullableComp, user: player,
+            ignoreGrab: true); // Goob
+    }
+
+    public bool CanPull(EntityUid puller, EntityUid pullableUid, PullerComponent? pullerComp = null)
+    {
+        if (!Resolve(puller, ref pullerComp, false))
+        {
+            return false;
+        }
+
+        if (pullerComp.NeedsHands
+            && !_handsSystem.TryGetEmptyHand(puller, out _)
+            && pullerComp.Pulling == null)
+        {
+            // <Trauma>
+            if (ShouldSpawnVirtualItems(puller, pullableUid))
+                return false;
+            // </Trauma>
+        }
+
+        if (!_blocker.CanInteract(puller, pullableUid))
+        {
+            return false;
+        }
+
+        if (!TryComp<PhysicsComponent>(pullableUid, out var physics))
+        {
+            return false;
+        }
+
+        if (physics.BodyType == BodyType.Static)
+        {
+            return false;
+        }
+
+        if (puller == pullableUid)
+        {
+            return false;
+        }
+
+        if (!_containerSystem.IsInSameOrNoContainer(puller, pullableUid))
+        {
+            return false;
+        }
+
+        var getPulled = new BeingPulledAttemptEvent(puller, pullableUid);
+        RaiseLocalEvent(pullableUid, getPulled, true);
+        var startPull = new StartPullAttemptEvent(puller, pullableUid);
+        RaiseLocalEvent(puller, startPull, true);
+        return !startPull.Cancelled && !getPulled.Cancelled;
+    }
+
+    public bool TogglePull(Entity<PullableComponent?> pullable, EntityUid pullerUid)
+    {
+        if (!Resolve(pullable, ref pullable.Comp, false))
+            return false;
+
+        // <Goob> - rewrote for grab intent
+        if (pullable.Comp.Puller != pullerUid)
+            return TryStartPull(pullerUid, pullable, pullableComp: pullable.Comp);
+
+        if (TryGrab((pullable, pullable.Comp), pullerUid))
+            return true;
+
+        if (!_combatMode.IsInCombatMode(pullable))
+            return TryStopPull(pullable, pullable.Comp, ignoreGrab: true);
+
+        return false;
+        // </Goob>
+    }
+
+    public bool TogglePull(EntityUid pullerUid, PullerComponent puller)
+    {
+        if (!TryComp<PullableComponent>(puller.Pulling, out var pullable))
+            return false;
+
+        return TogglePull((puller.Pulling.Value, pullable), pullerUid);
+    }
+
+    public bool TryStartPull(EntityUid pullerUid, EntityUid pullableUid,
+        PullerComponent? pullerComp = null, PullableComponent? pullableComp = null,
+        // <Trauma>
+        GrabStage? grabStageOverride = null,
+        float escapeAttemptModifier = 1.0f,
+        bool force = false)
+        // </Trauma>
+    {
+        if (!Resolve(pullerUid, ref pullerComp, false) ||
+            !Resolve(pullableUid, ref pullableComp, false))
+        {
+            return false;
+        }
+
+        if (pullerComp.Pulling == pullableUid)
+            return true;
+
+        if (!CanPull(pullerUid, pullableUid))
+            return false;
+
+        if (!TryComp(pullerUid, out PhysicsComponent? pullerPhysics) || !TryComp(pullableUid, out PhysicsComponent? pullablePhysics))
+            return false;
+
+        // <Goob> - prevent grabbing while on melee cooldown
+        if (!force &&
+            TryComp<MeleeWeaponComponent>(pullerUid, out var meleeWeapon) &&
+            _timing.CurTime < meleeWeapon.NextAttack)
+            return false;
+        // </Goob>
+
+        // Ensure that the puller is not currently pulling anything.
+        if (TryComp<PullableComponent>(pullerComp.Pulling, out var oldPullable)
+            && !TryStopPull(pullerComp.Pulling.Value, oldPullable, pullerUid, true)) // Goobstation
+            return false;
+
+        // Stop anyone else pulling the entity we want to pull
+        if (pullableComp.Puller != null)
+        {
+            // We're already pulling this item
+            if (pullableComp.Puller == pullerUid)
+                return false;
+            // <Goob>
+            if (!TryStopPull(pullableUid, pullableComp, pullableComp.Puller))
+            {
+                // Not succeed to retake grabbed entity
+                _popup.PopupEntity(Loc.GetString("popup-grab-retake-fail",
+                        ("puller", Identity.Entity(pullableComp.Puller.Value, EntityManager)),
+                        ("pulled", Identity.Entity(pullableUid, EntityManager))),
+                    pullerUid,
+                    pullerUid,
+                    PopupType.MediumCaution);
+                _popup.PopupClient(Loc.GetString("popup-grab-retake-fail-puller",
+                        ("puller", Identity.Entity(pullerUid, EntityManager)),
+                        ("pulled", Identity.Entity(pullableUid, EntityManager))),
+                    pullableComp.Puller.Value,
+                    pullableComp.Puller.Value,
+                    PopupType.MediumCaution);
+                return false;
+            }
+
+            if (pullableComp.GrabStage != GrabStage.No)
+            {
+                // Successful retake
+                _popup.PopupEntity(Loc.GetString("popup-grab-retake-success",
+                    ("puller", Identity.Entity(pullableComp.Puller.Value, EntityManager)),
+                    ("pulled", Identity.Entity(pullableUid, EntityManager))),
+                    pullerUid,
+                    pullerUid,
+                    PopupType.MediumCaution);
+                _popup.PopupClient(Loc.GetString("popup-grab-retake-success-puller",
+                    ("puller", Identity.Entity(pullerUid, EntityManager)),
+                    ("pulled", Identity.Entity(pullableUid, EntityManager))),
+                    pullableComp.Puller.Value,
+                    pullableComp.Puller.Value,
+                    PopupType.MediumCaution);
+            }
+            // </Goob>
+        }
+
+        var pullAttempt = new PullAttemptEvent(pullerUid, pullableUid);
+        RaiseLocalEvent(pullerUid, pullAttempt);
+
+        if (pullAttempt.Cancelled)
+            return false;
+
+        RaiseLocalEvent(pullableUid, pullAttempt);
+
+        if (pullAttempt.Cancelled)
+            return false;
+
+        // Pulling confirmed
+
+        _interaction.DoContactInteraction(pullableUid, pullerUid);
+
+        // Use net entity so it's consistent across client and server.
+        pullableComp.PullJointId = $"pull-joint-{GetNetEntity(pullableUid)}";
+
+        EnsureComp<ActivePullerComponent>(pullerUid);
+        pullerComp.Pulling = pullableUid;
+        pullableComp.Puller = pullerUid;
+
+        // store the pulled entity's physics FixedRotation setting in case we change it
+        pullableComp.PrevFixedRotation = pullablePhysics.FixedRotation;
+
+        // joint state handling will manage its own state
+        if (!_timing.ApplyingState)
+        {
+            var joint = _joints.CreateDistanceJoint(pullableUid, pullerUid,
+                    pullablePhysics.LocalCenter, pullerPhysics.LocalCenter,
+                    id: pullableComp.PullJointId);
+            joint.CollideConnected = false;
+            // This maximum has to be there because if the object is constrained too closely, the clamping goes backwards and asserts.
+            // Internally, the joint length has been set to the distance between the pivots.
+            // Add an additional 15cm (pretty arbitrary) to the maximum length for the hard limit.
+            joint.MaxLength = joint.Length + 0.15f;
+            joint.MinLength = 0f;
+            // Set the spring stiffness to zero. The joint won't have any effect provided
+            // the current length is beteen MinLength and MaxLength. At those limits, the
+            // joint will have infinite stiffness.
+            joint.Stiffness = 0f;
+
+            _physics.SetFixedRotation(pullableUid, pullableComp.FixedRotationOnPull, body: pullablePhysics);
+        }
+
+        // Messaging
+        var message = new PullStartedMessage(pullerUid, pullableUid);
+        _modifierSystem.RefreshMovementSpeedModifiers(pullerUid);
+        _alertsSystem.ShowAlert(pullerUid, pullerComp.PullingAlert, 0); // Goobstation
+        _alertsSystem.ShowAlert(pullableUid, pullableComp.PulledAlert, 0); // Goobstation
+
+        RaiseLocalEvent(pullerUid, message);
+        RaiseLocalEvent(pullableUid, message);
+
+        Dirty(pullerUid, pullerComp);
+        Dirty(pullableUid, pullableComp);
+
+        var pullingMessage =
+            Loc.GetString("getting-pulled-popup", ("puller", Identity.Entity(pullerUid, EntityManager)));
+        _popup.PopupEntity(pullingMessage, pullableUid, pullableUid);
+
+        _adminLogger.Add(LogType.Action, LogImpact.Low,
+            $"{ToPrettyString(pullerUid):user} started pulling {ToPrettyString(pullableUid):target}");
+
+        // <Goob>
+        if (grabStageOverride != null || _combatMode.IsInCombatMode(pullerUid))
+            TryGrab(pullableUid, pullerUid, true, grabStageOverride: grabStageOverride, escapeAttemptModifier: escapeAttemptModifier);
+        // </Goob>
+        return true;
+    }
+
+    public bool TryStopPull(EntityUid pullableUid, PullableComponent pullable, EntityUid? user = null,
+        bool ignoreGrab = false) // Goob
+    {
+        var pullerUidNull = pullable.Puller;
+
+        if (pullerUidNull == null)
+            return true;
+
+        // <Trauma> - check action blockers so you cant break grabs while stunned asleep etc
+        if (user is { } userUid && !_blocker.CanInteract(userUid, pullableUid))
+            return false;
+        // </Trauma>
+
+        var msg = new AttemptStopPullingEvent(user);
+        RaiseLocalEvent(pullableUid, ref msg, true);
+
+        if (msg.Cancelled)
+            return false;
+
+        // <Goob>
+        if (!ignoreGrab && !TryGrabRelease(pullableUid, user, pullerUidNull.Value))
+            return false;
+        // </Goob>
+
+        StopPulling(pullableUid, pullable);
+        return true;
+    }
+
+    /// <summary>
+    /// Copies compatible datafields of <see cref="PullerComponent"/> onto the target entity.
+    /// </summary>
+    /// <param name="source">The entity who's component will be taken.</param>
+    /// <param name="target">The entity to apply it to.</param>
+    public void CopyPullerComponent(Entity<PullerComponent?> source, EntityUid target)
+    {
+        if (!Resolve(source, ref source.Comp))
+            return;
+
+        var targetComp = EnsureComp<PullerComponent>(target);
+        targetComp.ThrowCooldown = source.Comp.ThrowCooldown;
+        targetComp.NeedsHands = source.Comp.NeedsHands;
+        targetComp.PullingAlert = source.Comp.PullingAlert;
+        Dirty(target, targetComp);
+    }
+}

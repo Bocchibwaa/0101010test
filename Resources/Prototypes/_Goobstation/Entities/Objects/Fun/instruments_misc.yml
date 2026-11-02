@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  abstract: true
+  parent: [BaseHandheldInstrument, Clothing]
+  id: BaseCassette
+  components:
+  - type: Instrument
+    program: 62
+  - type: SwappableInstrument
+    instrumentList:
+      "Synth": { 62: 0 }
+      "Friend": { 2: 0 }
+      "Overdriven": { 29: 0 }
+  - type: Sprite
+    state: icon
+  - type: Item
+    size: Small
+  - type: Clothing
+    quickEquip: false
+    slots:
+    - neck
+  - type: ActivatableUI
+    inHandsOnly: false
+  - type: StaticPrice
+    price: 50
+
+- type: entity
+  parent: [BaseCassette, BaseSyndicateContraband]
+  id: BloodredCassette
+  name: blood-red cassette player
+  description: The least subtle way to enjoy your favorite tunes.
+  components:
+  - type: Sprite
+    sprite: &bloodred _Goobstation/Objects/Fun/bloodred_cassette_player.rsi
+  - type: Item
+    sprite: *bloodred
+  - type: Clothing
+    sprite: *bloodred
+  - type: StaticPrice
+    price: 250
+
+- type: entity
+  parent: BaseCassette
+  id: CrewCassette
+  name: cassette player
+  description: Regular old cassette player to enjoy your tunes on the go.
+  components:
+  - type: Sprite
+    sprite: &regular _Goobstation/Objects/Fun/crew_cassette_player.rsi
+  - type: Item
+    sprite: *regular
+  - type: Clothing
+    sprite: *regular
+
+- type: entity
+  parent: BaseCassette
+  id: ExecutiveCassette
+  name: executive cassette player
+  description: Perfect to make you look like you do mergers and acquisitions.
+  components:
+  - type: Sprite
+    sprite: &executive _Goobstation/Objects/Fun/executive_cassette_player.rsi
+  - type: Item
+    sprite: *executive
+  - type: Clothing
+    sprite: *executive
+  - type: StaticPrice
+    price: 51 # premium

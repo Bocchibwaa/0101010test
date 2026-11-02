@@ -1,0 +1,116 @@
+using Content.Server.Chat.Systems;
+using Content.Server.Movement.Systems;
+using Content.Shared.Chat;
+using Content.Shared.Effects;
+using Content.Shared.Speech.Components;
+using Content.Shared.Weapons.Melee;
+using Content.Shared.Weapons.Melee.Events;
+using Robust.Shared.Map;
+using Robust.Shared.Player;
+using System.Linq;
+using System.Numerics;
+
+namespace Content.Server.Weapons.Melee;
+
+public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
+{
+    [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private LagCompensationSystem _lag = default!;
+    [Dependency] private SharedColorFlashEffectSystem _color = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<MeleeSpeechComponent, MeleeHitEvent>(OnSpeechHit);
+    }
+
+    protected override bool ArcRaySuccessful(EntityUid targetUid,
+        Vector2 position,
+        Angle angle,
+        Angle arcWidth,
+        float range,
+        MapId mapId,
+        EntityUid ignore,
+        ICommonSession? session)
+    {
+        // Originally the client didn't predict damage effects so you'd intuit some level of how far
+        // in the future you'd need to predict, but then there was a lot of complaining like "why would you add artifical delay" as if ping is a choice.
+        // Now damage effects are predicted but for wide attacks it differs significantly from client and server so your game could be lying to you on hits.
+        // This isn't fair in the slightest because it makes ping a huge advantage and this would be a hidden system.
+        // Now the client tells us what they hit and we validate if it's plausible.
+
+        // Even if the client is sending entities they shouldn't be able to hit:
+        // A) Wide-damage is split anyway
+        // B) We run the same validation we do for click attacks.
+
+        // Could also check the arc though future effort + if they're aimbotting it's not really going to make a difference.
+
+        // (This runs lagcomp internally and is what clickattacks use)
+        if (!Interaction.InRangeUnobstructed(ignore, targetUid, range + 0.1f, overlapCheck: false))
+            return false;
+
+        // TODO: Check arc though due to the aforementioned aimbot + damage split comments it's less important.
+        return true;
+    }
+
+    public override bool InRange(EntityUid user, EntityUid target, float range, ICommonSession? session, out EntityUid source) // Trauma - made public, added source
+    {
+        EntityCoordinates targetCoordinates;
+        Angle targetLocalAngle;
+
+        if (session is { } pSession)
+        {
+            (targetCoordinates, targetLocalAngle) = _lag.GetCoordinatesAngle(target, pSession);
+            // <Trauma>
+            if (RaiseInRangeEvent(user, target, range, targetCoordinates, targetLocalAngle, out var inRange, out source))
+                return inRange;
+            // </Trauma>
+            return Interaction.InRangeUnobstructed(user, target, targetCoordinates, targetLocalAngle, range, overlapCheck: false);
+        }
+
+        // <Trauma>
+        if (RaiseInRangeEvent(user, target, range, null, null, out var result, out source))
+            return result;
+        // </Trauma>
+
+        return Interaction.InRangeUnobstructed(user, target, range);
+    }
+
+    protected override void DoDamageEffect(HashSet<EntityUid> targets, EntityUid? user, TransformComponent targetXform)
+    {
+        var filter = Filter.Pvs(targetXform.Coordinates, entityMan: EntityManager).RemoveWhereAttachedEntity(o => o == user);
+        _color.RaiseEffect(Color.Red, targets.ToList(), filter);
+    }
+
+    public override void DoLunge(EntityUid user, EntityUid weapon, Angle angle, Vector2 localPos, string? animation, Angle spriteRotation, bool flipAnimation, bool predicted = true, EntityUid? source = null) // Trauma - added source
+    {
+        Filter filter;
+
+        if (predicted)
+        {
+            filter = Filter.Pvs(source ?? user, entityManager: EntityManager).RemovePlayerByAttachedEntity(user); // Trauma - source
+        }
+        else
+        {
+            filter = Filter.Pvs(source ?? user, entityManager: EntityManager); // Trauma - source
+        }
+
+        RaiseNetworkEvent(new MeleeLungeEvent(GetNetEntity(source ?? user), GetNetEntity(weapon), angle, localPos, animation, spriteRotation, flipAnimation), filter); // Trauma - source
+    }
+
+    private void OnSpeechHit(EntityUid owner, MeleeSpeechComponent comp, MeleeHitEvent args)
+    {
+        if (!args.IsHit ||
+        !args.HitEntities.Any())
+        {
+            return;
+        }
+
+        if (comp.Battlecry != null)//If the battlecry is set to empty, doesn't speak
+        {
+            _chat.TrySendInGameICMessage(args.User, comp.Battlecry, InGameICChatType.Speak, true, true, checkRadioPrefix: false);  //Speech that isn't sent to chat or adminlogs
+        }
+
+    }
+}

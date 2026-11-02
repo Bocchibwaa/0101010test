@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: soundCollection
+  id: PowerFistHit
+  files:
+  - /Audio/_Trauma/Weapons/Melee/PowerFist/powerfist_hit1.ogg
+  - /Audio/_Trauma/Weapons/Melee/PowerFist/powerfist_hit2.ogg
+  - /Audio/_Trauma/Weapons/Melee/PowerFist/powerfist_hit3.ogg

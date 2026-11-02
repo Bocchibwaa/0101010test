@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: cloningSettings
+  parent: [Traits, BaseEquipmentBlacklist]
+  id: FleshMimic
+  components:
+  # general
+  - DetailExaminable
+  - Dna
+  - Fingerprint
+  - RandomSprite
+  - EncryptionKeyHolder
+  # job specific
+  - MindShield
+  # accents
+  - Accentless
+  - BackwardsAccent
+  - BarkAccent
+  - BleatingAccent
+  - DamagedSiliconAccent
+  - FrenchAccent
+  - FrontalLisp
+  - GermanAccent
+  - LizardAccent
+  - MobsterAccent
+  - MonkeyAccent
+  - MothAccent
+  - MumbleAccent
+  - OwOAccent
+  - ParrotAccent
+  - PirateAccent
+  - ReplacementAccent
+  - RussianAccent
+  - ScrambledAccent
+  - SkeletonAccent
+  - SlurredAccent
+  - SouthernAccent
+  - SpanishAccent
+  - StutteringAccent
+  - LanguageSpeaker
+  - ForeignerTrait
+  forceCloning: true # IPC/Vox cloning for paradox ghostrole
+  copyInternalStorage: false
+  copyStorage: false
+  makeEquipmentUnremoveable: true
+  internalContentsUnremoveable: true
+  allowNonHumanoid: true
+  copyEquipment: # No pockets, ears, suit storage, id card
+  - PREVENTEQUIP
+  - HEAD
+  - EYES
+  - MASK
+  - OUTERCLOTHING
+  - INNERCLOTHING
+  - NECK
+  - BACK
+  - BELT
+  - GLOVES
+  - LEGS
+  - FEET

@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Damage.Systems;
+using Content.Shared.Random.Helpers;
+using Content.Shared.Trigger.Systems;
+using Robust.Shared.Timing;
+using Robust.Shared.Random;
+
+namespace Content.Goobstation.Shared.Trigger.Triggers;
+
+public sealed partial class TriggerOnDamageSystem : EntitySystem
+{
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private TriggerSystem _trigger = default!;
+
+    [SubscribeLocalEvent]
+    private void OnDamageDealt(Entity<TriggerOnDamageComponent> ent, ref DamageDealtEvent args)
+    {
+        if (args.Damage.GetTotal() <= ent.Comp.Threshold) // don't trigger on low damage
+            return;
+
+        if (!SharedRandomExtensions.PredictedProb(_timing, ent.Comp.Probability, GetNetEntity(ent)))
+            return;
+
+        _trigger.Trigger(ent.Owner, args.Origin, ent.Comp.KeyOut);
+    }
+}

@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: localizedDataset
+  id: NamesWraith
+  values:
+    prefix: names-wraith-dataset-
+    count: 35
+
+- type: localizedDataset
+  id: NamesWraithTitle
+  values:
+    prefix: names-wraith-title-dataset-
+    count: 10

@@ -1,0 +1,4 @@
+- files: ["growl.ogg", "tentacle_hit.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from Goonstation, converted to mono by @deltanedas (github)"
+  source: "https://github.com/goonstation/goonstation/tree/7a09de03575c8158526c1dbdff4cb7fb8021d641/sound/misc/hastur"

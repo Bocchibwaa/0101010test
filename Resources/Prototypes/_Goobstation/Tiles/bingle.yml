@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: tile
+  id: FloorBingle
+  name: tiles-bingle-floor
+  sprite: /Textures/_Trauma/Tiles/binglefloortile.png
+  variants: 4
+  baseTurf: Plating
+  isSubfloor: false
+  deconstructTools: [ Prying ]
+  footstepSounds:
+    collection: FootstepBlood
+  itemDrop: FloorTileItemBingle
+  friction: 1 #No longer slippy
+  heatCapacity: 10000
+  tileRipResistance: 80
+
+- type: entity
+  id: FloorTileItemBingle
+  parent: FloorTileItemBase
+  name: bingle floor
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Objects/Tiles/bingle.rsi
+    state: bingletile
+  - type: FloorTile
+    outputs:
+    - Plating
+    - FloorBingle
+  - type: Stack
+    stackType: FloorTileBingle
+
+- type: entity
+  id: FloorTileItemBingleFull
+  parent: FloorTileItemBingle
+  components:
+  - type: Stack
+    stackType: FloorTileBingle
+    count: 30
+
+- type: stack
+  id: FloorTileBingle
+  name: stack-bingle-tile
+  spawn: FloorTileItemBingle
+  maxCount: 30

@@ -1,0 +1,133 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: ClothingMaskGasERT
+  id: ClothingMaskGasChrono
+  name: futuristic gasmask
+  description: A futuristic gas mask of unknown design with an unimaginable number of filtration systems
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Mask/chronolegioneer.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Mask/chronolegioneer.rsi
+  - type: VoiceMask
+  - type: Tag
+    tags:
+    - WhitelistChameleon
+    - HidesHair
+
+- type: entity
+  parent: ClothingMaskGasChrono
+  id: ClothingMaskGasChronoUnremoveable
+  suffix: Unremoveable
+  components:
+  - type: Unremoveable
+
+- type: entity
+  parent: ClothingMaskClown
+  id: ClothingMaskClownUnremoveable
+  name: unremoveable banana clown wig and mask
+  components:
+  - type: Unremoveable
+  - type: FlashImmunity
+  - type: EyeProtection
+
+- type: entity
+  parent: [ClothingMaskBase, BaseMinorContraband]
+  id: ClothingMaskGasVoiceCraftable
+  suffix: Voice Mask, Craftable
+  name: Voice Modulator Mask
+  description: A poorly constructed voice modulator made of a gasmask and voice trigger.
+  components:
+    - type: Sprite
+      sprite: Clothing/Mask/gas.rsi
+    - type: Clothing
+      sprite: Clothing/Mask/gas.rsi
+    - type: BreathMask
+    - type: IdentityBlocker
+    - type: VoiceMask
+      voiceMaskSpeechVerb: VoiceModulator
+      enableAction: false
+    - type: HideLayerClothing
+      slots:
+      - Snout
+    - type: UserInterface
+      interfaces:
+        enum.VoiceMaskUIKey.Key:
+          type: VoiceModulatorBoundUserInterface
+    - type: Tag
+      tags:
+      - IPCMaskWearable # EE - IPCs
+    - type: Construction
+      graph: VoiceMaskCraftable
+      node: end
+
+- type: entity
+  parent: ClothingMaskGas
+  id: ClothingMaskGasHalf
+  name: half gas mask
+  description: A gas mask... only the half of it.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Mask/gashalf.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Mask/gashalf.rsi
+  - type: IdentityBlocker
+    coverage: MOUTH
+  - type: Tag
+    tags:
+    - HamsterWearable
+    - WhitelistChameleon
+    - GasMask
+    - Mask
+  - type: HideLayerClothing
+    slots:
+    - Snout
+    hideOnToggle: true
+  - type: Construction
+    graph: GasMaskHalf
+    node: end
+    deconstructionTarget: null
+  - type: Item
+    size: Tiny
+  - type: ViewconeModifier
+    angleModifier: 1.0
+
+- type: entity # TODO: Whenever vampirism is ported, make this block it.
+  parent: ClothingMaskBase
+  id: ClothingMaskMuzzleSecure
+  name: secure muzzle
+  description: Can prevent vampires from biting people, or prevent annoying people from talking.
+  components:
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Mask/securemuzzle.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Mask/securemuzzle.rsi
+    equipDelay: 3
+    unequipDelay: 10
+  - type: IngestionBlocker
+  - type: MumbleAccent
+    relayAccent: true
+  - type: Tag
+    tags:
+    - Muzzle
+
+- type: entity # TODO: Whenever vampirism is ported, make this block it, and shock.
+  parent: [ ClothingMaskMuzzleSecure, BaseBatteryShock ]
+  id: ClothingMaskMuzzleShock
+  name: shock muzzle
+  description: A muzzle designed to prevent biting. This one is fitted with a behaviour correction system.
+  components:
+  - type: ShockOnTrigger
+  - type: TriggerOnSpeak
+  - type: ActiveListener
+    range: 4
+
+- type: entity
+  parent: ClothingMaskGas
+  id: ClothingMaskGasUnremoveable
+  suffix: Unremoveable
+  components:
+  - type: Unremoveable

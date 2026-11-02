@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reaction
+  id: BlackBloodBreakdown
+  source: true
+  requiredMixerCategories:
+  - Centrifuge
+  reactants:
+    BlackBlood:
+      amount: 20
+  products:
+    Water: 7
+    Protein: 4
+    Iron: 3
+    Sugar: 2
+    Oxygen: 2
+    CarbonDioxide: 2

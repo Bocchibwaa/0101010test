@@ -1,0 +1,111 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# T3 chems for mapping
+
+- type: entity
+  id: GoldChemistryVial
+  parent: ChemistryEmptyVial
+  suffix: gold
+  components:
+  - type: Label
+    localizedLabel: reagent-name-gold
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Gold
+        Quantity: 30
+
+- type: entity
+  id: SilverChemistryVial
+  parent: ChemistryEmptyVial
+  suffix: silver
+  components:
+  - type: Label
+    localizedLabel: reagent-name-silver
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Silver
+        Quantity: 30
+
+- type: entity
+  id: UraniumChemistryVial
+  parent: ChemistryEmptyVial
+  suffix: uranium
+  components:
+  - type: Label
+    localizedLabel: reagent-name-uranium
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Uranium
+        Quantity: 30
+
+- type: entity
+  id: TirimolChemistryVial
+  parent: ChemistryEmptyVial
+  suffix: tirimol
+  components:
+  - type: Label
+    localizedLabel: reagent-name-tirimol
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Tirimol
+        Quantity: 30
+
+- type: entity
+  id: OmnizineChemistryVial
+  parent: ChemistryEmptyVial
+  suffix: omnizine
+  components:
+  - type: Label
+    localizedLabel: reagent-name-omnizine
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Omnizine
+        Quantity: 30
+
+- type: entity
+  id: ProcenylLazideChemistryVial
+  parent: ChemistryEmptyVial
+  suffix: procenyl lazide
+  components:
+  - type: Label
+    localizedLabel: reagent-name-procenyl-lazide
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: ProcenylLazide
+        Quantity: 30
+
+- type: entity
+  parent: BaseBeakerMetallic
+  id: BluespaceChemistryVial
+  name: bluespace vial
+  description: It's longer on the inside! # thats what she said, doctor
+  components:
+  - type: Tag
+    tags:
+    - CentrifugeCompatible
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _Goobstation/Objects/Specific/Medical/vial_bluespace.rsi
+    layers:
+      - state: icon
+  - type: SolutionContainerVisuals
+    maxFillLevels: 0
+  - type: Solution
+    solution:
+      maxVol: 300
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 25
+      Plastic: 37
+      Glass: 62
+      Plasma: 25
+      Silver: 12
+  - type: StaticPrice
+    price: 65

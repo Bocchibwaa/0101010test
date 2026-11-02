@@ -1,0 +1,315 @@
+# region Base
+- type: construction
+  abstract: true
+  id: BaseItemMisc
+  category: construction-category-misc
+  objectType: Item
+# endregion
+
+# region Weapons
+- type: construction
+  parent: BaseWeapon
+  id: bat
+  graph: WoodenBat
+  targetNode: bat
+  # <Trauma>
+  qualityPrototype: ShitCraft
+  theory:
+    WeaponsKnowledge: 0
+  practical:
+    WeaponsKnowledge: 4
+    CarvingKnowledge: 4
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: makeshiftstunprod
+  graph: makeshiftstunprod
+  targetNode: msstunprod
+  # <Trauma>
+  qualityPrototype: ShitCraft
+  theory:
+    WeaponsKnowledge: 1
+    FabricationKnowledge: 1
+  practical:
+    ElectronicsKnowledge: 4
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: pneumaticcannon
+  graph: PneumaticCannon
+  targetNode: cannon
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 3
+    WeaponsKnowledge: 1
+  practical:
+    GunsmithingKnowledge: 2
+    MechanicsKnowledge: 3
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: improvisedshotgun
+  graph: ImprovisedShotgunGraph
+  targetNode: shotgun
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 3
+    GunsmithingKnowledge: 2
+  practical:
+    GunsmithingKnowledge: 4
+    WeaponsKnowledge: 3
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: ShellShotgunImprovised
+  graph: ImprovisedShotgunShellGraph
+  targetNode: shell
+  # <Trauma>
+  qualityPrototype: ShitBullets
+  theory:
+    FabricationKnowledge: 3
+    GunsmithingKnowledge: 1
+  practical:
+    GunsmithingKnowledge: 2
+    WeaponsKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: riflestock
+  graph: RifleStockGraph
+  targetNode: riflestock
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    CarvingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: firebomb
+  graph: FireBomb
+  targetNode: firebomb
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    MechanicsKnowledge: 2
+    WeaponsKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: pipebomb
+  graph: PipeBomb
+  targetNode: pipebomb
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    MechanicsKnowledge: 3
+    WeaponsKnowledge: 3
+  # </Trauma>
+# endregion Weapons
+
+# region Clothing
+- type: construction
+  parent: BaseClothing
+  id: ghost_sheet
+  graph: GhostSheet
+  targetNode: ghost_sheet
+
+- type: construction
+  parent: BaseClothing
+  id: flowerwreath
+  graph: flowerwreath
+  targetNode: flowerwreath
+  # <Trauma>
+  theory: {}
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseClothing
+  id: strawHat
+  graph: StrawHat
+  targetNode: strawhat
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    TailoringKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseClothing
+  id: HardsuitGoliath
+  graph: HardsuitGoliath
+  targetNode: hardsuitGoliath
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+    ArmorKnowledge: 1
+  useQuality: false # just taping goliath hide to a hardsuit, and it doesnt work for the helmet lol
+  # </Trauma>
+
+- type: construction
+  parent: BaseClothing
+  id: scraparmor
+  graph: scraparmor
+  targetNode: scraparmorfinished
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+    ArmorKnowledge: 1
+  practical:
+    ArmorKnowledge: 4
+    MetalworkingKnowledge: 4
+  # </Trauma>
+
+- type: construction
+  parent: BaseClothing
+  id: scraphelmet
+  graph: scraphelmet
+  targetNode: scraphelmet
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+    ArmorKnowledge: 1
+  practical:
+    ArmorKnowledge: 4
+    MetalworkingKnowledge: 4
+  # </Trauma>
+
+- type: construction
+  parent: BaseClothing
+  id: ClothingBagPet
+  graph: ClothingBagPet
+  targetNode: bagPet
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    TailoringKnowledge: 1
+  useQuality: false
+  # </Trauma>
+# endregion Clothing
+
+# region Tools
+- type: construction
+  parent: BaseTool
+  id: makeshifthandcuffs
+  graph: makeshifthandcuffs
+  targetNode: cuffscable
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0 # tying a knot or something
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseTool
+  id: muzzle
+  graph: Muzzle
+  targetNode: muzzle
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    TailoringKnowledge: 1
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseTool
+  id: gauze
+  graph: Gauze
+  targetNode: gauze
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0 # its not rocket science
+    FirstAidKnowledge: 0
+  practical:
+    TailoringKnowledge: 2
+    FirstAidKnowledge: 1
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseTool
+  id: blindfold
+  graph: Blindfold
+  targetNode: blindfold
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0 # its a tied piece of cloth
+  practical:
+    TailoringKnowledge: 1
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseTool
+  id: rag
+  graph: Rag
+  targetNode: rag
+  # <Trauma>
+  theory: {} # its just a bunch of cloth literally no crafting involved
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseTool
+  id: rollingpin
+  graph: WoodenRollingPin
+  targetNode: rollingpin
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0 # its a piece of wood bro
+  practical:
+    CarvingKnowledge: 3
+  # </Trauma>
+# endregion Tools
+
+# region Miscellaneous
+- type: construction
+  parent: BaseItemMisc
+  id: CottonWovenCloth
+  graph: CottonObjects
+  targetNode: cottoncloth
+  category: construction-category-materials
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  practical:
+    TailoringKnowledge: 1
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseItemMisc
+  id: PetCarrier
+  graph: PetCarrier
+  targetNode: petCarrier
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseItemMisc
+  id: RepairMothershipPinpointer
+  graph: RepairMothershipPinpointer
+  targetNode: repairedPinpointer
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 0
+  useQuality: false
+  # </Trauma>
+# endregion Miscellaneous

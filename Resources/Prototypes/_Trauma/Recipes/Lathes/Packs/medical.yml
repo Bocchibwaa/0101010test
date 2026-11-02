@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+## Static
+
+- type: latheRecipePack
+  parent:
+  - TraumaCyberneticsStatic
+  id: TraumaMedicalStatic
+  recipes:
+  - MedicalHyposprayEmpty
+  - MedicalCigCarton
+
+- type: latheRecipePack
+  id: TraumaCyberneticsStatic
+  recipes:
+  - Hypoport
+
+- type: latheRecipePack
+  id: TraumaMedicalBoardsStatic
+  recipes:
+  - ChemiCompilerMachineCircuitboard
+
+## Dynamic
+
+- type: latheRecipePack
+  id: TraumaCybernetics
+  recipes:
+  - HypoportSecure
+
+- type: latheRecipePack
+  id: TraumaChemistry
+  recipes:
+  - MedkitCombat
+  - VialBluespace
+
+- type: latheRecipePack
+  id: TraumaMedicalBoards
+  recipes:
+  - StasisOperatingTableCircuitboard
+  - MedicalBiofabMachineBoard

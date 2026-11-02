@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.LightDetection.Components;
+using Content.Goobstation.Shared.LightDetection.Systems;
+using Content.Medical.Common.Damage;
+using Content.Medical.Common.Targeting;
+using Content.Medical.Shared.Wounds;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Mobs.Systems;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Timing;
+
+namespace Content.Goobstation.Server.LightDetection;
+
+/// <summary>
+/// This handles healing or dealing damage to an entity that is standing on a lighted area.
+/// </summary>
+public sealed partial class LightDetectionDamageSystem : SharedLightDetectionDamageSystem
+{
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private WoundSystem _woundSystem = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var now = _timing.CurTime;
+
+        var query = EntityQueryEnumerator<LightDetectionDamageComponent, LightDetectionComponent>();
+        while (query.MoveNext(out var uid, out var comp, out var lightDet))
+        {
+            if (comp.NextUpdate > now)
+                continue;
+
+            comp.NextUpdate = _timing.CurTime + comp.UpdateInterval;
+
+            var ev = new LightDamageUpdateAttemptEvent();
+            RaiseLocalEvent(uid, ref ev);
+            if (ev.Cancelled)
+                continue;
+
+            UpdateDetectionValues(comp, lightDet.CurrentLightLevel);
+            DirtyField(uid, comp, nameof(LightDetectionDamageComponent.DetectionValue));
+
+            if (comp.DetectionValue <= 0 && comp.TakeDamageOnLight && !_mobState.IsDead(uid))
+            {
+                _damageable.ChangeDamage(uid, comp.DamageToDeal * comp.ResistanceModifier, splitDamage: SplitDamageBehavior.SplitEnsureAll);
+                _audio.PlayPvs(comp.SoundOnDamage, uid, AudioParams.Default.WithVolume(-2f));
+                continue;
+            }
+
+            if (comp.DetectionValue > 0 && comp.HealOnShadows && !_mobState.IsDead(uid))
+            {
+                _woundSystem.TryHealWoundsOnOwner(uid, -comp.DamageToHeal, true);
+                _damageable.ChangeDamage(uid, comp.DamageToHeal, true, false, targetPart: TargetBodyPart.All, splitDamage: SplitDamageBehavior.SplitEnsureAllOrganic, canMiss: false);
+            }
+        }
+    }
+
+    private void UpdateDetectionValues(LightDetectionDamageComponent comp, float detectionDamage)
+    {
+        var detectionDelta = comp.DetectionValueRegeneration - detectionDamage;
+        comp.DetectionValue += detectionDelta;
+        comp.DetectionValue = Math.Clamp(comp.DetectionValue, 0f, comp.DetectionValueMax);
+    }
+}

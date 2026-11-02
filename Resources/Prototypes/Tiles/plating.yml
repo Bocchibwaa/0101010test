@@ -1,0 +1,103 @@
+- type: tile
+  id: BasePlating
+  abstract: true
+  friction: 1.5
+  heatCapacity: 10000
+  isSubfloor: true
+  # Goobstation - Fireaxe plating prying
+  deconstructTools: [ Axing ]
+  deconstructTimeMultiplier: 5 # Goobstation
+  footstepSounds:
+    collection: FootstepPlating
+  materialComposition:
+    Steel: 75 # 0.75 sheets; 0.5 for the lattice, 0.25 for the tile
+  baseTurf: Lattice
+  baseWhitelist:
+    - TrainLattice
+
+- type: tile
+  id: Plating
+  parent: BasePlating
+  name: tiles-plating
+  sprite: /Textures/_Trauma/Tiles/plating.png # Trauma
+
+- type: tile
+  id: PlatingRCD
+  parent: Plating
+  name: tiles-rcd-plating
+  baseWhitelist:
+    - Space
+    - TrainLattice
+    - FloorPlanetDirt
+    - FloorDesert
+    - FloorLowDesert
+    - FloorPlanetGrass
+    - FloorSnow
+    - FloorDirt
+    - FloorAsteroidIronsand
+    - FloorAsteroidSand
+    - FloorAsteroidSandBorderless
+    - FloorAsteroidIronsandBorderless
+    - FloorAsteroidSandRedBorderless
+
+- type: tile
+  id: FloorHullReinforced
+  parent: BasePlating
+  name: tiles-hull-reinforced
+  sprite: /Textures/Tiles/hull_reinforced.png
+  # <Goob>
+  baseTurf: Lattice
+  isSubfloor: true
+  friction: 1.5 #same as normal plating
+  # </Goob>
+  footstepSounds:
+    collection: FootstepHull
+  itemDrop: FloorTileItemSteel
+  heatCapacity: 100000 #/tg/ has this set as "INFINITY." I don't know if that exists here so I've just added an extra 0
+  indestructible: true
+  reinforced: true # Goob
+
+- type: tile
+  id: PlatingDamaged
+  parent: BasePlating
+  name: tiles-plating
+  sprite: /Textures/_Trauma/Tiles/plating_damaged.png # Trauma
+  variants: 3
+
+- type: tile
+  id: PlatingAsteroid
+  parent: BasePlating
+  name: tiles-asteroid-plating
+  sprite: /Textures/Tiles/Asteroid/asteroid_plating.png
+
+- type: tile
+  id: PlatingBrass
+  parent: BasePlating
+  name: tiles-brass-plating
+  sprite: /Textures/Tiles/Misc/clockwork/clockwork_floor.png
+
+- type: tile
+  id: PlatingSnow
+  name: tiles-snow-plating
+  parent: BasePlating
+  sprite: /Textures/Tiles/snow_plating.png #Not in the snow planet RSI because it doesn't have any metadata. Should probably be moved to its own folder later.
+  friction: 0.75 #a little less then actual snow
+
+- type: tile
+  id: Lattice
+  name: tiles-lattice
+  sprite: /Textures/Tiles/lattice.png
+  baseTurf: Space
+  isSubfloor: true
+  deconstructTools: [ Cutting ]
+  weather: true
+  footstepSounds:
+    collection: FootstepCatwalk
+  friction: 1.5
+  isSpace: true
+  itemDrop: PartRodMetal1
+  heatCapacity: 10000
+  mass: 200
+  variants: 3
+  materialComposition:
+    Steel: 50 # 0.5 sheets = 1 rod

@@ -1,0 +1,44 @@
+- type: job
+  id: Psychologist
+  name: job-name-psychologist
+  description: job-description-psychologist
+  playTimeTracker: JobPsychologist
+  startingGear: PsychologistGear
+  icon: "JobIconPsychologist"
+  supervisors: job-supervisors-cmo
+  guides: [ Medical ] # TODO: should have a more specific guidebook page instead of using the department itself
+  access:
+  - Medical
+  - Maintenance
+  extendedAccess:
+  - Chemistry
+  # <Trauma>
+  special:
+  - !type:OrganChipsSpecial
+    chips:
+    - SkillChipEducation
+    - SkillChipChemist
+  # </Trauma>
+
+- type: startingGear
+  id: PsychologistGear
+  equipment:
+    shoes: ClothingShoesLeather
+    id: PsychologistPDA
+    ears: ClothingHeadsetMedical
+    pocket1: PillCanisterSpaceDrugs
+  storage:
+    back:
+    - RubberStampPsychologist
+
+- type: chameleonOutfit
+  id: PsychologistChameleonOutfit
+  job: Psychologist
+  equipment:
+    head: ClothingHeadHatBeretMedic
+    eyes: ClothingEyesHudMedical
+    mask: ClothingMaskSterile
+    outerClothing: ClothingOuterCoatLab
+    neck: ClothingNeckStethoscope
+    belt: ClothingBeltMedical
+    gloves: ClothingHandsGlovesLatex

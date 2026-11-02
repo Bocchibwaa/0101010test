@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  abstract: true
+  id: XenomorphBloodstream
+  parent: MobBloodstream
+  components:
+  - type: Bloodstream
+    bloodReferenceSolution:
+      reagents:
+      - ReagentId: Blood
+        quantity: 300
+    bleedReductionAmount: 5
+    maxBleedAmount: 0
+    bloodlossDamage:
+      types: {}
+    bloodlossHealDamage:
+      types: {}

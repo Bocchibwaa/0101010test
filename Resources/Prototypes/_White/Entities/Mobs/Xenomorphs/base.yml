@@ -1,0 +1,258 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent:
+  - BaseMob
+  - MobDamageable
+  - MobPolymorphable
+  - MobCombat
+  - XenomorphBloodstream # Goob, uses custom bloodstream so we can disable bleeding for the time being.
+  - MobFlammable
+  id: BaseMobXenomorph
+  abstract: true
+  components:
+  - type: LanguageHivemind
+    language: XenoHivemind
+  - type: Xenomorph
+    weedHeal:
+      types:
+        Blunt: -1.33
+        Slash: -1.33
+        Piercing: -1.33
+        Ballistic: -1.33
+        Heat: -1
+        Cold: -1
+        Shock: -1
+        Poison: -2.5
+        Radiation: -2.5
+        Asphyxiation: -5
+        Bloodloss: -5
+  - type: Pinpointer
+    whitelist:
+      components:
+      - XenomorphQueen
+    alert: QueenFinder
+    isActive: true
+    canToggle: false
+    canEmag: false
+    canExamine: false
+  - type: ThermalVision
+    toggleAction: ToggleThermalVisionXenomorph
+    color: white
+    drawOverlay: false
+    lightRadius: 10
+    strength: 0
+    noise: 0
+    tint: 3, 3, 3
+  - type: NameIdentifier
+    group: GenericNumber
+  - type: CombatMode
+    combatToggleAction: ActionCombatModeToggleXenomorph
+    canDisarm: true
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 3
+    baseSprintSpeed: 4.5
+  - type: NpcFactionMember
+    factions:
+    - Xeno
+  - type: Deathgasp
+    prototype: XenomorphDeathgasp
+  - type: DamageStateVisuals
+    states:
+      Alive:
+        Base: xenomorph
+      Critical:
+        Base: xenomorph_unconscious
+      Dead:
+        Base: xenomorph_dead
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      185: Critical
+      200: Dead
+    stateAlertDict:
+      Alive: XenomorphHealth
+      Critical: XenomorphCrit
+      Dead: XenomorphDead
+  - type: SlowOnDamage
+    speedModifierThresholds:
+      125: 0.9
+      150: 0.8
+  - type: Damageable
+    damageModifierSet: Xenomorph
+  - type: Injurable
+    damageContainer: Biological
+  - type: Stamina
+    baseCritThreshold: 200
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.25
+        density: 200
+        mask:
+        - MobMask
+        layer:
+        - MobLayer
+  - type: Bloodstream
+    bloodReferenceSolution:
+      reagents:
+      - ReagentId: FluorosulfuricAcid
+        Quantity: 250
+    bloodlossDamage:
+      types:
+        Bloodloss: 0.05
+    bloodlossHealDamage:
+      types:
+        Bloodloss: -1
+    bleedReductionAmount: 5  #goob
+  - type: MeleeWeapon
+    altDisarm: true
+    angle: 0
+    soundHit:
+      collection: AlienClaw
+    animation: WeaponArcClaw
+    damage:
+      types:
+        Blunt: 5
+        Slash: 10
+        Piercing: 10
+  - type: TypingIndicator
+    proto: alien
+  - type: AtmosExposed
+  - type: Temperature
+    temperature: 310.15
+  - type: TemperatureDamage
+    heatDamageThreshold: 600
+    coldDamageThreshold: 100 # Trauma, was -150
+    coldDamage: #per second, scales with temperature & other constants
+      types:
+        Cold: 0.25 # Trauma, was 0.1
+    heatDamage: #per second, scales with temperature & other constants
+      types:
+        Heat: 1.5
+  - type: ZombieImmune
+  - type: StatusEffects
+    allowed:
+    - Stun
+  - type: NoSlip
+  - type: Perishable
+    molsPerSecondPerUnitMass: 0.0005
+  - type: LizardAccent
+  - type: Speech
+    speechSounds: Xenomorph
+    speechVerb: SmallMob
+  - type: Vocal
+    emoteSounds: Xenomorph
+  - type: LanguageSpeaker
+    speaks:
+    - Xeno
+    understands:
+    - Xeno
+    - Hissing
+    - Draconic
+  - type: CollectiveMind
+    defaultChannel: Xenomorphivemind
+    channels:
+    - Xenomorphivemind
+  - type: SSDIndicator
+  - type: Emoting
+  - type: BodyEmotes
+    soundsId: GeneralBodyEmotes
+  - type: Access
+    enabled: true
+    groups:
+    - XenomorphAccess
+  - type: BloodSplatterer
+  - type: KnowledgeGrant
+    skills:
+      ThrowingKnowledge: 50
+
+- type: entity
+  parent: [BaseMobXenomorph, StripableInventoryBase]
+  id: BaseMobXenomorphAdult
+  abstract: true
+  components:
+  - type: MovementSpeedModifier
+    baseWeightlessAcceleration: 1.7
+    baseWeightlessFriction: 1
+    baseWeightlessModifier: 1
+  - type: FootstepModifier
+    footstepSoundCollection:
+      collection: FootstepXenomorph
+      params:
+        volume: -6
+  - type: Prying
+    speedModifier: 5
+    pryPowered: true
+    useSound: /Audio/Machines/airlock_creaking.ogg
+  - type: ComplexInteraction
+  - type: Hands
+  - type: ShowHealthIcons
+  - type: Puller
+    needsHands: false
+  - type: IdExaminable
+  - type: Inventory
+    templateId: xenomorph
+  - type: Stripping
+  - type: UserInterface
+    interfaces:
+      enum.StrippingUiKey.Key:
+        type: StrippableBoundUserInterface
+      enum.InstrumentUiKey.Key:
+        type: InstrumentBoundUserInterface
+        requireInputValidation: false
+  - type: RotationVisuals
+    defaultRotation: 90
+    horizontalRotation: 90
+  - type: Dna
+  - type: Tag
+    tags:
+    - DoorBumpOpener
+    - FootstepSound
+  - type: XenomorphShoveTracker
+    shoveThreshold: 3
+    knockdownDuration: 7
+  - type: MovementAlwaysTouching
+
+- type: entity
+  id: BaseMobXenomorphDungeon
+  abstract: true
+  suffix: Dungeon
+  components:
+  - type: Damageable
+    damageModifierSet: XenomorphDungeon
+  - type: HTN
+    rootTask:
+      task: XenomorphCompound
+    blackboard:
+      NavClimb: !type:Bool
+        true
+      NavInteract: !type:Bool
+        true
+      NavPry: !type:Bool
+        true
+      NavSmash: !type:Bool
+        true
+      FreeHands: !type:Bool
+        false
+      ActiveHandFree: !type:Bool
+        false
+      Inventory: !type:Bool
+        false
+
+- type: entity
+  abstract: true
+  id: BaseXenomorphGhostRole
+  components:
+  - type: GhostRole
+    allowMovement: true
+    allowSpeech: true
+    makeSentient: true
+    rules: ghost-role-information-rules-default-xeno
+    mindRoles:
+    - MindRoleXenomorph
+    raffle:
+      settings: default
+  - type: GhostTakeoverAvailable

@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Server.Polymorph.Components;
+using Content.Shared.Polymorph;
+using Content.Trauma.Common.Wizard.Projectile;
+using Content.Trauma.Server.Wizard.Components;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Player;
+
+namespace Content.Trauma.Server.Wizard.Systems;
+
+public sealed partial class WizardJauntSystem : EntitySystem
+{
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private EntityQuery<TrailComponent> _trailQuery = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<WizardJauntComponent, PolymorphedEvent>(OnPolymorph);
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var query = EntityQueryEnumerator<WizardJauntComponent, PolymorphedEntityComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var jaunt, out var polymorphed, out var xform))
+        {
+            if (jaunt.JauntEndEffectEntity is { } endEffect)
+            {
+                if (!TerminatingOrDeleted(endEffect))
+                    _transform.SetMapCoordinates(endEffect, _transform.GetMapCoordinates(xform));
+                continue;
+            }
+
+            jaunt.DurationBetweenEffects -= frameTime;
+
+            if (jaunt.DurationBetweenEffects > 0f)
+                continue;
+
+            var ent = Spawn(jaunt.JauntEndEffect,
+                _transform.GetMapCoordinates(uid, xform),
+                rotation: _transform.GetWorldRotation(xform));
+            _audio.PlayEntity(jaunt.JauntEndSound, Filter.Pvs(ent), ent, true);
+            jaunt.JauntEndEffectEntity = ent;
+
+            if (!_trailQuery.TryComp(ent, out var trail))
+                continue;
+
+            trail.RenderedEntity = polymorphed.Parent;
+            Dirty(ent, trail);
+        }
+    }
+
+    private void OnPolymorph(Entity<WizardJauntComponent> ent, ref PolymorphedEvent args)
+    {
+        var (uid, comp) = ent;
+
+        if (args.IsRevert)
+            return;
+
+        var startEffect = Spawn(comp.JauntStartEffect,
+            _transform.GetMapCoordinates(uid),
+            rotation: _transform.GetWorldRotation(uid));
+        _audio.PlayPvs(comp.JauntStartSound, startEffect);
+
+        if (!TryComp(startEffect, out TrailComponent? trail))
+            return;
+
+        trail.RenderedEntity = args.OldEntity;
+        Dirty(startEffect, trail);
+    }
+}

@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Actions
+- type: entity
+  parent: BaseMentalAction
+  id: ActionExitConsole
+  name: Exit console
+  description: Exit console.
+  components:
+  - type: Sprite
+    sprite: _Shitmed/Interface/Actions/actions_abductor.rsi
+    layers:
+    - state: exit
+  - type: Action
+    checkCanInteract: false
+    priority: -20
+    itemIconStyle: BigAction
+  - type: InstantAction
+    event: !type:ExitConsoleEvent
+
+- type: entity
+  parent: BaseMentalAction
+  id: ActionSendYourself
+  name: Send yourself
+  description: You need to FTL to the same map as the station to use this ability!
+  components:
+  - type: Sprite
+    sprite: _Shitmed/Interface/Actions/actions_abductor.rsi
+    layers:
+    - state: send-yourself
+  - type: Action
+    itemIconStyle: BigAction
+    checkCanInteract: false
+    useDelay: 10
+    priority: -19
+  - type: TargetAction
+    checkCanAccess: false
+    range: -1
+  - type: WorldTargetAction
+    event: !type:SendYourselfEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionReturnToShip
+  name: return
+  description: return to the ship.
+  components:
+  - type: Sprite
+    sprite: _Shitmed/Interface/Actions/actions_abductor.rsi
+    layers:
+    - state: take
+  - type: Action
+    useDelay: 30
+    priority: -12
+  - type: InstantAction
+    event: !type:AbductorReturnToShipEvent
+
+- type: entity
+  parent: BaseMentalAction
+  id: ActionSendPad
+  name: Send from pad
+  description: Teleport whoever is attached to the alien pad to the target location.
+  components:
+  - type: Sprite
+    sprite: _Shitmed/Interface/Actions/actions_abductor.rsi
+    layers:
+    - state: send-yourself
+  - type: Action
+    itemIconStyle: BigAction
+    checkCanInteract: false
+    useDelay: 10
+    priority: -19
+  - type: TargetAction
+    checkCanAccess: false
+    range: -1
+  - type: WorldTargetAction
+    event: !type:SendPadEvent

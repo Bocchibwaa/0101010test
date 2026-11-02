@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: combo
+  id: SleepingCarpGnashingTeeth
+  attacks:
+  - Harm
+  - Harm
+  userEffects:
+  - !type:MartialArtsSaying
+    randomSayings:
+    - carp-saying-huah
+    - carp-saying-hya
+    - carp-saying-choo
+    - carp-saying-wuo
+    - carp-saying-kya
+    - carp-saying-huh
+    - carp-saying-hiyoh
+    - carp-saying-strike
+    - carp-saying-bite
+    randomSayingsDowned:
+    - carp-saying-banzai
+    - carp-saying-kiya
+    - carp-saying-omae
+    - carp-saying-see
+    - carp-saying-time
+    - carp-saying-cowabunga
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit1.ogg
+  # TODO: scale damage with number of times you use the combo up to a limit that gets reset
+  opponentEffects:
+  - !type:HealthChange
+    targetPart: Chest
+    damage:
+      types:
+        Slash: 20
+
+- type: combo
+  id: SleepingCarpKneeHaul
+  attacks:
+  - Harm
+  - Grab
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit3.ogg
+  opponentEffects:
+  - !type:IfElse
+    # knee'ing someone who's standing does more damage
+    condition: !type:StandingCondition
+    trueEffects:
+    - !type:HealthChange
+      targetPart: Chest
+      damage:
+        types:
+          Blunt: 10
+    - !type:TakeStaminaDamage
+      amount: 60
+    - !type:ModifyKnockdown
+      time: 6
+      drop: true
+    falseEffects:
+    - !type:HealthChange
+      targetPart: Chest
+      damage:
+        types:
+          Blunt: 5
+    - !type:TakeStaminaDamage
+      amount: 40
+    - !type:DropItems
+
+- type: combo
+  id: SleepingCarpCrashingWaves
+  attacks:
+  - Harm
+  - Disarm
+  conditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-target-down
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit2.ogg
+  opponentEffects:
+  - !type:TakeStaminaDamage
+    amount: 25
+  - !type:StopPull
+  - !type:GrabThrow

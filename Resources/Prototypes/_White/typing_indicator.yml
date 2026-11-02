@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: typingIndicator
+  id: alien_royal
+  typingState: alienroyal0
+  idleState: alienroyal0
+  offset: 0.64, 0.32

@@ -1,0 +1,274 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Bloodtrak;
+using Content.Shared.Fluids.Components;
+using Content.Shared.Forensics.Components;
+using Content.Shared.Forensics.Systems;
+using Content.Shared.Interaction;
+using Content.Shared.Pinpointer;
+using Content.Shared.Popups;
+using Content.Shared.Tag;
+using Content.Shared.Timing.Components;
+using Content.Shared.Timing.Systems;
+using Robust.Shared.Timing;
+
+namespace Content.Goobstation.Server.Bloodtrak;
+
+public sealed partial class BloodtrakSystem : SharedBloodtrakSystem
+{
+    [Dependency] private TagSystem _tag = default!;
+    [Dependency] private ForensicsSystem _forensics = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private UseDelaySystem _delay = default!;
+
+    public static readonly ProtoId<TagPrototype> ScannableTag = "DNASolutionScannable";
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<BloodtrakComponent, AfterInteractEvent>(OnAfterInteract);
+        SubscribeLocalEvent<BloodtrakComponent, ActivateInWorldEvent>(OnActivate);
+    }
+
+    /// <summary>
+    /// Checks the DNA of the puddle against known DNA entries to find a matching entity.
+    /// </summary>
+    private (EntityUid, TimeSpan)? GetPuddleDnaOwner(EntityUid target, BloodtrakComponent component, EntityUid user)
+    {
+        if (!_tag.HasTag(target, ScannableTag) || !HasComp<PuddleComponent>(target))
+        {
+            _popup.PopupEntity(Loc.GetString("bloodtrak-scan-failed"), user, user);
+            return null;
+        }
+
+        if (component.LastScannedTarget.Equals(target))
+        {
+            if (component.ResultList.Count == 0)
+            {
+                _popup.PopupEntity("Nothing scanned!?", user, user);
+                return null;
+            }
+
+            // cycle through DNAs already acquired
+            component.ResultListOffset++;
+            if (component.ResultListOffset == component.ResultList.Count)
+                component.ResultListOffset = 0;
+
+            var (dna, freshnessTimestamp, entityId) = component.ResultList[component.ResultListOffset];
+            _popup.PopupEntity(Loc.GetString("bloodtrak-dna-saved", ("dna", dna)), user, user);
+            return (entityId, freshnessTimestamp);
+        }
+
+        var solutionsDna = _forensics.GetSolutionsDNA(target);
+
+        if (solutionsDna.Count == 0)
+        {
+            _popup.PopupEntity(Loc.GetString("bloodtrak-no-dna"), user, user);
+            return null;
+        }
+
+        component.LastScannedTarget = target;
+        component.ResultList.Clear();
+        component.ResultListOffset = 0;
+
+        // select the first target
+
+        var targetDna = GetEntityDNAs();
+
+        foreach (var (dna, freshnessTimestamp) in solutionsDna)
+        {
+
+            if (!targetDna.TryGetValue(dna, out var uid))
+                continue;
+
+            component.ResultList.Add((dna, freshnessTimestamp, uid));
+        }
+
+        if (component.ResultList.Count > 0)
+        {
+            var (dna, freshnessTimestamp, entityId) = component.ResultList[component.ResultListOffset];
+            _popup.PopupEntity(Loc.GetString("bloodtrak-dna-saved", ("dna", dna)), user, user);
+            return (entityId, freshnessTimestamp);
+        }
+
+        _popup.PopupEntity(Loc.GetString("bloodtrak-no-match"), user, user);
+        return null;
+    }
+
+    private Dictionary<string, EntityUid> GetEntityDNAs()
+    {
+        var result = new Dictionary<string, EntityUid>();
+
+        var query = EntityQueryEnumerator<DnaComponent>();
+        while (query.MoveNext(out var uid, out var dna))
+        {
+            if (dna.DNA is not null)
+                result[dna.DNA] = uid;
+        }
+
+        return result;
+    }
+
+    private void OnAfterInteract(EntityUid uid, BloodtrakComponent component, AfterInteractEvent args)
+    {
+        if (!args.CanReach || args.Target is not { } target || component.IsActive || _delay.IsDelayed(uid))
+            return;
+
+        args.Handled = true;
+        var dnaOwner = GetPuddleDnaOwner(target, component, args.User);
+        if (dnaOwner is { })
+        {
+            component.Target = dnaOwner.Value.Item1;
+            component.Freshness = dnaOwner.Value.Item2;
+            return;
+        }
+        component.Target = null;
+        component.Freshness = TimeSpan.Zero;
+    }
+
+    public override bool TogglePinpointer(EntityUid uid, BloodtrakComponent? pinpointer = null)
+    {
+        if (!Resolve(uid, ref pinpointer))
+            return false;
+
+        var isActive = !pinpointer.IsActive;
+
+        if (isActive)
+        {
+            // If the targrt does not exist anymore (deleted, etc), display no target.
+            if (pinpointer.Target == null || !Exists(pinpointer.Target.Value))
+            {
+                _popup.PopupEntity(Loc.GetString("bloodtrak-no-target"), uid);
+                return false;
+            }
+
+            if (_delay.IsDelayed(uid))
+                return false;
+
+            // Tracking duration scales linearly with freshness.
+            var newExpirationTime = _timing.CurTime + pinpointer.MaximumTrackingDuration - (_timing.CurTime - pinpointer.Freshness);
+            if (newExpirationTime <= _timing.CurTime)
+            {
+                _popup.PopupEntity(Loc.GetString("bloodtrak-sample-expired"), uid);
+                return false;
+            }
+            pinpointer.ExpirationTime = newExpirationTime;
+        }
+
+        SetActive(uid, isActive, pinpointer);
+        UpdateAppearance(uid, pinpointer);
+        return isActive;
+    }
+
+    private void UpdateAppearance(EntityUid uid, BloodtrakComponent? pinpointer, AppearanceComponent? appearance = null)
+    {
+        if (!Resolve(uid, ref appearance) || !Resolve(uid, ref pinpointer))
+            return;
+
+        _appearance.SetData(uid, PinpointerVisuals.IsActive, pinpointer.IsActive, appearance);
+        _appearance.SetData(uid, PinpointerVisuals.TargetDistance, pinpointer.DistanceToTarget, appearance);
+    }
+
+    private void OnActivate(EntityUid uid, BloodtrakComponent component, ActivateInWorldEvent args)
+    {
+        if (args.Handled || !args.Complex || _delay.IsDelayed(uid))
+            return;
+
+        TogglePinpointer(uid, component);
+        args.Handled = true;
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+        var currentTime = _timing.CurTime;
+
+        var query = EntityQueryEnumerator<BloodtrakComponent>();
+        while (query.MoveNext(out var uid, out var tracker))
+        {
+            if (!tracker.IsActive)
+                continue;
+
+            // Check if tracking expired or target is invalid
+            var targetValid = tracker.Target != null && Exists(tracker.Target.Value);
+            var expired = currentTime >= tracker.ExpirationTime;
+
+            if (!targetValid || expired)
+            {
+                // Deactivate only if target is invalid or time expired
+                _popup.PopupEntity(Loc.GetString(targetValid ? "bloodtrak-tracking-expired" : "bloodtrak-target-lost"), uid);
+                TogglePinpointer(uid, tracker);
+                tracker.Target = null;
+
+                _delay.SetLength(uid, tracker.CooldownDuration);
+
+                Dirty(uid, tracker);
+            }
+            else
+                UpdateDirectionToTarget(uid, tracker);
+        }
+    }
+
+    protected override void UpdateDirectionToTarget(EntityUid uid, BloodtrakComponent? pinpointer = null)
+    {
+        if (!Resolve(uid, ref pinpointer))
+            return;
+
+        var oldDist = pinpointer.DistanceToTarget;
+        var target = pinpointer.Target;
+
+        if (target == null || !Exists(target.Value))
+        {
+            SetDistance(uid, Shared.Bloodtrak.Distance.Unknown, pinpointer);
+            return;
+        }
+
+        var dirVec = CalculateDirection(uid, target.Value);
+        if (dirVec == null)
+        {
+            SetDistance(uid, Shared.Bloodtrak.Distance.Unknown, pinpointer);
+            return;
+        }
+
+        var angle = dirVec.Value.ToWorldAngle();
+        TrySetArrowAngle(uid, angle, pinpointer);
+        var dist = CalculateDistance(dirVec.Value, pinpointer);
+        SetDistance(uid, dist, pinpointer);
+
+        if (oldDist != pinpointer.DistanceToTarget)
+            UpdateAppearance(uid, pinpointer);
+    }
+
+    private Vector2? CalculateDirection(EntityUid pinUid, EntityUid trgUid)
+    {
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        if (!xformQuery.TryGetComponent(pinUid, out var pin) ||
+            !xformQuery.TryGetComponent(trgUid, out var trg) ||
+            pin.MapID != trg.MapID)
+            return null;
+
+        return _transform.GetWorldPosition(trg, xformQuery) - _transform.GetWorldPosition(pin, xformQuery);
+    }
+
+    private static Shared.Bloodtrak.Distance CalculateDistance(Vector2 vec, BloodtrakComponent pinpointer)
+    {
+        var dist = vec.Length();
+
+        // Check from smallest to largest threshold
+        if (dist <= pinpointer.ReachedDistance)
+            return Shared.Bloodtrak.Distance.Reached;
+        if (dist <= pinpointer.CloseDistance)
+            return Shared.Bloodtrak.Distance.Close;
+        if (dist <= pinpointer.MediumDistance)
+            return Shared.Bloodtrak.Distance.Medium;
+        if (dist > pinpointer.MaxDistance)
+            return Shared.Bloodtrak.Distance.Unknown;
+
+        return Shared.Bloodtrak.Distance.Far;
+    }
+}

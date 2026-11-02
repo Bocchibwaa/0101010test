@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  id: ChemistryBottleTramadol
+  suffix: tramadol
+  parent: BaseChemistryBottleFilled
+  components:
+  - type: Label
+    localizedLabel: reagent-name-tramadol
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Tramadol
+        Quantity: 30
+
+- type: entity
+  id: ChemistryBottleOxycodone
+  suffix: oxycodone
+  parent: BaseChemistryBottleFilled
+  components:
+  - type: Label
+    localizedLabel: reagent-name-oxycodone
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Oxycodone
+        Quantity: 30
+
+- type: entity
+  id: ChemistryBottleIbuprofen
+  suffix: Ibuprofen
+  parent: BaseChemistryBottleFilled
+  components:
+  - type: Label
+    localizedLabel: reagent-name-ibuprofen
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Ibuprofen
+        Quantity: 30

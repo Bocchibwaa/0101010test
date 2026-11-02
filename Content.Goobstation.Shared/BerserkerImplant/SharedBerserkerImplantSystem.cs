@@ -1,0 +1,107 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Events;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Jittering;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Popups;
+using Content.Shared.Weapons.Melee.Events;
+using Content.Shared.Weapons.Ranged.Events;
+using Content.Trauma.Common.Weapons;
+using Content.Trauma.Common.Wizard.Projectile;
+using Robust.Shared.Timing;
+
+namespace Content.Goobstation.Shared.BerserkerImplant;
+
+public abstract partial class SharedBerserkerImplantSystem : EntitySystem
+{
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] protected SharedPopupSystem Popup = default!;
+    [Dependency] private MobThresholdSystem _mobThreshold = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedJitteringSystem _jitter = default!;
+
+    [SubscribeLocalEvent]
+    private void OnActivate(ActivateBerserkerImplantActionEvent args)
+    {
+        if (args.Handled)
+            return;
+
+        if (TryComp<BerserkerImplantActiveComponent>(args.Performer, out var berserker))
+            return;
+
+        args.Handled = true;
+
+        var uid = args.Performer;
+        berserker = EnsureComp<BerserkerImplantActiveComponent>(uid);
+        berserker.EndTime = Timing.CurTime + TimeSpan.FromSeconds(berserker.Duration);
+        if (!HasComp<TrailComponent>(uid))
+        {
+            var trail = AddComp<TrailComponent>(uid);
+            trail.RenderedEntity = uid;
+            trail.LerpTime = 0.1f;
+            trail.LerpDelay = TimeSpan.FromSeconds(2);
+            trail.Lifetime = 3;
+            trail.Frequency = 0.07f;
+            trail.AlphaLerpAmount = 0.2f;
+            trail.MaxParticleAmount = 25;
+            trail.Color = new(255, 47, 0, 180);
+        }
+
+        _jitter.DoJitter(uid, TimeSpan.FromSeconds(3), true);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDamageModify(Entity<BerserkerImplantActiveComponent> ent, ref DamageModifyEvent args)
+    {
+        if (!args.Damage.AnyPositive())
+            return;
+
+        args.Damage = DamageSpecifier.ApplyModifierSet(args.Damage, ent.Comp.DamageModifier);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnBeforeDamageChanged(Entity<BerserkerImplantActiveComponent> ent, ref BeforeDamageChangedEvent args)
+    {
+        if (!args.Damage.AnyPositive())
+            return;
+
+        if (!_mobState.IsAlive(ent.Owner))
+            return;
+
+        if (!_mobThreshold.TryGetThresholdForState(ent.Owner, MobState.Critical, out var threshold))
+            return;
+
+        if (!TryComp<DamageableComponent>(ent, out var damageable))
+            return;
+
+        if (_mobThreshold.CheckVitalDamage((ent, damageable)) + args.Damage.GetTotal() < threshold)
+            return;
+
+        args.Cancelled = true;
+
+        if (ent.Comp.DelayedDamage.GetTotal() < 150)    // Prevent insta gib after berserker ends
+            ent.Comp.DelayedDamage += args.Damage;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnStaminaDamageModify(Entity<BerserkerImplantActiveComponent> ent, ref BeforeStaminaDamageEvent args)
+    {
+        args.Value *= ent.Comp.StunModifier;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnGetMeleeDamage(Entity<BerserkerImplantActiveComponent> ent, ref GetUserMeleeDamageEvent args)
+    {
+        args.Damage *= ent.Comp.SelfDamageModifier;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnShotAttempted(Entity<BerserkerImplantActiveComponent> ent, ref ShotAttemptedEvent args)
+    {
+        args.Cancel();
+    }
+}

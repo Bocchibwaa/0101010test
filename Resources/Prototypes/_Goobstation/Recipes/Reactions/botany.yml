@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reaction
+  id: OrganicPotash
+  minTemp: 400 # hotter than 373 so soap can still be made
+  reactants:
+    Lye:
+      amount: 1
+  products:
+    Potash: 1
+
+- type: reaction
+  id: Potash
+  reactants:
+    Potassium:
+      amount: 1
+    Chlorine:
+      amount: 1
+    SulfuricAcid:
+      amount: 1
+  products:
+    Potash: 2
+
+- type: reaction
+  id: Saltpeter
+  reactants:
+    EZNutrient:
+      amount: 1
+    Potash:
+      amount: 1
+    Nitrogen:
+      amount: 1
+  products:
+    Saltpeter: 2
+    Water: 1

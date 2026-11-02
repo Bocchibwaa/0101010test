@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: construction
+  id: portableChemicalMixerConstruction
+  graph: portableChemicalMixerGraph
+  targetNode: end
+  category: construction-category-misc
+  objectType: Item
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    ElectronicsKnowledge: 1

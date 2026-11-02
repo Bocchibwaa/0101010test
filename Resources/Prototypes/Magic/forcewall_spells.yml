@@ -1,0 +1,38 @@
+- type: entity
+  parent: BaseAction
+  id: ActionForceWall
+  name: Force Wall # Goob edit
+  description: Create a magical barrier that only you can pass through. # Goob edit
+  components:
+  # <Trauma>
+  - type: Magic
+    requiresSpeech: true
+    school: Conjuration
+  - type: ActionUpgrade
+    effectedLevels:
+      2: ActionForceWallII
+      3: ActionForceWallIII
+      4: ActionForceWallIV
+      5: ActionForceWallV
+  # </Trauma>
+  - type: Action
+    # <Trauma>
+    raiseOnUser: true
+    checkCanInteract: false
+    useDelay: 30 # was 15
+    # <Trauma>
+    itemIconStyle: BigAction
+    sound: !type:SoundPathSpecifier
+      path: /Audio/Magic/forcewall.ogg
+  - type: Sprite
+    # <Trauma> - replaced icon
+    sprite: _Goobstation/Wizard/actions.rsi
+    layers:
+    - state: shield_greater
+    # </Trauma>
+  - type: InstantAction
+    event: !type:InstantSpawnSpellEvent
+      prototype: WallForce
+      posData: !type:TargetInFront
+  - type: SpeakOnAction
+    sentence: action-speech-spell-forcewall

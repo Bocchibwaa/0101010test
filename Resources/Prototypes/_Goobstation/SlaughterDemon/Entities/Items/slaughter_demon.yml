@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseDemonBottle
+  id: BottleOfTickles
+  name: vial of tickles
+  description: A magically infused bottle of clown love, distilled from countless hugging attacks. Used in funny rituals to attract adorable creatures.
+  components:
+  - type: Sprite
+    state: vialtickles
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Laughter
+        Quantity: 15
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 5
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - !type:SpillBehavior
+        solution: liquid
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          ShardGlass:
+            min: 0
+            max: 1
+      - !type:AddGameRuleBehavior
+        rule: LaughterDemonSummon
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+
+- type: entity
+  parent: BaseDemonBottle
+  id: BottleOfBlood
+  name: vial of blood
+  description: A magically infused bottle of blood, distilled from countless murder victims. Used in unholy rituals to attract horrifying creatures.
+  components:
+  - type: Sprite
+    state: vial
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Blood
+        Quantity: 15
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 5
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - !type:SpillBehavior
+        solution: liquid
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          ShardGlass:
+            min: 0
+            max: 1
+      - !type:AddGameRuleBehavior
+        rule: SlaughterDemonSummon
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: VialSummon

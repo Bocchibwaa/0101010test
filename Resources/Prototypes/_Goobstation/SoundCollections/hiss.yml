@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: soundCollection
+  id: HissSay
+  files:
+  - /Audio/_Goobstation/Heretic/hiss/hiss1.ogg
+  - /Audio/_Goobstation/Heretic/hiss/hiss2.ogg
+
+- type: soundCollection
+  id: HissGasp
+  files:
+  - /Audio/_Goobstation/Heretic/hiss/lowHiss2.ogg
+  - /Audio/_Goobstation/Heretic/hiss/lowHiss3.ogg

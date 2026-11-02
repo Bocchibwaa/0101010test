@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseItem
+  id: ArmHammerChangeling
+  name: arm hammer
+  description: A hammer made out of flesh and bone, heavy enough to smash through structures and people alike.
+  suffix: Unremoveable
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Changeling/hammer.rsi
+    state: icon
+  - type: MeleeWeapon
+    angle: 0
+    wideAnimationRotation: 75
+    attackRate: 0.75
+    damage:
+      types:
+        Blunt: 25
+        Structural: 50
+      woundSeverityMultipliers:
+        Blunt: 2
+    heavyStaminaCost: 12
+    soundHit:
+      collection: MetalThud
+  - type: Item
+    size: Ginormous
+    sprite: _Goobstation/Changeling/hammer.rsi
+  - type: Unremoveable
+  - type: DisarmMalus
+    malus: 0
+  - type: MeleeThrowOnHit
+    distance: 3 # Goobstation
+    speed: 5
+  - type: KnockdownOnHit
+    duration: 1
+    knockdownOnHeavyAttack: false
+
+- type: entity
+  parent: ArmHammerChangeling
+  id: ArmHammerShattered
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Heretic/Entities/hammer.rsi
+    state: icon
+  - type: Item
+    sprite: _Goobstation/Heretic/Entities/hammer.rsi
+  - type: MeleeWeapon
+    soundHit:
+      collection: GlassBreak
+
+- type: entity
+  parent: ArmHammerShattered
+  id: ArmHammerShatteredEmpowered
+  components:
+  - type: Tag
+    tags:
+    - EmpoweredShatteredWeapon
+  - type: Multihit
+    multihitWhitelist:
+      tags:
+      - EmpoweredShatteredWeapon

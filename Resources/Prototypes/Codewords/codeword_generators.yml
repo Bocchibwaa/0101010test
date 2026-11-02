@@ -1,0 +1,7 @@
+- type: codewordGenerator
+  id: TraitorCodewordGenerator
+  words:
+  - Adjectives
+  - Verbs
+  - CodeWords # Trauma
+  amount: 4

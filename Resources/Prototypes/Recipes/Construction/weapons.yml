@@ -1,0 +1,287 @@
+# region Base
+- type: construction
+  abstract: true
+  id: BaseWeapon
+  category: construction-category-weapons
+  objectType: Item
+# endregion Base
+
+# region Weapons
+- type: construction
+  parent: BaseWeapon
+  id: BladedFlatcapGrey
+  graph: BladedFlatcapGrey
+  targetNode: icon
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+    WeaponsKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BladedFlatcapGrey
+  id: BladedFlatcapBrown
+  graph: BladedFlatcapBrown
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    TailoringKnowledge: 2
+    WeaponsKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: Shiv
+  graph: Shiv
+  targetNode: icon
+  # <Trauma>
+  qualityPrototype: ShitCraft
+  theory: {} # wrapping cloth around glass come on. shittiest possible weapon
+  practical:
+    WeaponsKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: Shiv
+  id: ReinforcedShiv
+  graph: ReinforcedShiv
+
+- type: construction
+  parent: Shiv
+  id: PlasmaShiv
+  graph: PlasmaShiv
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1 # need to be careful with phoron
+    WeaponsKnowledge: 0
+  practical:
+    WeaponsKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: Shiv
+  id: UraniumShiv
+  graph: UraniumShiv
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1 # need to be careful with uranium
+    WeaponsKnowledge: 0
+  practical:
+    WeaponsKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: Spear
+  graph: Spear
+  targetNode: spear
+  # <Trauma>
+  qualityPrototype: ShitCraft
+  theory:
+    FabricationKnowledge: 0 # caveman gaming
+  practical:
+    WeaponsKnowledge: 5 # Very difficult to make something good out of shit
+  # </Trauma>
+
+- type: construction
+  parent: Spear
+  id: SpearReinforced
+  graph: SpearReinforced
+
+- type: construction
+  parent: Spear
+  id: SpearPlasma
+  graph: SpearPlasma
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: Spear
+  id: SpearUranium
+  graph: SpearUranium
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: Spear
+  id: SpearSharkMinnow
+  graph: SpearSharkMinnow
+  # <Trauma>
+  practical:
+    WeaponsKnowledge: 4
+    CarvingKnowledge: 4
+  # </Trauma>
+
+- type: construction
+  parent: Spear
+  id: SpearBone
+  graph: SpearBone
+  # <Trauma>
+  qualityPrototype: ShitCraft
+  theory:
+    WeaponsKnowledge: 0
+  practical:
+    WeaponsKnowledge: 4
+    CarvingKnowledge: 4
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: Bola
+  graph: Bola
+  targetNode: bola
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    WeaponsKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: WoodenBuckler
+  graph: WoodenBuckler
+  targetNode: woodenBuckler
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    CarvingKnowledge: 2
+    ArmorKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: CardShield
+  graph: CardShield
+  targetNode: cardShield
+  # <Trauma>
+  qualityPrototype: ShitCraft
+  theory:
+    FabricationKnowledge: 0 # it's cardboard
+  practical:
+    ArmorKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: MakeshiftShield
+  graph: MakeshiftShield
+  targetNode: makeshiftShield
+  # <Trauma>
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    ArmorKnowledge: 1
+    MetalworkingKnowledge: 1
+  # </Trauma>
+
+
+- type: construction
+  parent: BaseWeapon
+  id: ImprovisedArrow
+  graph: ImprovisedArrow
+  targetNode: ImprovisedArrow
+  # <Trauma>
+  qualityPrototype: ShitBullets
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    GunsmithingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: ImprovisedArrowCarp
+  graph: ImprovisedArrowCarp
+  targetNode: ImprovisedArrowCarp
+  # <Trauma>
+  qualityPrototype: ShitBullets
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    GunsmithingKnowledge: 2
+    CarvingKnowledge: 3
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: ImprovisedArrowPlasma
+  graph: ImprovisedArrowPlasma
+  targetNode: ImprovisedArrowPlasma
+  # <Trauma>
+  qualityPrototype: ShitBullets
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    GunsmithingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: ImprovisedArrowUranium
+  graph: ImprovisedArrowUranium
+  targetNode: ImprovisedArrowUranium
+  # <Trauma>
+  qualityPrototype: ShitBullets
+  theory:
+    FabricationKnowledge: 1
+  practical:
+    GunsmithingKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: CardArrow
+  graph: CardArrow
+  targetNode: CardArrow
+  # <Trauma>
+  qualityPrototype: Cardboard
+  theory:
+    FabricationKnowledge: 0 # it's cardboard but like origami
+  practical:
+    WeaponsKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: ImprovisedBow
+  graph: ImprovisedBow
+  targetNode: ImprovisedBow
+  # <Trauma>
+  theory:
+    WeaponsKnowledge: 1
+    FabricationKnowledge: 1
+  practical:
+    WeaponsKnowledge: 1
+    CarvingKnowledge: 2
+  # </Trauma>
+
+# <Trauma>
+#- type: construction
+#  parent: BaseWeapon
+#  id: ClothingHandsKnuckleDustersBrass
+#  graph: ClothingHandsKnuckleDustersBrass
+#  targetNode: icon
+# </Trauma>
+
+- type: construction
+  parent: BaseWeapon
+  id: CardSword
+  graph: CardSword
+  targetNode: cardSword
+  # <Trauma>
+  qualityPrototype: ShitCraft
+  theory:
+    FabricationKnowledge: 0 # it's cardboard
+  practical:
+    WeaponsKnowledge: 1
+  # </Trauma>
+# endregion Weapons

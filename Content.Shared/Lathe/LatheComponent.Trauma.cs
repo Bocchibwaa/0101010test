@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+namespace Content.Shared.Lathe;
+
+/// <summary>
+/// Trauma - fields added to LatheComponent.
+/// </summary>
+public sealed partial class LatheComponent
+{
+    /// <summary>
+    /// The producing sound entity being played.
+    /// Used to stop it when producing stops.
+    /// </summary>
+    [DataField]
+    public EntityUid? SoundEntity;
+}

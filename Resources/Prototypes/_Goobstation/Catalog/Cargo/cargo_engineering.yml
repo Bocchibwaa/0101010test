@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: cargoProduct
+  id: CargoEngineeringTEGKit
+  icon:
+    sprite: Structures/Power/Generation/teg.rsi
+    state: teg
+  product: CrateEngineeringTEG
+  cost: 20000
+  category: cargoproduct-category-name-engineering
+  group: market

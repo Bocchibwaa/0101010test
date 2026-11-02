@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Speech.Components;
+
+namespace Content.Trauma.Shared.Speech;
+
+/// <summary>
+/// Accent that makes you speak in pig latin.
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+public sealed partial class PigLatinAccentComponent : BaseAccentComponent;

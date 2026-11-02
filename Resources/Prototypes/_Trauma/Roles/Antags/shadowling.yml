@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: antagSpecifier
+  parent: RestrictedAntag
+  id: Shadowling
+  prefRoles: [ Shadowling ]
+
+- type: antagSpecifier
+  parent: Shadowling
+  id: ShadowlingMidround
+  spawnerPrototype: GhostRoleSpawnerShadowling

@@ -1,0 +1,5 @@
+<GridContainer xmlns="https://spacestation14.io"
+               Columns="4"
+               HorizontalAlignment="Center"
+               Margin="0 8"> <!-- Goob -->
+</GridContainer>

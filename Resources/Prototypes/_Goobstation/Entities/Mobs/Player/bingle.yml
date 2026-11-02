@@ -1,0 +1,215 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Base bingle
+- type: entity
+  parent: [ MobSpaceBasic, BaseSlicingRefinable, MobNightVision ]
+  id: MobBingle
+  name: bingle
+  description: bingle
+  components:
+  - type: Bingle
+    upgradedID: MobBingleUpgraded
+  - type: GhostTakeoverAvailable
+  - type: GhostRole
+    name: ghost-role-information-bingle-name
+    description: ghost-role-information-bingle-description
+    rules: ghost-role-information-bingle-rules
+    mindRoles:
+    - MindRoleGhostRoleTeamAntagonist
+    raffle:
+      settings: short
+  - type: Sprite
+    drawdepth: Mobs
+    sprite: _Goobstation/Mobs/Bingle/bingle.rsi
+    layers:
+    - map: ["enum.DamageStateVisualLayers.Base", "movement"]
+      state: alive
+    - map: ["enum.BingleVisual.Upgraded"]
+      state: Upgraded
+      visible: false
+    - map: ["enum.BingleVisual.Combat"]
+      state: combat
+      visible: false
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      100: Dead # by request
+  - type: MobState
+    allowedStates:
+      - Alive
+      - Dead
+  - type: DamageStateVisuals
+    states:
+      Alive:
+        Base: alive
+      Dead:
+        Base: dead
+  - type: Bloodstream
+    bloodReferenceSolution:
+      reagents:
+      - ReagentId: Nitrogen
+        Quantity: 50
+    bleedReductionAmount: 1
+  - type: MeleeWeapon
+    soundHit:
+        path: /Audio/Weapons/Xeno/alien_claw_flesh3.ogg
+    angle: 0
+    wideAnimationRotation: 0
+    animation: WeaponArcSlash
+    damage:
+      types:
+        Blunt: 7
+        Structural: 14 # breaks down the walls and airlocks in 10 hits
+        Ion: 5
+    bluntStaminaDamageFactor: 2.0
+  - type: MovementSpeedModifier
+    baseWalkSpeed : 2 # same as slime
+    baseSprintSpeed : 4
+  - type: Stamina
+    baseCritThreshold: 120
+  - type: StaminaDamageOnHit # from stunbaton
+    damage: 15
+    overtime: 40
+    sound: /Audio/Weapons/egloves.ogg
+  - type: Damageable
+    damageModifierSet: Bingle
+  - type: Injurable
+    damageContainer: Biological
+  - type: FootstepModifier
+    footstepSoundCollection:
+      path: /Audio/Effects/Footsteps/slime1.ogg
+      params:
+        volume: 3
+  - type: TypingIndicator
+    proto: alien
+  - type: Speech
+    speechVerb: Bingle
+    speechSounds: Slime
+  - type: LanguageSpeaker
+    currentLanguage: Bingle
+    speaks:
+    - Bingle
+    understands:
+    - TauCetiBasic
+  - type: CollectiveMind
+    defaultChannel: Binglemind
+    respectAccents: true
+    channels:
+    - Binglemind
+  - type: PassiveDamage #passive Healing
+    allowedStates:
+    - Alive
+    damage:
+      types:
+        Blunt: -0.16
+        Slash: -0.16
+        Piercing: -0.16
+        Ballistic: -0.16
+        Radiation: -0.16
+        Heat: -0.13
+        Cold: -0.13
+        Shock: -0.13
+        Caustic: -0.13
+        Poison: -0.5
+  - type: FlashImmunity
+    showInExamine: false
+  - type: ScannableForPoints # NTR update
+    points: 2 # this would be abused so much if i made it more
+  - type: ToolRefinable
+    refineResult:
+    - id: FoodMeatBingle
+      amount: 3
+  - type: PointLight
+    radius: 1.2
+    energy: 2
+    color: "#df2b2b"
+
+- type: entity
+  id: MobBinglePrime
+  parent: MobBingle
+  suffix: Prime
+  components:
+  - type: Bingle
+    prime: true
+  - type: ScannableForPoints # NTR update, 5 points is the default.
+
+- type: entity
+  id: MobBingleUpgraded
+  parent: MobBingle
+  suffix: Upgraded
+  components:
+  - type: Bingle
+    upgraded: true
+  - type: Sprite
+    drawdepth: Mobs
+    sprite: _Goobstation/Mobs/Bingle/bingle.rsi
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base", "movement" ]
+      state: Upgraded
+    - map: [ "enum.BingleVisual.Combat" ]
+      state: combat
+      visible: false
+  - type: DamageStateVisuals
+    states:
+      Alive:
+        Base: Upgraded
+      Dead:
+        Base: dead_upgraded
+  - type: MeleeWeapon
+    soundHit:
+      path: /Audio/Weapons/Xeno/alien_claw_flesh3.ogg
+    angle: 0
+    wideAnimationRotation: 0
+    animation: WeaponArcSlash
+    damage:
+      types:
+        Blunt: 14
+        Structural: 28
+        Ion: 7
+  - type: Damageable
+    damageModifierSet: BingleUpgraded
+  - type: Injurable
+    damageContainer: Biological
+
+# Skin - turkle
+- type: entity
+  parent: MobBingle
+  id: MobTurkle
+  name: turkle
+  description: A bingle from foreign lands lost to time. Seems very proud of their homeland.
+  components:
+  - type: Bingle
+    upgradedID: MobTurkleUpgraded
+  - type: Sprite
+    drawdepth: Mobs
+    sprite: _Goobstation/Mobs/Bingle/turkle.rsi
+    layers:
+    - map: ["enum.DamageStateVisualLayers.Base", "movement"]
+      state: alive
+    - map: ["enum.BingleVisual.Upgraded"]
+      state: Upgraded
+      visible: false
+    - map: ["enum.BingleVisual.Combat"]
+      state: combat
+      visible: false
+  - type: PointLight
+    radius: 1.2
+    energy: 2
+    color: "#ad2a33"
+
+- type: entity
+  parent: MobBingleUpgraded
+  id: MobTurkleUpgraded
+  suffix: Upgraded
+  components:
+  - type: Bingle
+    upgraded: true
+  - type: Sprite
+    drawdepth: Mobs
+    sprite: _Goobstation/Mobs/Bingle/turkle.rsi
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base", "movement" ]
+      state: Upgraded
+    - map: [ "enum.BingleVisual.Combat" ]
+      state: combat
+      visible: false

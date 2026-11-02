@@ -1,0 +1,168 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reagent
+  id: Johntonite
+  name: reagent-name-johntonite
+  group: Toxins
+  desc: reagent-desc-johntonite
+  physicalDesc: reagent-physical-desc-powdery
+  flavor: bitter
+  color: "#1abcff"
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 1
+      conditions:
+      - !type:NameContainsCondition
+        name: John
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Asphyxiation: 1.5
+            Heat: 5
+            Cellular: 1
+      - !type:PopupMessage
+        type: Local
+        visualType: MediumCaution
+        probability: 0.03
+        messages:
+        - generic-reagent-effect-burning-insides
+        - generic-reagent-effect-tearing-up
+      - !type:ModifyParalysis
+        probability: 0.2
+        time: 2
+      - !type:Emote
+        emote: Gasp
+        probability: 0.1
+      - !type:Emote
+        emote: Scream
+        probability: 0.1
+      - !type:Jitter
+
+- type: reagent
+  id: Glennium
+  name: reagent-name-glennium
+  group: Toxins
+  desc: reagent-desc-glennium
+  physicalDesc: reagent-physical-desc-powdery
+  color: "#1abcff"
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 1
+      conditions:
+      - !type:NameContainsCondition
+        name: Glenn
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Blunt: 99999
+
+- type: reagent
+  id: NitricAcid
+  name: reagent-name-nitric-acid
+  group: Toxins
+  desc: reagent-desc-nitric-acid
+  physicalDesc: reagent-physical-desc-abrasive
+  flavor: acid
+  color: "#FAFAFA"
+  boilingPoint: 356
+  meltingPoint: 231
+  plantMetabolism:
+  - !type:PlantAdjustToxins
+    amount: 10
+  - !type:PlantAdjustWeeds
+    amount: -2
+  - !type:PlantAdjustHealth
+    amount: -5
+  reactiveEffects:
+    Acidic:
+      methods: [ Touch ]
+      effects:
+      - !type:HealthChange
+        ignoreResistances: false
+        damage:
+          types:
+            Caustic: 0.1
+      - !type:Emote
+        emote: Scream
+        probability: 0.1
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 3 # Okay damage, high metabolism rate. You need a lot of units to crit. Simulates acid burning through you fast.
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Caustic: 12 # 4/u, comparable to other acids. it's fucking nitric acid
+      - !type:PopupMessage
+        type: Local
+        visualType: Large
+        messages: [ "generic-reagent-effect-burning-insides" ]
+        probability: 0.33
+      - !type:Emote
+        emote: Scream
+        probability: 0.2
+
+- type: reagent
+  id: BatrachoToxin
+  name: reagent-name-batracho-toxin
+  group: Toxins
+  desc: reagent-desc-batracho-toxin
+  physicalDesc: reagent-physical-desc-syrupy
+  contrabandSeverity: Major
+  flavor: bitter
+  color: "#4a7a3a"
+  boilingPoint: 255.0
+  meltingPoint: 36.0
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 0.2
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: 1.5
+            Cellular: 0.5
+      - !type:ModifyParalysis
+        probability: 0.15
+        time: 3
+        conditions:
+        - !type:ReagentCondition
+          reagent: BatrachoToxin
+          min: 5
+      - !type:ModifyParalysis
+        probability: 0.4
+        time: 5
+        conditions:
+        - !type:ReagentCondition
+          reagent: BatrachoToxin
+          min: 15
+      - !type:HealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: BatrachoToxin
+          min: 20
+        damage:
+          types:
+            Poison: 3.5
+            Asphyxiation: 2
+            Cellular: 1.5
+      - !type:PopupMessage
+        type: Local
+        visualType: MediumCaution
+        probability: 0.08
+        messages:
+        - generic-reagent-effect-burning-insides
+      - !type:Emote
+        emote: Gasp
+        probability: 0.08
+        conditions:
+        - !type:ReagentCondition
+          reagent: BatrachoToxin
+          min: 5
+      - !type:Jitter
+        conditions:
+        - !type:ReagentCondition
+          reagent: BatrachoToxin
+          min: 10

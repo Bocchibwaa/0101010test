@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: tile
+  parent: Lattice
+  id: LatticeDiagonalNW
+  sprite: /Textures/_Goobstation/Tiles/latticeDiagonalNW.png
+  heatCapacity: 5000 # half of 10kJ
+  mass: 100 # half of 200
+
+- type: tile
+  parent: LatticeDiagonalNW
+  id: LatticeDiagonalNE
+  sprite: /Textures/_Goobstation/Tiles/latticeDiagonalNE.png
+
+- type: tile
+  parent: LatticeDiagonalNW
+  id: LatticeDiagonalSW
+  sprite: /Textures/_Goobstation/Tiles/latticeDiagonalSW.png
+
+- type: tile
+  parent: LatticeDiagonalNW
+  id: LatticeDiagonalSE
+  sprite: /Textures/_Goobstation/Tiles/latticeDiagonalSE.png

@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Overlays;
+using Robust.Shared.Enums;
+
+namespace Content.Goobstation.Client.Overlays;
+
+public sealed partial class BaseSwitchableOverlay<TComp> : Overlay where TComp : SwitchableVisionOverlayComponent
+{
+    [Dependency] private IPrototypeManager _proto = default!;
+
+    public override bool RequestScreenTexture => true;
+    public override OverlaySpace Space => OverlaySpace.WorldSpace;
+
+    private readonly ShaderInstance _shader;
+
+    public TComp? Comp = null;
+
+    public bool IsActive = true;
+
+    public readonly ProtoId<ShaderPrototype> NightVision = "NightVision";
+
+    public BaseSwitchableOverlay()
+    {
+        IoCManager.InjectDependencies(this);
+        _shader = _proto.Index(NightVision).InstanceUnique();
+    }
+
+    protected override void Draw(in OverlayDrawArgs args)
+    {
+        if (ScreenTexture is null || Comp is null || !IsActive)
+            return;
+
+        _shader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
+        _shader.SetParameter("tint", Comp.Tint);
+        _shader.SetParameter("luminance_threshold", Comp.Strength);
+        _shader.SetParameter("noise_amount", Comp.Noise);
+
+        var worldHandle = args.WorldHandle;
+
+        var accumulator = Math.Clamp(Comp.PulseAccumulator, 0f, Comp.PulseTime);
+        var alpha = Comp.PulseTime <= 0f ? 1f : float.Lerp(1f, 0f, accumulator / Comp.PulseTime);
+
+        worldHandle.SetTransform(Matrix3x2.Identity);
+        worldHandle.UseShader(_shader);
+        worldHandle.DrawRect(args.WorldBounds, Comp.Color.WithAlpha(alpha * Comp.OverlayOpacity));
+        worldHandle.UseShader(null);
+    }
+}

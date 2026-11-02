@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+#Lost Frontier Prospector
+
+- type: loadoutEffectGroup
+  id: MasterMiner
+  effects:
+  - !type:JobRequirementLoadoutEffect
+    requirement:
+      !type:RoleTimeRequirement
+      role: JobSalvageSpecialist
+      time: 72000 #20 hours
+
+- type: loadout
+  id: MinerCloak
+  effects:
+  - !type:GroupLoadoutEffect
+    proto: MasterMiner
+  equipment:
+    neck: ClothingNeckCloakSalvagerSupreme
+
+- type: loadout
+  id: SalvageEnvirosuit
+  equipment:
+    jumpsuit: ClothingUniformEnvirosuitSalvage
+  effects:
+  - !type:SpeciesLoadoutEffect
+    species:
+    - Plasmaman
+
+- type: loadout
+  id: SalvageEnvirohelm
+  equipment:
+    head: ClothingHeadEnvirohelmSalvage
+  effects:
+  - !type:SpeciesLoadoutEffect
+    species:
+    - Plasmaman
+
+- type: loadout
+  id: SalvageEnvirogloves
+  equipment:
+    gloves: ClothingHandsGlovesEnviroglovesSalvage
+  effects:
+  - !type:SpeciesLoadoutEffect
+    species:
+    - Plasmaman

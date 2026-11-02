@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Total cost: 2 wood, 3 steel
+- type: constructionGraph
+  id: Hammer
+  graph:
+  - node: start
+    edges:
+    - to: handle
+      steps:
+      - material: WoodPlank
+        amount: 2
+        doAfter: 5
+  - node: handle
+    entity: WoodenHandleHammer
+    edges:
+    - to: hammer
+      steps:
+      - material: Screw
+        amount: 2
+        doAfter: 2
+      - tool: Screwing
+        doAfter: 1
+      - material: Steel
+        amount: 2
+        doAfter: 2
+      - tool: Screwing
+        doAfter: 1
+  - node: hammer
+    entity: MeleeHammer

@@ -1,0 +1,125 @@
+- type: entity
+  name: fireaxe
+  parent: [BaseItem, BaseEngineeringContraband, KnifeDurabilitySharpenOnly] # Trauma - Durability
+  id: FireAxe
+  description: Truly, the weapon of a madman. Who would think to fight fire with an axe?
+  components:
+  # <Trauma>
+  - type: Scalpel
+    speed: 0.3
+  - type: BoneSaw
+    speed: 0.5
+  - type: SurgeryTool
+    startSound:
+      path: /Audio/_Shitmed/Medical/Surgery/saw.ogg
+  - type: CosmicTransmutable
+    transmuteTo: ScytheCosmicCult
+  - type: WeaponClass
+    class: Bludgeon # not really but you use it like one
+  - type: Sharp
+  # </Trauma>
+  - type: Tag
+    tags:
+    - FireAxe
+  - type: Execution
+    doAfterDuration: 4.0
+    decapitation: true # Trauma
+  - type: Sprite
+    sprite: Objects/Weapons/Melee/fireaxe.rsi
+    state: icon
+  - type: MeleeWeapon
+    heavyStaminaCost: 15 # Trauma
+    wideAnimationRotation: 135
+    swingLeft: true
+    attackRate: 0.75
+    damage:
+      types:
+        # axes are kinda like sharp hammers, you know?
+        Blunt: 5
+        Slash: 10
+        Structural: 3
+      woundSeverityMultipliers: # Trauma
+        Blunt: 2
+        Slash: 2.5
+    soundHit:
+      collection: MetalThud
+  - type: Wieldable
+  - type: IncreaseDamageOnWield
+    damage:
+      types:
+        Slash: 10
+        Structural: 40
+  - type: Item
+    shape:
+    - 1,0,2,5
+    - 0,0,0,2
+    storedSprite:
+      state: storage
+      sprite: Objects/Weapons/Melee/fireaxe.rsi
+    size: Ginormous
+  - type: Clothing
+    sprite: Objects/Weapons/Melee/fireaxe.rsi
+    quickEquip: false
+    slots:
+    - back
+    - suitStorage
+  - type: Tool
+    qualities:
+    - Axing # Trauma
+    - Prying
+    - Prying
+    - Slicing
+    - Sawing
+  - type: ToolTileCompatible
+  - type: Prying
+  - type: UseDelay
+    delay: 1
+  - type: StealTarget
+    stealGroup: FireAxe
+  - type: IgniteOnMeleeHit
+    fireStacks: -4
+
+- type: entity
+  id: FireAxeFlaming
+  name: fire axe
+  parent: [ BaseSyndicateContraband, FireAxe ]
+  description: Why fight fire with an axe when you can fight with fire and axe? Now featuring rugged rubberized handle!
+  components:
+  - type: MeleeWeapon
+    wideAnimationRotation: 135
+    swingLeft: true
+  # <Trauma>
+    damage:
+      types:
+        Blunt: 5 # Trauma, was heat
+        Slash: 10
+        Structural: 20
+      woundSeverityMultipliers:
+        Slash: 2.5
+        Blunt: 2 # Trauma, was heat
+  - type: IncreaseDamageOnWield
+    damage:
+      types:
+        # Heat: 10
+        Slash: 10
+        Structural: 40 # Trauma, was 80
+  # </Trauma>
+  - type: Item
+    shape:
+    - 1,0,2,5
+    - 0,0,0,2
+    storedSprite:
+      state: storage
+      sprite: Objects/Weapons/Melee/fireaxeflaming.rsi
+    size: Ginormous
+  - type: IgniteOnMeleeHit
+    fireStacks: 2 # Trauma - was 1
+  - type: Sprite
+    sprite: Objects/Weapons/Melee/fireaxeflaming.rsi
+    state: icon
+  - type: Clothing
+    sprite: Objects/Weapons/Melee/fireaxeflaming.rsi
+    quickEquip: false
+    slots:
+    - back
+    - suitStorage

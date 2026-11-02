@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: construction
+  parent: BaseRev
+  id: Killdozer
+  graph: Killdozer
+  targetNode: Killdozer
+  objectType: Item
+  theory:
+    RevolutionaryKnowledge: 3
+  useQuality: false
+
+- type: construction
+  parent: BaseRev
+  id: PowerArmorFrame
+  graph: PowerArmorFrame
+  targetNode: Frame
+  objectType: Item
+  theory:
+    RevolutionaryKnowledge: 2
+  useQuality: false

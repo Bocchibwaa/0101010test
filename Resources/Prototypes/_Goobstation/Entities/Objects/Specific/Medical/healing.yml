@@ -1,0 +1,242 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# I am making a grave mistake aren't I?
+- type: entity
+  suffix: pax
+  parent: PrefilledSyringe
+  id: SyringePax
+  components:
+  - type: Label
+    localizedLabel: reagent-name-pax
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Pax
+        Quantity: 15
+
+# Yes, yes we are.
+- type: entity
+  suffix: poison
+  parent: PrefilledSyringe
+  id: SyringePoisonCentcomm
+  components:
+  - type: Label
+    localizedLabel: reagent-name-amatoxin
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Amatoxin
+        Quantity: 15
+
+- type: entity
+  parent: SyringePoisonFent
+  id: SyringePoisonFentUsed
+  name: used fent syringe
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Fentanyl
+        Quantity: 7
+
+- type: entity
+  parent: PrefilledSyringe
+  id: SyringePoisonFent
+  name: fentanyl syringe
+  suffix: fent
+  description: What the fuck?!
+  components:
+  - type: Label
+    localizedLabel: reagent-name-fentanyl
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Fentanyl
+        Quantity: 15
+
+- type: entity
+  parent: PrefilledSyringe
+  name: syringe
+  description: A somewhat humane way to put down prisoners.
+  id: SyringePoisonLethalInjection
+  suffix: lethal injection
+  components:
+  - type: Label
+    localizedLabel: syringe-lethal-injection
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Cyanide
+        Quantity: 10
+      - ReagentId: Amatoxin
+        Quantity: 5
+
+- type: entity
+  name: pill
+  suffix: Tramadol 7.5u
+  parent: Pill
+  id: PillTramadol
+  components:
+  - type: Pill
+    pillType: 18
+  - type: Sprite
+    state: pill18
+  - type: Label
+    localizedLabel: reagent-name-tramadol
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Tramadol
+        Quantity: 7.5 # Half OD
+
+- type: entity
+  name: pill canister
+  parent: PillCanister
+  id: PillCanisterTramadol
+  suffix: Tramadol 7.5u, 15
+  components:
+  - type: Label
+    localizedLabel: reagent-name-tramadol
+  - type: EntityTableContainerFill
+    containers:
+      storagebase:
+        id: PillTramadol
+        amount: 15
+
+- type: entity
+  name: pill
+  suffix: Oxycodone 5u
+  parent: Pill
+  id: PillOxycodone
+  components:
+  - type: Pill
+    pillType: 19
+  - type: Sprite
+    state: pill19
+  - type: Label
+    localizedLabel: reagent-name-oxycodone
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Oxycodone
+        Quantity: 5
+
+- type: entity
+  name: pill canister
+  parent: PillCanister
+  id: PillCanisterOxycodone
+  suffix: Oxycodone 5u, 15
+  components:
+  - type: Label
+    localizedLabel: reagent-name-oxycodone
+  - type: EntityTableContainerFill
+    containers:
+      storagebase:
+        id: PillOxycodone
+        amount: 15
+
+- type: entity
+  name: pill
+  suffix: Ibuprofen 10u, 15
+  parent: Pill
+  id: PillIbuprofen
+  components:
+  - type: Pill
+    pillType: 1
+  - type: Sprite
+    state: pill1
+  - type: Label
+    localizedLabel: reagent-name-ibuprofen
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Ibuprofen
+        Quantity: 10
+
+- type: entity
+  name: pill canister
+  parent: PillCanister
+  id: PillCanisterIbuprofen
+  suffix: Ibuprofen 10u, 15
+  components:
+  - type: Label
+    localizedLabel: reagent-name-ibuprofen
+  - type: EntityTableContainerFill
+    containers:
+      storagebase:
+        id: PillIbuprofen
+        amount: 15
+
+- type: entity
+  parent: PrefilledSyringe
+  name: syringe
+  description: A potent painkiller.
+  id: SyringeTramadol
+  suffix: Tramadol 15u
+  components:
+  - type: Label
+    localizedLabel: reagent-name-tramadol
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Tramadol
+        Quantity: 15
+
+- type: entity
+  parent: PrefilledSyringe
+  name: syringe
+  description: A potent painkiller.
+  id: SyringeOxycodone
+  suffix: Oxycodone 15u
+  components:
+  - type: Label
+    localizedLabel: reagent-name-oxycodone
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Oxycodone
+        Quantity: 15
+
+- type: entity
+  parent: PrefilledSyringe
+  name: syringe
+  description: A mild painkiller.
+  id: SyringeIbuprofen
+  suffix: Ibuprofen 15u
+  components:
+  - type: Label
+    localizedLabel: reagent-name-ibuprofen
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Ibuprofen
+        Quantity: 15
+
+- type: entity
+  parent: PrefilledSyringe
+  name: syringe
+  description: Damn.
+  id: SyringeHeroin
+  suffix: heroin 15u
+  components:
+  - type: Label
+    localizedLabel: reagent-name-heroin
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Heroin
+        Quantity: 15
+
+- type: entity
+  suffix: microplastics
+  parent: PrefilledSyringe
+  id: SyringeMicroplastics
+  description: Humanity used to macrodose themselves with this. Now its just a medicine for vox.
+  components:
+  - type: Label
+    localizedLabel: reagent-name-microplastics
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Microplastics
+        Quantity: 15

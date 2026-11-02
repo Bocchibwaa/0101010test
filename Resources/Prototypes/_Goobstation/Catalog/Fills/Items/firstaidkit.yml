@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  id: MedkitCombatStasiziumFilled
+  name: futuristic medkit
+  description: Medkit filled with medicines of the future
+  suffix: Stazisium
+  parent: MedkitCombat
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: StasiziumAutoInjector
+          amount: 8
+  - type: Sprite
+    sprite: Objects/Specific/Medical/firstaidkits.rsi
+    state: purplekit
+
+- type: entity
+  id: MedkitCombatBlueFilled
+  suffix: Filled, Pills
+  parent: MedkitCombatBlue
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: PillCanisterBicaridine
+        - id: PillCanisterDermaline
+        - id: PillCanisterTricordrazine
+        - id: PillCanisterTramadol
+        - id: PillCanisterIron
+        - id: PillCanisterDexalin
+        - id: PillCanisterDylovene
+        - id: PillCanisterHyronalin
+
+- type: entity
+  id: MedkitCombatPurpleFilled
+  suffix: Filled, IPC
+  parent: MedkitCombatPurple
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: ClothingEyesGlassesMeson
+        - id: WelderIndustrial
+        - id: CableApcStack
+        - id: PowerCellHigh

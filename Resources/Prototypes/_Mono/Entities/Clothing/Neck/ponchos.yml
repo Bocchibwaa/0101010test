@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: ClothingNeckBase
+  id: ClothingNeckPonchoBlack
+  name: black cold weather poncho
+  description: The Cold Weather Poncho, advertised as a masterpiece of elemental protection. The truth is that it's itchy, stuffy, and a little baggy - but at least it's not cold. This one is black.
+  components:
+  - type: Sprite
+    sprite: _Mono/Clothing/Neck/Ponchos/black.rsi
+  - type: Clothing
+    sprite: _Mono/Clothing/Neck/Ponchos/black.rsi
+  - type: Item
+    size: Normal
+  - type: TemperatureProtection
+    coefficient: 0.7
+
+- type: entity
+  parent: ClothingNeckPonchoBlack
+  id: ClothingNeckPonchoArctic
+  name: cold weather poncho
+  description: The Cold Weather Poncho, advertised as a masterpiece of elemental protection. The truth is that it's itchy, stuffy, and a little baggy - but at least it's not cold.
+  components:
+  - type: Sprite
+    sprite: _Mono/Clothing/Neck/Ponchos/arctic.rsi
+  - type: Clothing
+    sprite: _Mono/Clothing/Neck/Ponchos/arctic.rsi
+
+- type: entity
+  parent: ClothingNeckPonchoBlack
+  id: ClothingNeckPonchoSyndicate
+  name: black and red cold weather poncho
+  description: The Cold Weather Poncho, advertised as a masterpiece of elemental protection. The truth is that it's itchy, stuffy, and a little baggy - but at least it's not cold. This one seems vaguely sinister...
+  components:
+  - type: Sprite
+    sprite: _Mono/Clothing/Neck/Ponchos/syndicate.rsi
+  - type: Clothing
+    sprite: _Mono/Clothing/Neck/Ponchos/syndicate.rsi

@@ -1,0 +1,350 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Evil yaml
+# Basically, we throw the blade - it checks if we are heretic and wearing sharp medal item,
+# in this case it toggles boomerang and damage on throw and makes next trigger deactivate it (either on hand equip or land)
+# Can't just rely on 1 trigger otherwise the behavior may desync (and it will remove boomerang on throw instead of adding it!)
+# So overwrite values of "ItemToggleOnTrigger" on each trigger
+# I wish I could just have 2 different "EntityEffectOnTrigger" comps, 1 for user and 1 for blade...
+- type: entity
+  abstract: true
+  id: SharpMedalHereticBladeEffect
+  components:
+  - type: TriggerOnThrown
+    keyOut: activate
+  - type: TriggerOnMeleeHit
+    keyOut: activate
+  - type: TriggerOnGotEquippedHand
+    keyOut: deactivate
+  - type: GenericTriggerCondition
+    keys: [activate]
+    checkUser: true
+    condition: !type:AllConditions
+      conditions:
+      - !type:WhitelistCondition
+        checkMind: true
+        whitelist:
+          components:
+          - Ghoul
+          - Heretic
+      - !type:InventoryAnyNestedCondition
+        condition: !type:WhitelistCondition
+          whitelist:
+            tags:
+            - SharpMedal
+  - type: EntityEffectOnTrigger
+    keysIn: [activate]
+    targetUser: true
+    effects:
+    - !type:SetThrowCooldown
+      cooldown: 0.9
+  - type: ItemToggleOnTrigger
+    keysIn: [activate]
+    canDeactivate: false
+    showPopup: false
+  - type: ItemToggle
+    onActivate: false
+    onUse: false
+    wieldToggle: false
+  - type: ComponentToggler
+    components:
+    - type: Boomerang
+    - type: DamageOtherOnHit
+      damage:
+        types:
+          Slash: 20
+        armorPenetration: 0.3
+        woundSeverityMultipliers:
+          Slash: 1.5
+      soundHit:
+        path: /Audio/Weapons/bladeslice.ogg
+      forceSound: true
+    - type: ItemToggleOnTrigger
+      keysIn: [deactivate]
+      canActivate: false
+      showPopup: false
+    deactivateComponents:
+    - type: ItemToggleOnTrigger
+      keysIn: [activate]
+      canDeactivate: false
+      showPopup: false
+
+- type: entity
+  abstract: true
+  parent: [SharpMedalHereticBladeEffect, BaseItem, BaseMagicalContraband, KnifeDurabilitySharpenOnly]
+  id: HereticBladeBaseNoTeleport
+  name: eldritch blade
+  description: A sickly green crescent blade, decorated with an ornamental eye. You feel like you're being watched...
+  components:
+  - type: WeaponClass
+    class: Knife # not a knife but uses short blade knowledge
+  - type: LandAtCursor
+  - type: UnholyItem
+  - type: HereticBlade
+  - type: SurgeryTool
+  - type: Tool
+    qualities:
+    - Slicing
+    useSound:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: Sprite
+    sprite: _Goobstation/Heretic/Blades/eldritch_blade.rsi
+    state: icon
+  - type: Clothing
+    quickEquip: false
+    slots:
+    - Belt
+  - type: MeleeWeapon
+    wideAnimationRotation: -125
+    damage:
+      types:
+        Slash: 20
+      armorPenetration: 0.3
+      woundSeverityMultipliers:
+        Slash: 1.5
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: Item
+    size: Normal
+    sprite: _Goobstation/Heretic/Blades/eldritch_blade-inhands.rsi
+    shape:
+    - 0,0,1,0
+    - 0,1,0,1
+    storedRotation: 180
+  - type: Scalpel
+    speed: 1.5
+  - type: BoneSaw
+    speed: 1.5
+  - type: Tag
+    tags:
+    - HereticItem
+    - HereticBlade
+
+- type: entity
+  id: BaseRandomTeleportBlade
+  abstract: true
+  components:
+  - type: RandomTeleport
+    radius:
+      min: 10
+      max: 100
+
+- type: entity
+  parent: [ HereticBladeBaseNoTeleport, BaseRandomTeleportBlade ]
+  id: HereticBladeBase
+
+- type: entity
+  parent: HereticBladeBase
+  id: HereticBladeAsh
+  name: ashen blade
+  description: Molten and unwrought, a hunk of metal warped to cinders and slag. Unmade, it aspires to be more than it is, and shears soot-filled wounds with a blunt edge.
+  suffix: Ash
+  components:
+  - type: HereticBlade
+    effects:
+    - !type:Flammable
+      multiplier: 2.5
+      fireProtectionPenetration: 0.35
+    - !type:Ignite
+    path: Ash
+  - type: Sprite
+    sprite: _Goobstation/Heretic/Blades/blade_ash.rsi
+    state: icon
+  - type: Item
+    sprite: _Goobstation/Heretic/Blades/blade_ash-inhand.rsi
+  - type: Cautery
+    speed: 1.5
+
+- type: entity
+  parent: HereticBladeBase
+  id: HereticBladeBlade
+  name: sundered blade
+  description: A galliant blade, sundered and torn. Furiously, the blade cuts. Silver scars bind it forever to its dark purpose.
+  suffix: Blade
+  components:
+  - type: HereticBlade
+    bonusEvent: !type:BladeBladeBonusEvent
+      extraDamage:
+        types:
+          Structural: 10
+    path: Blade
+  - type: Sprite
+    sprite: _Goobstation/Heretic/Blades/blade_blade.rsi
+    layers:
+    - state: icon
+      map: [ "base" ]
+  - type: Item
+    sprite: _Goobstation/Heretic/Blades/blade_blade-inhand.rsi
+  - type: Tag
+    tags:
+    - HereticItem
+    - HereticBlade
+    - HereticBladeBlade
+  - type: Multihit
+    damageMultiplier: 0.75
+    multihitWhitelist:
+      tags:
+      - HereticBladeBlade
+    userConditions:
+    - !type:HereticStageCondition
+      requiredPath: Blade
+      minPathStage: 7
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.InfusedBladeVisuals.Infused:
+        base:
+          False: { state: icon }
+          True: { state: infused }
+
+- type: entity
+  abstract: true
+  parent: HereticBladeBaseNoTeleport
+  id: HereticBladeFleshBase
+  description: A crescent blade born from a fleshwarped creature. Keenly aware, it seeks to spread to others the suffering it has endured from its dreadful origins.
+  components:
+  - type: HereticBlade
+    effects:
+    - !type:ModifyBleed
+      amount: 2
+    - !type:SpillBlood
+      amount: 10
+    path: Flesh
+  - type: Sprite
+    sprite: _Goobstation/Heretic/Blades/blade_flesh.rsi
+    state: icon
+  - type: Item
+    sprite: _Goobstation/Heretic/Blades/blade_flesh-inhand.rsi
+
+# Ghoul blade (cannot teleport, lower damage)
+- type: entity
+  parent: HereticBladeFleshBase
+  id: HereticBladeFleshGhoul
+  name: ghoul blade
+  description: A crescent blade born from a fleshwarped creature. Keenly aware, it seeks to spread to others the suffering it has endured from its dreadful origins.
+  suffix: Flesh ghoul
+  components:
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 15
+
+- type: entity
+  parent: [HereticBladeFleshBase, BaseRandomTeleportBlade]
+  id: HereticBladeFlesh
+  name: bloody blade
+  suffix: Flesh
+
+- type: entity
+  parent: HereticBladeBase
+  id: HereticBladeLock
+  name: key blade
+  description: A blade and a key, a key to what? What grand gates does it open?
+  suffix: Lock
+  components:
+  - type: HereticBlade
+    bonusEvent: !type:HereticBladeBonusWoundingEvent
+      woundingBonus:
+        7: 1.25
+        10: 1.5
+    probabilities:
+      7: 0.35
+      10: 0.65
+    effects:
+    - !type:LockBladeEffect
+      scaleProbability: true
+    path: Lock
+  - type: Sprite
+    sprite: _Goobstation/Heretic/Blades/blade_lock.rsi
+    state: icon
+  - type: Item
+    sprite: _Goobstation/Heretic/Blades/blade_lock-inhand.rsi
+  - type: Prying
+    speedModifier: 1.5
+  - type: ToolTileCompatible
+  - type: Tool
+    qualities:
+    - Prying
+    useSound:
+      path: /Audio/Items/crowbar.ogg
+  - type: UseDelay # For insta prying
+    delay: 0.5
+  - type: Tag
+    tags:
+    - HereticItem
+    - HereticBlade
+    - HereticBladeLock
+
+- type: entity
+  parent: HereticBladeBase
+  id: HereticBladeRust
+  name: rusted blade
+  description: This crescent blade is decrepit, wasting to rust. Yet still it bites, ripping flesh and bone with jagged, rotten teeth.
+  suffix: Rust
+  components:
+  - type: HereticBlade
+    bonusEvent: !type:HereticBladeBonusDamageEvent
+      extraDamage:
+        types:
+          Poison: 8
+    effects:
+    - !type:ReduceRotting # Increase rotting
+      conditions:
+      - !type:MobStateCondition
+        mobstate: Dead
+      seconds: -60
+    path: Rust
+  - type: Sprite
+    sprite: _Goobstation/Heretic/Blades/blade_rust.rsi
+    state: icon
+  - type: Item
+    sprite: _Goobstation/Heretic/Blades/blade_rust-inhand.rsi
+
+- type: entity
+  parent: HereticBladeBase
+  id: HereticBladeVoid
+  name: void blade
+  description: Devoid of any substance, this blade reflects nothingness. It is a real depiction of purity, and chaos that ensues after its implementation.
+  suffix: Void
+  components:
+  - type: HereticBlade
+    effects:
+    - !type:VoidCurse
+    path: Void
+  - type: Sprite
+    sprite: _Goobstation/Heretic/Blades/blade_void.rsi
+    state: icon
+  - type: Item
+    sprite: _Goobstation/Heretic/Blades/blade_void-inhand.rsi
+
+- type: entity
+  parent: HereticBladeBase
+  id: HereticBladeCosmos
+  name: cosmic blade
+  description: A mote of celestial resonance, shaped into a star-woven blade. An iridescent exile, carving radiant trails, desperately seeking unification.
+  suffix: Cosmos
+  components:
+  - type: HereticBlade
+    bonusEvent: !type:CosmosBladeBonusEvent
+      extraDamage:
+        types:
+          Heat: 5
+    effects:
+    - !type:StarMark
+    path: Cosmos
+  - type: Sprite
+    sprite: _Goobstation/Heretic/Blades/blade_cosmos.rsi
+    state: icon
+  - type: Item
+    sprite: _Goobstation/Heretic/Blades/blade_cosmos-inhand.rsi
+
+- type: entity
+  parent: HereticBladeBaseNoTeleport
+  id: HereticBladeArena
+  name: imperfect blade
+  description: A blade given to those who cannot accept the truth, out of pity. May it act as a blessing in the short time it remains alongside you.
+  components:
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 15

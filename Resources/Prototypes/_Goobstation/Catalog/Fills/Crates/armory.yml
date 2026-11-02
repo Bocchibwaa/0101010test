@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  id: CrateArmoryCombatHardsuit
+  parent: [ CrateWeaponSecure, BaseSecurityContraband ]
+  name: Combat hardsuit crate
+  description: Contains an advanced security hardsuit. Requires Armory access to open.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage:
+        id: ClothingOuterHardsuitCombatOfficer
+
+- type: entity
+  id: CrateArmoryCombatMedicalHardsuit
+  parent: [ CrateWeaponSecure, BaseSecurityContraband ]
+  name: Combat medical hardsuit crate
+  description:  Contains an advanced medical security hardsuit, less defence but much less cumbersome. Requires Armory access to open.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage:
+        id: ClothingOuterHardsuitCombatMedical
+
+- type: entity
+  id: CrateArmoryCombatRiotHardsuit
+  parent: [ CrateWeaponSecure, BaseSecurityContraband ]
+  name: Riot hardsuit crate
+  description: Contains an advanced riot security hardsuit, very high defence but much also very cumbersome. Requires Armory access to open.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage:
+        id: ClothingOuterHardsuitCombatRiot

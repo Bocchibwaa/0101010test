@@ -1,0 +1,273 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# I couldn't figure out how randomsprite works so this mess was created!!!
+# Also pointlight masks were probably created by yakub or some shit to fuck with people holy god
+# Pointlight masks were coded in hell and sent up to us ong
+- type: entity
+  id: SpawnerChristmasLightsWhite
+  parent: MarkerBase
+  components:
+  - type: Sprite
+    layers:
+      - state: green
+      - sprite: _Goobstation/Objects/Specific/Christmas/lights.rsi
+        state: base1
+  - type: RandomSpawner
+    offset: 0.0
+    prototypes:
+    - ChristmasLightsWhite1
+    - ChristmasLightsWhite2
+    - ChristmasLightsWhite3
+    - ChristmasLightsWhite4
+    - ChristmasLightsWhite5
+    - ChristmasLightsWhite6
+
+- type: entity
+  id: SpawnerChristmasLightsRed
+  parent: MarkerBase
+  components:
+  - type: Sprite
+    layers:
+      - state: green
+      - sprite: _Goobstation/Objects/Specific/Christmas/lights.rsi
+        state: base1
+        color: "#ff7878"
+  - type: RandomSpawner
+    offset: 0.0
+    prototypes:
+    - ChristmasLightsRed1
+    - ChristmasLightsRed2
+    - ChristmasLightsRed3
+    - ChristmasLightsRed4
+    - ChristmasLightsRed5
+    - ChristmasLightsRed6
+
+- type: entity
+  id: SpawnerChristmasLightsBlue
+  parent: MarkerBase
+  components:
+  - type: Sprite
+    layers:
+      - state: green
+      - sprite: _Goobstation/Objects/Specific/Christmas/lights.rsi
+        state: base1
+        color: "#2A8FBD"
+  - type: RandomSpawner
+    offset: 0.0
+    prototypes:
+    - ChristmasLightsBlue1
+    - ChristmasLightsBlue2
+    - ChristmasLightsBlue3
+    - ChristmasLightsBlue4
+    - ChristmasLightsBlue5
+    - ChristmasLightsBlue6
+
+# Base
+
+- type: entity
+  abstract: true
+  id: BaseChristmasLights
+  name: christmas lights
+  description: Some white Christmas lights.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Objects/Specific/Christmas/lights.rsi
+  - type: PointLight
+    color: "#f9f375"
+    radius: 3
+    energy: 4
+    lightMask: Sparkle
+
+- type: entity
+  parent: BaseChristmasLights
+  id: BaseChristmasLightsRed
+  description: Some red Christmas lights.
+  components:
+  - type: PointLight
+    color: "#fc8d8d"
+
+- type: entity
+  parent: BaseChristmasLights
+  id: BaseChristmasLightsBlue
+  description: Some blue Christmas lights.
+  components:
+  - type: PointLight
+    color: "#61accf"
+
+# White
+
+- type: entity
+  parent: BaseChristmasLights
+  id: ChristmasLightsWhite1
+  components:
+  - type: Sprite
+    layers:
+    - state: base1
+    - state: lights1
+
+- type: entity
+  parent: BaseChristmasLights
+  id: ChristmasLightsWhite2
+  components:
+  - type: Sprite
+    layers:
+    - state: base2
+    - state: lights2
+
+- type: entity
+  parent: BaseChristmasLights
+  id: ChristmasLightsWhite3
+  components:
+  - type: Sprite
+    layers:
+    - state: base3
+    - state: lights3
+
+- type: entity
+  parent: BaseChristmasLights
+  id: ChristmasLightsWhite4
+  components:
+  - type: Sprite
+    layers:
+    - state: base4
+    - state: lights4
+
+- type: entity
+  parent: BaseChristmasLights
+  id: ChristmasLightsWhite5
+  components:
+  - type: Sprite
+    layers:
+    - state: base5
+    - state: lights5
+
+- type: entity
+  parent: BaseChristmasLights
+  id: ChristmasLightsWhite6
+  components:
+  - type: Sprite
+    layers:
+    - state: base6
+    - state: lights6
+
+- type: entity
+  parent: BaseChristmasLightsRed
+  id: ChristmasLightsRed1
+  components:
+  - type: Sprite
+    layers:
+    - state: base1
+    - state: lights1
+      color: &red "#ff7878"
+
+- type: entity
+  parent: BaseChristmasLightsRed
+  id: ChristmasLightsRed2
+  components:
+  - type: Sprite
+    layers:
+    - state: base2
+    - state: lights2
+      color: *red
+
+- type: entity
+  parent: BaseChristmasLightsRed
+  id: ChristmasLightsRed3
+  components:
+  - type: Sprite
+    layers:
+    - state: base3
+    - state: lights3
+      color: *red
+
+- type: entity
+  parent: BaseChristmasLightsRed
+  id: ChristmasLightsRed4
+  components:
+  - type: Sprite
+    layers:
+    - state: base4
+    - state: lights4
+      color: *red
+
+- type: entity
+  parent: BaseChristmasLightsRed
+  id: ChristmasLightsRed5
+  components:
+  - type: Sprite
+    layers:
+    - state: base5
+    - state: lights5
+      color: *red
+
+- type: entity
+  parent: BaseChristmasLightsRed
+  id: ChristmasLightsRed6
+  components:
+  - type: Sprite
+    layers:
+    - state: base6
+    - state: lights6
+      color: *red
+
+# Blue
+
+- type: entity
+  parent: BaseChristmasLightsBlue
+  id: ChristmasLightsBlue1
+  components:
+  - type: Sprite
+    layers:
+    - state: base1
+    - state: lights1
+      color: &blue "#2A8FBD"
+
+- type: entity
+  parent: BaseChristmasLightsBlue
+  id: ChristmasLightsBlue2
+  components:
+  - type: Sprite
+    layers:
+    - state: base2
+    - state: lights2
+      color: *blue
+
+- type: entity
+  parent: BaseChristmasLightsBlue
+  id: ChristmasLightsBlue3
+  components:
+  - type: Sprite
+    layers:
+    - state: base3
+    - state: lights3
+      color: *blue
+
+- type: entity
+  parent: BaseChristmasLightsBlue
+  id: ChristmasLightsBlue4
+  components:
+  - type: Sprite
+    layers:
+    - state: base4
+    - state: lights4
+      color: *blue
+
+- type: entity
+  parent: BaseChristmasLightsBlue
+  id: ChristmasLightsBlue5
+  components:
+  - type: Sprite
+    layers:
+    - state: base5
+    - state: lights5
+      color: *blue
+
+- type: entity
+  parent: BaseChristmasLightsBlue
+  id: ChristmasLightsBlue6
+  components:
+  - type: Sprite
+    layers:
+    - state: base6
+    - state: lights6
+      color: *blue

@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Effect ran on mimes when they break vow
+- type: entityEffect
+  id: MimePunishments
+  effects:
+  - !type:WeightedRandomEffect
+    probability: 0.25 # 75% chance of nothing happening
+    children:
+    - effect: !type:AddComponents
+        components:
+        - type: OhioAccent
+    - effect: !type:AddComponents
+        components:
+        - type: BackwardsAccent
+        - type: DementiaAccent
+    - effect: !type:AddComponents
+        components:
+        - type: VulgarAccent
+        - type: BoganAccent
+    - effect: !type:AddComponents
+        components:
+        - type: VulgarAccent
+        - type: RussianAccent
+        - type: BackwardsAccent
+        - type: OhioAccent

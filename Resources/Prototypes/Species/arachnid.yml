@@ -1,0 +1,20 @@
+- type: species
+  id: Arachnid
+  name: species-name-arachnid
+  roundStart: true
+  prototype: MobArachnid
+  defaultSkinTone: "#385878"
+  dollPrototype: AppearanceArachnid
+  skinColoration: Hues
+  maleFirstNames: NamesArachnidFirst
+  femaleFirstNames: NamesArachnidFirst
+  lastNames: NamesArachnidLast
+  sexes:
+  - Unsexed
+  knowledge: Arachnid # Trauma
+  defaultSoundsBySex:
+  - UnisexArachnid
+  - UnisexArachnid
+  - UnisexArachnid
+  voices:
+  - UnisexArachnid

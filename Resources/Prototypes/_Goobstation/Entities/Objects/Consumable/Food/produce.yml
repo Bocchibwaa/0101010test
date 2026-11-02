@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: [ ProduceBase, BaseSlicingRefinable ]
+  id: Nevcotta
+  name: nevcotta log
+  description: When planted out of it's native habitat, it grows into an entirely different plant.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Objects/Specific/Hydroponics/nevcotta.rsi
+    state: icon
+  - type: Produce
+    plantId: TowercapPlants # Shhh, I don't want to make this an actual plant yet!
+  - type: ToolRefinable
+    refineResult:
+    - id: NevcottaBark
+      amount: 2
+
+- type: entity
+  parent: BaseItem
+  id: NevcottaBark
+  name: nevcotta bark
+  description: The bark of a Nevcotta tree.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Objects/Specific/Hydroponics/nevcotta.rsi
+    state: bark
+  - type: Extractable
+    grindableSolutionName: food
+  - type: Solution
+    id: food
+    solution:
+      maxVol: 10
+      reagents:
+      - ReagentId: NevcottaPowder
+        Quantity: 5
+      - ReagentId: Fiber
+        Quantity: 4
+
+- type: entity
+  parent: FoodBlueTomato
+  id: FoodBluespaceTomato
+  name: bluespace tomato
+  description: Be careful with it.
+  components:
+  - type: SwapTeleportOnThrow
+  - type: Solution
+    id: food
+    solution:
+      maxVol: 10
+      canReact: false
+      reagents:
+      - ReagentId: Nutriment
+        Quantity: 3
+      - ReagentId: Singulo
+        Quantity: 5
+  - type: Sprite
+    sprite: _Goobstation/Objects/Specific/Hydroponics/bluespace_tomato.rsi
+  - type: Item
+    heldPrefix: produce
+  - type: Produce
+    plantId: BluespaceTomatoPlants
+  - type: Extractable
+    grindableSolutionName: food
+    juiceSolution:
+      reagents:
+      - ReagentId: Singulo
+        Quantity: 5
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 1
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: desecration
+      - !type:SpillBehavior
+        solution: food
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: Tag
+    tags:
+    - Fruit
+    - Vegetable

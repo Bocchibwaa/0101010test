@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAntagGhostRoleRule
+  id: WraithMidround
+  components:
+  - type: GhostroleAlert
+  - type: AntagSelection
+    agentName: wraith-round-end-agent-name
+    antags:
+    - !type:FixedAntagCount
+      proto: WraithMidround
+  - type: AntagRandomSpawn
+  - type: AntagSpawner
+    prototype: MobWraith
+  - type: StationEvent
+    weight: 4
+    earliestStart: 20
+    minimumPlayers: 30
+    duration: null
+    maxOccurrences: 1
+  - type: WraithRule

@@ -1,0 +1,134 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  abstract: true
+  parent: [ SmallConstructibleMachine, BaseConstructibleMachineDestructible ]
+  id: BaseEnergyReagentDispenser
+  suffix: Energy
+  components:
+  - type: Sprite
+    snapCardinals: true
+    sprite: Structures/dispensers.rsi
+  - type: Transform
+    anchored: true
+    noRot: true
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.25, -0.4, 0.25, 0.4"
+        density: 190
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+  - type: Battery
+    maxCharge: 1500
+    startingCharge: 1500
+  - type: ApcBatteryCharger
+    idleLoad: 800
+    drawRate: 1000 # charges the battery at 30 W
+    efficiency: 0.03 # crazy high 3% efficiency for converting energy to matter
+  - type: ApcPowerReceiver
+    powerLoad: 800
+  - type: ExtensionCableReceiver
+  - type: Anchorable
+  - type: Pullable
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalGlassBreak
+      - !type:ChangeConstructionNodeBehavior
+        node: machineFrame
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: ContainerContainer
+    containers:
+      machine_board: !type:Container
+      machine_parts: !type:Container
+      energyBeakerSlot: !type:ContainerSlot
+  - type: ItemSlots
+    slots:
+      energyBeakerSlot:
+        whitelistFailPopup: reagent-dispenser-component-cannot-put-entity-message
+        whitelist:
+          components:
+          - FitsInDispenser
+  - type: StaticPrice
+    price: 1000
+  - type: WiresPanel
+  - type: GuideHelp
+    guides:
+    - Chemicals
+    - Chemist
+  - type: ActivatableUI
+    key: enum.EnergyReagentDispenserUiKey.Key
+  - type: ActivatableUIRequiresAnchor # anchor instead of power so draw spikes when dispensing at full charge don't close the UI
+  - type: UserInterface
+    interfaces:
+      enum.EnergyReagentDispenserUiKey.Key:
+        type: EnergyReagentDispenserBUI
+  - type: EnergyReagentDispenser #Keep on bottom for view's sake, format is reagentProto: Cost
+    reagents:
+      Aluminium: 8
+      Carbon: 3
+      Chlorine: 12
+      Copper: 5
+      Ethanol: 8
+      Fluorine: 12
+      Hydrogen: 3
+      Iodine: 8
+      Iron: 5
+      Lithium: 12
+      Mercury: 12
+      Nitrogen: 3
+      Oxygen: 3
+      Phosphorus: 5
+      Potassium: 8
+      Radium: 15
+      Silicon: 3
+      Sodium: 5
+      Sugar: 5
+      Sulfur: 5
+
+- type: entity
+  abstract: true
+  parent: BaseEnergyReagentDispenser
+  id: BaseEnergyReagentDispenserAnimated
+  components:
+  - type: Sprite
+    layers:
+    - state: industrial-working
+      map: ["base"]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.PowerDeviceVisuals.Powered:
+        base:
+          True: { state: industrial-working }
+          False: { state: industrial-off }
+
+- type: entity
+  parent: BaseEnergyReagentDispenserAnimated
+  id: EnergyChemDispenser
+  name: energy chemical dispenser
+  description: A bluespace Chemical Dispenser that uses station energy to synthesize Reagents. The future is here and now.
+  components:
+  - type: Machine
+    board: EnergyChemDispenserMachineCircuitboard
+  - type: StealTarget
+    stealGroup: ChemDispenser

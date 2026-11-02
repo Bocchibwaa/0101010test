@@ -1,0 +1,97 @@
+// <Trauma>
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Network;
+// </Trauma>
+using Content.Shared.Damage.Components;
+using Content.Shared.Whitelist;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Timing;
+
+namespace Content.Shared.Damage.Systems;
+
+public sealed partial class DamageContactsSystem : EntitySystem
+{
+    // <Trauma>
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private INetManager _net = default!;
+    // </Trauma>
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
+
+    [Dependency] private EntityQuery<DamageContactsComponent> _damageQuery = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<DamageContactsComponent, StartCollideEvent>(OnEntityEnter);
+        SubscribeLocalEvent<DamageContactsComponent, EndCollideEvent>(OnEntityExit);
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var query = EntityQueryEnumerator<DamagedByContactComponent>();
+
+        while (query.MoveNext(out var ent, out var damaged))
+        {
+            if (_timing.CurTime < damaged.NextSecond)
+                continue;
+            damaged.NextSecond = _timing.CurTime + TimeSpan.FromSeconds(1);
+
+            if (damaged.Damage != null)
+            // <Trauma> - play clientside sound
+            {
+                _damageable.TryChangeDamage(ent, damaged.Damage, interruptsDoAfters: false);
+
+                if (_net.IsServer)
+                    continue;
+
+                _audio.PlayLocal(damaged.DamageSound, ent, ent);
+            }
+            // </Trauma>
+        }
+    }
+
+    private void OnEntityExit(EntityUid uid, DamageContactsComponent component, ref EndCollideEvent args)
+    {
+        var otherUid = args.OtherEntity;
+
+        if (!TryComp<PhysicsComponent>(otherUid, out var body))
+            return;
+
+        foreach (var ent in _physics.GetContactingEntities(otherUid, body))
+        {
+            if (ent == uid)
+                continue;
+
+            if (_damageQuery.HasComponent(ent))
+                return;
+        }
+
+        RemComp<DamagedByContactComponent>(otherUid);
+    }
+
+    private void OnEntityEnter(EntityUid uid, DamageContactsComponent component, ref StartCollideEvent args)
+    {
+        var otherUid = args.OtherEntity;
+
+        if (HasComp<DamagedByContactComponent>(otherUid))
+            return;
+
+        if (_whitelistSystem.IsWhitelistPass(component.IgnoreWhitelist, otherUid))
+            return;
+
+        var damagedByContact = EnsureComp<DamagedByContactComponent>(otherUid);
+        damagedByContact.Damage = component.Damage;
+
+        // <Trauma>
+        damagedByContact.DamageSound = component.DamageSound;
+        Dirty(uid, component);
+        // </Trauma>
+    }
+}

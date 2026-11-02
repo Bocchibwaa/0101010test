@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ToggleThermalVision
+  name: Toggle Thermal Vision
+  description: Toggles thermal vision.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _White/Clothing/Eyes/Goggles/thermal.rsi
+    layers:
+    - state: icon
+  - type: Action
+    itemIconStyle: BigAction
+    priority: -20
+    useDelay: 1
+  - type: InstantAction
+    event: !type:ToggleThermalVisionEvent
+
+- type: entity
+  id: PulseThermalVision
+  parent: ToggleThermalVision
+  name: Pulse Thermal Vision
+  description: Activate thermal vision temporarily.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Action
+    useDelay: 4

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: OrganHumanHeart
+  id: LavalandCursedHeart
+  description: "I feel bad for the heartless bastard who lost this."
+  suffix: Cursed
+  components:
+  - type: Sprite
+    sprite: _Lavaland/Objects/Specific/Lavaland/loot.rsi
+    layers:
+    - state: cursed_heart
+  - type: Item
+    size: Small
+  - type: CursedHeartGrant
+
+- type: entity
+  id: LavalandVampirismCrystal
+  parent: BasePKAUpgrade
+  name: a red crystal
+  components:
+  - type: Sprite
+    sprite: _Lavaland/Objects/Specific/Lavaland/loot.rsi
+    state: crystal
+  - type: GunUpgrade
+    name: gun-upgrade-vampirism-name
+  - type: GunUpgradeVampirism
+    damageOnHit:
+      types:
+        Slash: -1.5
+        Piercing: -1.5
+        Blunt: -1.5

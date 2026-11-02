@@ -1,0 +1,100 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reaction
+  id: CycloniteExplosion
+  minTemp: 576 #todo: make the reaction require another explosion to detonate it.
+  impact: High
+  priority: 20
+  reactants:
+    Cyclonite:
+      amount: 1
+  products:
+    Ash: 0.1
+  effects:
+  - !type:Explosion
+    explosionType: DemolitionCharge #Better at breaking walls and stuff
+    maxIntensity: 15
+    intensityPerUnit: 1 # RDX's RE factor is 1.6 of tnt
+    intensitySlope: 3 # more controlled explosion
+    maxTotalIntensity: 100
+
+- type: reaction
+  id: AmmoniumNitrateDecomposition
+  minTemp: 484
+  reactants:
+    AmmoniumNitrate:
+      amount: 2
+  products:
+    Nitrogen: 2
+    Oxygen: 1
+    Water: 4
+
+- type: reaction
+  id: SodiumBicarbonateDecomposition
+  minTemp: 324
+  reactants:
+    SodiumBicarbonate:
+      amount: 2
+  products:
+    SodiumCarbonate: 2
+    CarbonDioxide: 1
+    Water: 1
+
+- type: reaction
+  id: ANFOExplosion
+  minTemp: 576 #todo: make the reaction require another explosion to detonate it.
+  impact: High
+  priority: 20
+  reactants:
+    AmmoniumNitrateFuelOil:
+      amount: 1
+  products:
+    Ash: 0.1
+  effects:
+  - !type:Explosion
+    explosionType: DemolitionCharge #ANFO is used in mining
+    maxIntensity: 15
+    intensityPerUnit: 1 # you need a lot of it for a large explosion
+    intensitySlope: 1
+    maxTotalIntensity: 100
+
+- type: reaction
+  id: VinegarDecomposition
+  minTemp: 504
+  reactants:
+    Vinegar:
+      amount: 1
+  products:
+    Ethenone: 1
+    Water: 1
+
+- type: reaction
+  id: OctogenExplosion
+  minTemp: 553 #todo: make the reaction require another explosion to detonate it.
+  impact: High
+  priority: 20
+  reactants:
+    Octogen:
+      amount: 1
+  products:
+    Ash: 0.1
+  effects:
+  - !type:Explosion
+    explosionType: HardBomb # very high detonation velocity
+    maxIntensity: 8
+    intensityPerUnit: 1 # Lower because hardbomb
+    intensitySlope: 0.5 # very high detonation velocity
+    maxTotalIntensity: 100
+
+# chaplain stuff
+
+- type: reaction
+  id: CLF3toHolyCLF3
+  impact: Low
+  requiredMixerCategories:
+  - Holy
+  reactants:
+    ChlorineTrifluoride:
+      amount: 1
+  products:
+    HolyChlorineTrifluoride: 1

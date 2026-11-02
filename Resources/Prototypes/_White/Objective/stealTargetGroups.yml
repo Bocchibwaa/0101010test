@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Thief Animal
+
+- type: stealTargetGroup
+  id: AnimalLamarr
+  name: steal-target-groups-animal-lamarr
+  sprite:
+    sprite: _Trauma/Mobs/Xenos/facehugger.rsi
+    state: facehugger

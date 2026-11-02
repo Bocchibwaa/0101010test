@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: cloningSettings
+  parent: FleshMimic
+  id: Illusion
+  components:
+  - NpcFactionMember
+  - BloodCultMember
+  copyEquipment: WITHOUT_POCKET

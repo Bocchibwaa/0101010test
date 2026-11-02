@@ -1,0 +1,98 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: combo
+  id: DropKick
+  attacks:
+  - Disarm
+  - Disarm
+  userConditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-prone
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Effects/demon_attack1.ogg
+  opponentEffects:
+  - !type:TakeStaminaDamage
+    amount: 80
+  - !type:HealthChange
+    targetPart: Chest
+    damage:
+      types:
+        Slash: 10
+  - !type:StopPull
+  - !type:GrabThrow
+    speed: 25
+
+- type: combo
+  id: HeadRip
+  attacks:
+  - Harm
+  - Harm
+  - Harm
+  - Grab
+  userConditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-prone
+  conditions:
+  - !type:MobStateCondition
+    mobstate: Dead
+    failMessage: martial-arts-fail-target-alive
+  - !type:HasOrgan
+    organCategory: Head
+    failMessage: martial-arts-fail-target-headless
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Effects/gib1.ogg
+  - !type:PlaySoundEffect
+    sound: /Audio/Effects/demon_attack1.ogg
+  opponentEffects:
+  - !type:StopPull
+  - !type:RelayOrgan
+    category: Head
+    effects:
+    - !type:HealthChange
+      damage:
+        types:
+          Slash: 100
+    - !type:DetachOrgan
+
+- type: combo
+  id: TearDown
+  attacks:
+  - Harm
+  - Disarm
+  - Grab
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Effects/Fluids/blood1.ogg
+  - !type:PlaySoundEffect
+    sound: /Audio/Effects/demon_attack1.ogg
+  opponentEffects:
+  - !type:TakeStaminaDamage
+    amount: 50
+  - !type:HealthChange
+    targetPart: Chest
+    damage:
+      types:
+        Slash: 60
+
+- type: combo
+  id: Slam
+  attacks:
+  - Disarm
+  - Harm
+  conditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-target-down
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Effects/metal_slam5.ogg
+  - !type:PlaySoundEffect
+    sound: /Audio/Effects/demon_attack1.ogg
+  - !type:SetStanding
+    force: true
+  opponentEffects:
+  - !type:TakeStaminaDamage
+    amount: 100
+  - !type:ModifyKnockdown
+    time: 8

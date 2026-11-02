@@ -1,0 +1,11 @@
+<widgets:AlertsUI xmlns="https://spacestation14.io"
+                  xmlns:widgets="clr-namespace:Content.Client.UserInterface.Systems.Alerts.Widgets"
+                  MinSize="64 64">
+	<!-- Shitmed - wrapped in BoxContainer so PartStatus goes at the bottom of your alerts -->
+	<BoxContainer Orientation="Vertical">
+	    <PanelContainer HorizontalAlignment="Right" VerticalAlignment="Top">
+	        <BoxContainer Name="AlertContainer" Access="Public" Orientation="Vertical" />
+	    </PanelContainer>
+	    <Control Name="PartStatus" Access="Public"/> <!-- Shitmed -->
+    </BoxContainer>
+</widgets:AlertsUI>

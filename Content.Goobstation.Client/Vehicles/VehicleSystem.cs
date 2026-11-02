@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Vehicles;
+
+namespace Content.Goobstation.Client.Vehicles;
+
+public sealed partial class VehicleSystem : SharedVehicleSystem
+{
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private IEyeManager _eye = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
+
+    private EntityQuery<SpriteComponent> _spriteQuery;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<VehicleComponent, AppearanceChangeEvent>(OnAppearanceChange);
+        SubscribeLocalEvent<VehicleComponent, MoveEvent>(OnMove);
+
+        _spriteQuery = GetEntityQuery<SpriteComponent>();
+    }
+
+    private void OnAppearanceChange(Entity<VehicleComponent> ent, ref AppearanceChangeEvent args)
+    {
+        if (args.Sprite == null
+            || !_appearance.TryGetData(ent, VehicleState.Animated, out bool animated)
+            || !_spriteQuery.TryComp(ent, out var spriteComp))
+            return;
+
+        SpritePos(ent);
+
+        if(!_sprite.TryGetLayer((ent,spriteComp),0,out var layer, false))
+            return;
+
+        _sprite.LayerSetAutoAnimated(layer, animated);
+    }
+
+    private void OnMove(Entity<VehicleComponent> ent, ref MoveEvent args)
+    {
+        SpritePos(ent);
+    }
+
+    private void SpritePos(Entity<VehicleComponent> ent)
+    {
+        if (!_spriteQuery.TryComp(ent, out var spriteComp)
+            || !_appearance.TryGetData(ent, VehicleState.DrawOver, out _))
+            return;
+
+        _sprite.SetDrawDepth((ent, spriteComp), (int)Content.Shared.DrawDepth.DrawDepth.Objects);
+
+        if (ent.Comp.RenderOver == VehicleRenderOver.None)
+            return;
+
+        var dir = (Transform(ent).LocalRotation + _eye.CurrentEye.Rotation).GetCardinalDir();
+        var renderOverFlag = dir switch
+        {
+            Direction.North => VehicleRenderOver.North,
+            Direction.NorthEast => VehicleRenderOver.NorthEast,
+            Direction.East => VehicleRenderOver.East,
+            Direction.SouthEast => VehicleRenderOver.SouthEast,
+            Direction.South => VehicleRenderOver.South,
+            Direction.SouthWest => VehicleRenderOver.SouthWest,
+            Direction.West => VehicleRenderOver.West,
+            Direction.NorthWest => VehicleRenderOver.NorthWest,
+            _ => VehicleRenderOver.None,
+        };
+
+        if ((ent.Comp.RenderOver & renderOverFlag) == renderOverFlag)
+            _sprite.SetDrawDepth((ent, spriteComp), (int) Content.Shared.DrawDepth.DrawDepth.OverMobs);
+    }
+}

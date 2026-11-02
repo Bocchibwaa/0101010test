@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+
+namespace Content.Goobstation.Shared.Shadowling.Components.Abilities.Ascension;
+
+/// <summary>
+/// This is used for Ascendant Broadcast ability.
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+public sealed partial class ShadowlingAscendantBroadcastComponent : Component
+{
+    [DataField]
+    public EntProtoId ActionId = "ActionAscendantBroadcast";
+
+    [DataField]
+    public EntityUid? ActionEnt;
+}

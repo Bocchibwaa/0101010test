@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: shader
+  id: Insanity
+  kind: source
+  path: "/Textures/_Goobstation/Wraith/Shaders/insanity.swsl"
+  params:
+    radius: 1.0
+    speed: 1.0

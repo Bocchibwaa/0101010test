@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  abstract: true
+  id: BaseModsuitPieceERTSecurity
+  components:
+  - type: Sprite
+    sprite: _EinsteinEngines/Clothing/NanoTrasen/Modsuits/security-responsory.rsi
+
+# The Modsuit Itself, This is just a ERT modsuit
+- type: entity
+  parent: [ BaseModsuitERT, BaseModsuitPieceERTSecurity ]
+  id: ClothingModsuitResponsorySecurity
+  name: Security Responsory modsuit control unit
+  description: The main controller for a Security Responsory modsuit.
+  components:
+  - type: ToggleableClothing
+    clothingPrototypes:
+      head: ClothingModsuitHelmetResponsorySecurity
+      gloves: ClothingModsuitGauntletsResponsorySecurity
+      outerClothing: ClothingModsuitChestplateResponsorySecurity
+      shoes: ClothingModsuitBootsResponsorySecurity
+
+- type: entity
+  parent: [ BaseModsuitGauntletsERT, BaseModsuitPieceERTSecurity ]
+  id: ClothingModsuitGauntletsResponsorySecurity
+  name: Security Responsory modsuit gauntlets
+  description: A pair of gauntlets made for the Security Responsory modsuit.
+  categories: [HideSpawnMenu]
+
+- type: entity
+  parent: [ BaseModsuitHelmetERT, BaseModsuitPieceERTSecurity ]
+  id: ClothingModsuitHelmetResponsorySecurity
+  name: Security Responsory modsuit helmet
+  description: A state-of-the-art helmet designed by NanoTrasen for the Security Responsory modsuit. It includes a built-in HUD.
+  categories: [HideSpawnMenu]
+
+- type: entity
+  parent: [ BaseModsuitChestplateERT, BaseModsuitPieceERTSecurity ]
+  id: ClothingModsuitChestplateResponsorySecurity
+  name: Security Responsory modsuit chestplate
+  description: A state of the art chestplate designed by NanoTrasen for the Security Responsory modsuit. It incorporates powered servos to reduce the equipment load.
+  categories: [HideSpawnMenu]
+  components:
+  - type: StaminaResistance
+    damageCoefficient: 0.45
+
+- type: entity
+  parent: [ BaseModsuitBootsERT, BaseModsuitPieceERTSecurity ]
+  id: ClothingModsuitBootsResponsorySecurity
+  name: Security Responsory modsuit boots
+  description: A state-of-the-art pair of magboots for the Security Responsory modsuit.
+  categories: [HideSpawnMenu]
+  components:
+  - type: ClothingSpeedModifier
+    walkModifier: 0.95
+    sprintModifier: 0.95
+
+- type: entity
+  id: SuitStorageResponsorySecurity
+  parent: SuitStorageBase
+  suffix: Security Responsory Modsuit
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: OxygenTankFilled
+        - id: ClothingModsuitResponsorySecurity
+        - id: ClothingMaskBreath

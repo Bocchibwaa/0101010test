@@ -1,0 +1,178 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using System.Linq;
+using Content.Shared.EntityConditions;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Components;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Popups;
+using Content.Trauma.Common.MartialArts;
+using Content.Trauma.Shared.MartialArts.Components;
+
+namespace Content.Trauma.Shared.MartialArts;
+
+/// <summary>
+/// This handles determining if a combo was performed.
+/// </summary>
+public partial class MartialArtsSystem
+{
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedEntityConditionsSystem _conditions = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+
+    [SubscribeLocalEvent]
+    private void OnInit(Entity<CanPerformComboComponent> ent, ref ComponentInit args)
+    {
+        ent.Comp.AllowedCombos.Clear();
+        foreach (var item in ent.Comp.RoundstartCombos)
+        {
+            ent.Comp.AllowedCombos.Add(ProtoMan.Index(item));
+        }
+    }
+
+    [SubscribeLocalEvent]
+    private void OnComboAttackPerformed(Entity<CanPerformComboComponent> ent, ref ComboAttackPerformedEvent args)
+    {
+        var user = args.Performer;
+        // ignore attacks that use weapons...
+        if (!_timing.IsFirstTimePredicted || args.Weapon != user)
+            return;
+
+        var attemptEv = new ComboAttemptEvent();
+        RaiseLocalEvent(ent, ref attemptEv);
+        RaiseLocalEvent(user, ref attemptEv);
+        if (attemptEv.Cancelled)
+            return;
+
+        if (TryComp<MartialArtsKnowledgeComponent>(ent, out var martialArtsComp) && martialArtsComp.Blocked)
+            return;
+
+        if (!TryComp<MobStateComponent>(args.Target, out var targetState))
+            return;
+
+        if (ent.Comp.CurrentTarget is { } target && args.Target != target)
+            ent.Comp.LastAttacks.Clear();
+
+        ent.Comp.CurrentTarget = args.Target;
+        ent.Comp.ResetTime = _timing.CurTime + TimeSpan.FromSeconds(5);
+        ent.Comp.LastAttacks.Add(args.Type);
+        if (ent.Comp.LastAttacksLimit >= 0)
+        {
+            var difference = ent.Comp.LastAttacks.Count - ent.Comp.LastAttacksLimit;
+            if (difference > 0)
+                ent.Comp.LastAttacks.RemoveRange(0, difference);
+        }
+
+        if (TryComp<ComboActionsComponent>(ent, out var comboActions) && comboActions.QueuedPrototype is { } queued)
+        {
+            var proto = ProtoMan.Index(queued);
+            var level = _knowledge.GetLevel(ent.Owner);
+
+            if (!CheckCombo(ent, proto, level, user, args.Target, out var failMessage))
+            {
+                PopupFail(failMessage, user);
+                return;
+            }
+
+            PerformCombo(user, args.Target, proto, ent, level);
+            comboActions.QueuedPrototype = null;
+            return;
+        }
+
+        TryPerformCombo(ent, ref args);
+    }
+
+    private void TryPerformCombo(Entity<CanPerformComboComponent> ent, ref ComboAttackPerformedEvent args)
+    {
+        var target = args.Target;
+        var performer = args.Performer;
+        var level = _knowledge.GetLevel(ent.Owner);
+
+        LocId? failMessage = null;
+        foreach (var proto in ent.Comp.AllowedCombos)
+        {
+            if (!CheckCombo(ent, proto, level, performer, target, out var fail))
+            {
+                failMessage ??= fail;
+                continue;
+            }
+
+            PerformCombo(performer, target, proto, ent, level);
+            return; // found the combo
+        }
+
+        PopupFail(failMessage, performer);
+    }
+
+    private void PopupFail(LocId? message, EntityUid user)
+    {
+        if (message is { } id)
+            _popup.PopupCursor(Loc.GetString(id), user, PopupType.MediumCaution);
+    }
+
+    private bool CheckCombo(Entity<CanPerformComboComponent> ent,
+        ComboPrototype proto,
+        int level,
+        EntityUid user,
+        EntityUid target,
+        out LocId? failMessage)
+    {
+        failMessage = null;
+
+        var sum = ent.Comp.LastAttacks.Count - proto.AttackTypes.Count;
+        if (proto.AttackTypes.Count <= 0 || sum < 0)
+            return false;
+
+        var list = ent.Comp.LastAttacks.GetRange(sum, proto.AttackTypes.Count).AsEnumerable();
+        var attackList = proto.AttackTypes.AsEnumerable();
+
+        if (level < proto.LevelRequired || (level > proto.LevelExceeded && proto.LevelExceeded > 0) ||
+            !list.SequenceEqual(attackList))
+            return false;
+
+        // only complain once the attacks lined up, or every combo you don't know would yell at you
+        if (!_conditions.TryConditions(user, proto.UserConditions, out var failedUser, sourceEnt: user))
+        {
+            failMessage = failedUser?.FailMessage;
+            return false;
+        }
+
+        if (!_conditions.TryConditions(target, proto.Conditions, out var failedTarget, sourceEnt: user))
+        {
+            failMessage = failedTarget?.FailMessage;
+            return false;
+        }
+
+        return true;
+    }
+
+    public void PerformCombo(EntityUid performer, EntityUid target, ComboPrototype proto, Entity<CanPerformComboComponent> ent, int level)
+    {
+        var scaleEv = new MartialArtModifyScaleEvent(performer);
+        RaiseLocalEvent(ent, ref scaleEv);
+        var scale = scaleEv.Scale;
+
+        if (proto.UserEffects != null)
+            _effects.ApplyEffects(performer, proto.UserEffects, scale, user: performer);
+        if (proto.OpponentEffects != null)
+            _effects.ApplyEffects(target, proto.OpponentEffects, scale, user: performer);
+
+        ent.Comp.LastAttacks.Clear();
+        Dirty(ent);
+
+        var ev = new ComboPerformedEvent(performer, target);
+        RaiseLocalEvent(ent, ref ev);
+        // TODO: move xp logic into an event handler
+        if (TryComp<MartialArtsKnowledgeComponent>(ent, out var comp) && comp.GiveExperience && !comp.Blocked && _mobState.IsAlive(target) && proto.GiveExperience)
+        {
+            // you can only go up to your opponents level + 10, to encourage actual training between masters
+            var opponent = GetMartialArtLevel(target);
+            _knowledge.AddExperience(ent.Owner, performer, 1, opponent + 10);
+        }
+    }
+
+    private int GetMartialArtLevel(EntityUid uid)
+        => _knowledge.GetActiveMartialArt(uid) is { } unit
+            ? _knowledge.GetLevel(unit)
+            : 0;
+}

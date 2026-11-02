@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: alert
+  id: RecentlyBlocked
+  icons:
+  - sprite: /Textures/Objects/Weapons/Melee/shields.rsi
+    state: buckler-icon
+  name: alerts-blocked-name
+  description: alerts-blocked-desc

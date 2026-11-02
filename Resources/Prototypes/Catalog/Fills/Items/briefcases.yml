@@ -1,0 +1,128 @@
+- type: entity
+  id: BriefcaseBrownFilled
+  parent: BriefcaseBrown
+  suffix: Filled, Paper
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase:
+        id: Paper
+        amount: 3
+
+- type: entity
+  id: BriefcaseSyndieSniperBundleFilled
+  parent: BriefcaseBrown
+  suffix: Syndicate, Sniper Bundle
+  components:
+  - type: Storage # Trauma - increased size by 1,1
+    grid:
+    - 0,0,7,4
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: WeaponSniperHristov
+        - id: MagazineAntiMateriel # Goob
+        - id: MagazineBoxAntiMateriel
+        - id: ClothingNeckTieRed
+        - id: ClothingHandsGlovesLatex
+        - id: ClothingUniformJumpsuitLawyerBlack
+        - id: BarberScissors
+        - id: SkillChipSniper # Trauma
+
+- type: entity
+  id: BriefcaseSyndieLobbyingBundleFilled
+  parent: BriefcaseSyndie
+  suffix: Syndicate, Spesos
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: ClothingOuterCoatJensenSyndie
+        - id: ClothingUniformJumpsuitTacticool
+        - id: ClothingEyesGlassesSunglasses
+        - id: SpaceCash30000
+        - id: EncryptionKeySyndie
+        - id: RubberStampTrader
+        - id: PhoneInstrumentSyndicate
+        - id: ClothingHandsGlovesCombat
+        - id: ClothingMaskNeckGaiter
+        - id: VialCocaine # Trauma
+
+- type: entity
+  id: BriefcaseThiefBribingBundleFilled
+  parent: BriefcaseSyndie
+  suffix: Thief, Spesos
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: ClothingOuterCoatJensen
+        - id: ClothingEyesGlassesSunglasses
+        - id: SpaceCash20000
+        - id: ClothingHandsGlovesCombat # Goob - was ClothingHandsGlovesColorBlack
+        - id: ClothingHandsGlovesColorBlack
+        - id: ToyFigurineThief # Goob
+
+- type: entity
+  id: BriefcaseWeaponHushpupFilled
+  parent: BriefcaseWeaponSmall
+  name: secure hushpup case
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: WeaponShotgunHushpup
+        - id: TreasureCoinIron
+        - id: SkillChipShotgun # Trauma
+        - id: MagazineShotgun # Trauma
+
+- type: entity
+  id: BriefcaseWeaponC20Filled
+  parent: BriefcaseWeaponSmall
+  name: secure C-20r case
+  components:
+  # <Trauma>
+  - type: Storage
+    maxItemSize: Ginormous
+    grid:
+    - 0,0,4,0
+    - 0,1,3,1
+  # </Trauma>
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children: # Trauma
+        - id: WeaponSubMachineGunC20r
+        - id: MagazinePistolSubMachineGun # Trauma
+        - id: SkillChipSMG # Trauma
+
+- type: entity
+  id: BriefcaseWeaponBulldogFilled
+  parent: BriefcaseWeapon # Trauma
+  name: secure Bulldog case
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector # Trauma
+        children:
+        - id: WeaponShotgunBulldog
+        - id: MagazineShotgun # Trauma
+        - id: SkillChipShotgun # Trauma
+
+- type: entity
+  id: BriefcaseWeaponChinaLakeFilled
+  parent: BriefcaseWeapon
+  name: secure China Lake case
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: WeaponLauncherChinaLake
+        - id: GrenadeFrag
+          amount: 2
+        - id: SkillChipHeavy

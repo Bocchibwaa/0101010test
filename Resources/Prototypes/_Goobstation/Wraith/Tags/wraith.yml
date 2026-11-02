@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: Tag
+  id: WeakToSalt
+
+- type: Tag
+  id: RotHulkTrash
+
+- type: Tag
+  id: Fungus

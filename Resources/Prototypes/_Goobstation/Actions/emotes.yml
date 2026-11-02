@@ -1,0 +1,122 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: emote
+  id: Flip
+  name: chat-emote-name-flip
+  icon: _Goobstation/Interface/Emotes/flip.png
+  chatMessages: ["chat-emote-msg-flip"]
+  chatTriggers:
+  - flip
+  - flips
+  - flips.
+  - flips!
+  - does a flip
+  - does a flip.
+  - does a flip!
+  conditions:
+  - !type:HasStatusEffectCondition
+    effectProto: BlockVomitEmotesStatusEffect
+    inverted: true
+  effectsOnEmote:
+  - !type:AccumulateCounterStatusEffect
+    status: EmoteVomitCounterStatusEffect
+    updateTime: 1
+  - !type:IfElse
+    condition: !type:CheckCounterStatusEffectCondition
+      status: EmoteVomitCounterStatusEffect
+      max: 5
+    trueEffects:
+    - !type:RaiseNetworkEvents
+      events:
+      - !type:AnimationFlipEmoteEvent
+    falseEffects:
+    - !type:ModifyStatusEffect
+      effectProto: BlockVomitEmotesStatusEffect
+      time: 10
+    - !type:Vomit
+
+- type: emote
+  id: Tweak
+  name: chat-emote-name-tweak
+  chatMessages: ["chat-emote-msg-tweak"]
+  whitelist:
+    tags:
+    - Mouse
+    - MimicToolbox
+  chatTriggers:
+  - tweak
+  - tweaks
+  - tweaks.
+  - tweaks!
+  effectsOnEmote:
+  - !type:RaiseNetworkEvents
+    events:
+    - !type:AnimationTweakEmoteEvent
+
+- type: emote
+  id: Flex
+  name: chat-emote-name-flex
+  chatMessages: ["chat-emote-msg-flex"]
+  whitelist:
+    tags:
+    - Blobbernaut
+  chatTriggers:
+  - flex
+  - flexes
+  - flexes muscles
+  - flexes its muscles
+  - shows off
+  - shows off muscles
+  - shows off its muscles
+  - intimidates
+  effectsOnEmote:
+  - !type:RaiseNetworkEvents
+    events:
+    - !type:AnimationFlexEmoteEvent
+
+- type: emote
+  id: Spin
+  name: chat-emote-name-spin
+  category: Invalid # Don't show in the emote wheel
+  chatMessages: ["chat-emote-msg-spin"]
+  chatTriggers:
+  - spin
+  - spins
+  - spins.
+  - spins!
+  conditions:
+  - !type:HasStatusEffectCondition
+    effectProto: BlockVomitEmotesStatusEffect
+    inverted: true
+  effectsOnEmote:
+  - !type:AccumulateCounterStatusEffect
+    status: EmoteVomitCounterStatusEffect
+    updateTime: 1
+  - !type:IfElse
+    condition: !type:CheckCounterStatusEffectCondition
+      status: EmoteVomitCounterStatusEffect
+      max: 5
+    trueEffects:
+    - !type:RaiseNetworkEvents
+      events:
+      - !type:AnimationSpinEmoteEvent
+    falseEffects:
+    - !type:ModifyStatusEffect
+      effectProto: BlockVomitEmotesStatusEffect
+      time: 10
+    - !type:Vomit
+
+- type: emote
+  id: Jump
+  name: chat-emote-name-jump
+  icon: _Goobstation/Interface/Emotes/jump.png
+  chatMessages: ["chat-emote-msg-jump"]
+  chatTriggers:
+  - jump
+  - jumps
+  - jumps.
+  - jumps!
+  effectsOnEmote:
+  - !type:RaiseNetworkEvents
+    events:
+    - !type:AnimationJumpEmoteEvent

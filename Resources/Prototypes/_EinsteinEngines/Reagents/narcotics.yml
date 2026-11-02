@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reagent
+  id: Morphine
+  name: reagent-name-morphine
+  group: Narcotics
+  desc: reagent-desc-morphine
+  flavor: bitter
+  color: "#ffde7448"
+  physicalDesc: reagent-physical-desc-translucent
+  contrabandSeverity: Major # Does nothing, may as well make it fun (illegal) to have
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 0.1
+      effects:
+      - !type:Emote
+        emote: Yawn
+        showInChat: true
+        probability: 0.03
+      - !type:ModifyStatusEffect
+        effectProto: StatusEffectDrowsiness
+        time: 2.5
+        type: Add
+      - !type:HealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: Morphine
+          min: 16
+        damage:
+          types:
+            Asphyxiation: 2

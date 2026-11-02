@@ -1,0 +1,111 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: BasicTauCetiBasicTranslatorImplant
+  name: basic common translator implant
+  description: Provides your illiterate friends the ability to understand the common galactic tongue.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageTauCetiBasic: 50
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: TauCetiBasicTranslatorImplant
+  name: advanced common translator implant
+  description: A more advanced version of the translator implant, teaches your illiterate friends the ability to both speak and understand the galactic tongue!
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageTauCetiBasic: 100
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: BubblishTranslatorImplant
+  name: bubblish translator implant
+  description: An implant that helps you speak and understand the language of slimes! Special vocal chords not included.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageBubblish: 50
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: DraconicTranslatorImplant
+  name: draconic translator implant
+  description: A translator implant giving the ability to speak to dragons! Subsequently, also allows to communicate with the Unathi.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageDraconic: 50
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: SolCommonTranslatorImplant
+  name: sol-common translator implant
+  description: An implant giving the ability to understand and speak SolCommon. Raaagh!
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageSolCommon: 50
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: NovuNedericTranslatorImplant
+  name: novu-nederic translator implant
+  description: An implant giving the ability to understand and speak Novu-Nederic. Hoezee!
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageNovuNederic: 50
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: RootSpeakTranslatorImplant
+  name: root-speak translator implant
+  description: An implant that lets you speak for the trees. Or to the trees.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageRootSpeak: 50
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: MofficTranslatorImplant
+  name: moffic translator implant
+  description: An implant designed to help domesticate mothroaches. Subsequently, allows you to communicate with the moth people.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageMoffic: 50
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: AzazibaTranslatorImplant
+  name: azaziba translator implant
+  description: An implant giving the ability to understand and speak Azaziba. # Intended for Admins Only, this item is for lore reasons not obtainable.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageAzaziba: 50
+
+- type: entity
+  parent: BaseSubdermalImplant
+  id: NewKinPidginTranslatorImplant
+  name: ka'rakk translator implant
+  description: An implant giving the ability to understand and speak Ka'rakk.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KnowledgeGrantOnWear
+    skills:
+      LanguageNewKinPidgin: 50

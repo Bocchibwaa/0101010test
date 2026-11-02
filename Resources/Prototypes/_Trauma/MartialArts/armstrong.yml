@@ -1,0 +1,147 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: combo
+  id: ArmstrongBusterPunches
+  attacks:
+  - Harm
+  - Harm
+  - Grab
+  conditions:
+  # cant punch with stubs
+  - !type:HasOrgan
+    organCategory: HandLeft
+  - !type:HasOrgan
+    organCategory: HandRight
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/boxingpunch2.ogg
+  opponentEffects:
+  - !type:TakeStaminaDamage
+    amount: 18
+  - !type:HealthChange
+    targetPart: Chest
+    damage:
+      types:
+        Blunt: 12
+
+- type: combo
+  id: ArmstrongDropkick
+  attacks:
+  - Grab
+  - Harm
+  - Harm
+  - Disarm
+  userConditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-prone
+  conditions:
+  - !type:StandingCondition
+    failMessage: martial-arts-fail-target-down
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit3.ogg
+  - !type:ModifyKnockdown
+    time: 0.5
+    drop: false
+  opponentEffects:
+  - !type:ModifyParalysis
+    time: 6
+  - !type:TakeStaminaDamage
+    amount: 25
+  - !type:HealthChange
+    targetPart: Chest
+    damage:
+      types:
+        Blunt: 15
+  - !type:StopPull
+  - !type:GrabThrow
+
+- type: combo
+  id: ArmstrongMachineGunFist
+  attacks:
+  - Harm
+  - Disarm
+  - Harm
+  - Disarm
+  conditions:
+  # cant punch with stubs
+  - !type:HasOrgan
+    organCategory: HandLeft
+  - !type:HasOrgan
+    organCategory: HandRight
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/boxingpunch3.ogg
+  - !type:ModifyStatusEffect
+    effectProto: StatusEffectAttackSpeed
+    type: Add
+    time: 4
+  opponentEffects:
+  - !type:TakeStaminaDamage
+    amount: 17
+  - !type:HealthChange
+    targetPart: Chest
+    damage:
+      types:
+        Blunt: 25
+
+- type: combo
+  id: ArmstrongFireball
+  attacks:
+  - Harm
+  - Disarm
+  - Disarm
+  conditions:
+  # need at least 1 fist
+  - !type:AnyCondition
+    conditions:
+    - !type:HasOrgan
+      organCategory: HandLeft
+    - !type:HasOrgan
+      organCategory: HandRight
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Magic/fireball.ogg
+  opponentEffects:
+  - !type:HealthChange
+    targetPart: Chest
+    damage:
+      types:
+        Heat: 20
+  - !type:Flammable
+    multiplier: 4
+    multiplierOnExisting: 0.2
+  - !type:Ignite
+
+- type: combo
+  id: ArmstrongHorseStance
+  attacks:
+  - Disarm
+  - Disarm
+  - Disarm
+  conditions:
+  - !type:IsUser
+  userEffects:
+  - !type:TakeStaminaDamage
+    amount: -20
+
+- type: combo
+  id: ArmstrongHeadbutt
+  attacks:
+  - Harm
+  - Disarm
+  - Grab
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit2.ogg
+  - !type:HealthChange
+    targetPart: Head
+    damage:
+      types:
+        Blunt: 4
+  opponentEffects:
+  - !type:HealthChange
+    targetPart: Head
+    damage:
+      types:
+        Blunt: 18

@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: constructionGraph
+  id: BoogieBot
+  graph:
+  - node: start
+    edges:
+    - to: bot
+      steps:
+      - tag: BikeHorn
+        icon:
+          sprite: Objects/Fun/bikehorn.rsi
+          state: icon
+        name: construction-graph-tag-clown-bike-horn
+        doAfter: 2
+      - tag: ProximitySensor
+        icon:
+          sprite: Objects/Misc/proximity_sensor.rsi
+          state: icon
+        name: construction-graph-tag-proximity-sensor
+      - tag: BorgArm
+        icon:
+          sprite: Mobs/Silicon/drone.rsi
+          state: l_hand
+        name: construction-graph-tag-borg-arm
+        doAfter: 2
+  - node: bot
+    entity: BoogieBotSpawner
+
+- type: constructionGraph
+  id: SecBot
+  graph:
+  - node: start
+    edges:
+    - to: bot
+      steps:
+      - tag: Stunbaton
+        icon:
+          sprite: Objects/Weapons/Melee/stunbaton.rsi
+          state: stunbaton_off
+        name: construction-graph-tag-stun-baton
+        doAfter: 2
+      - tag: ProximitySensor
+        icon:
+          sprite: Objects/Misc/proximity_sensor.rsi
+          state: icon
+        name: construction-graph-tag-proximity-sensor
+        doAfter: 2
+      - tag: BorgArm
+        icon:
+          sprite: Mobs/Silicon/drone.rsi
+          state: l_hand
+        name: construction-graph-tag-borg-arm
+        doAfter: 1
+      - tag: SecurityHelmet
+        name: construction-graph-tag-security-helmet
+        icon:
+          sprite: Clothing/Head/Helmets/security.rsi
+          state: icon
+          doAfter: 1
+  - node: bot
+    entity: MobSecuritron

@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.FixedPoint;
+using Content.Shared.Chemistry.Reagent;
+
+namespace Content.Goobstation.Shared.Wraith.Components.Mobs;
+
+[RegisterComponent, NetworkedComponent]
+public sealed partial class RatBiteComponent : Component
+{
+    /// <summary>
+    /// Dictionary of reagents and their quantities to be injected.
+    /// Key: Reagent ID, Value: Quantity to inject.
+    /// </summary>
+    [DataField(required: true)]
+    public Dictionary<ProtoId<ReagentPrototype>, FixedPoint2> Reagents = new();
+}

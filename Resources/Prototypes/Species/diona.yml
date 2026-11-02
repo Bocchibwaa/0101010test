@@ -1,0 +1,21 @@
+- type: species
+  id: Diona
+  name: species-name-diona
+  roundStart: true
+  prototype: MobDiona
+  defaultSkinTone: "#cdb369"
+  dollPrototype: AppearanceDiona
+  skinColoration: Hues
+  maleFirstNames: NamesDionaFirst
+  femaleFirstNames: NamesDionaFirst
+  lastNames: NamesDionaLast
+  naming: TheFirstofLast
+  sexes:
+  - Unsexed
+  knowledge: Diona # Trauma
+  defaultSoundsBySex:
+  - UnisexDiona
+  - UnisexDiona
+  - UnisexDiona
+  voices:
+  - UnisexDiona

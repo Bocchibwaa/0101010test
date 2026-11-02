@@ -1,0 +1,205 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reagent
+  id: Tranquility
+  name: reagent-name-tranquility
+  group: Toxins
+  desc: reagent-desc-tranquility-trauma
+  physicalDesc: reagent-physical-desc-calming
+  flavor: mindful
+  color: "#915E48"
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 0.05
+      effects:
+      - !type:AdjustReagent # Gradually builds up if not "neutralized" with spicy food
+        reagent: Tranquility
+        amount: 0.1 # 20s/1u after metabolism
+        conditions:
+        - !type:ReagentCondition
+          reagent: Tranquility
+          min: 2.5 # Not sure where to put this yet, but shouldn't work diluted
+      - !type:PopupMessage
+        type: Local
+        messages: [ "reagent-popup-tranquility" ]
+        probability: 0.05
+      - !type:GenericStatusEffect
+        key: Pacified
+        component: Pacified
+        conditions:
+        - !type:ReagentCondition
+          reagent: Tranquility
+          min: 10
+      - !type:ModifyStatusEffect
+        effectProto: StatusEffectMuted
+        conditions:
+        - !type:ReagentCondition
+          reagent: Tranquility
+          min: 20 # maybe ask medical for help
+      - !type:Polymorph
+        prototype: Gondola
+        conditions:
+        - !type:ReagentCondition
+          reagent: Tranquility
+          min: 25
+
+- type: reagent
+  id: BingleJuice
+  name: reagent-name-binglejuice
+  group: Toxins
+  desc: reagent-desc-binglejuice
+  physicalDesc: reagent-physical-desc-calming
+  flavor: bitter
+  color: "#1a6ac1"
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 0.05
+      effects:
+      - !type:PopupMessage
+          type: Local
+          messages: [ "reagent-popup-binglejuice" ]
+          probability: 0.2
+      - !type:Polymorph
+        prototype: Bingle
+        conditions:
+        - !type:ReagentCondition
+          reagent: BingleJuice
+          min: 25
+
+- type: reagent
+  id: Carpolin
+  name: reagent-name-carpolin
+  group: Toxins
+  desc: reagent-desc-carpolin
+  physicalDesc: reagent-physical-desc-exotic-smelling
+  flavor: bitter
+  color: "#bb26f9"
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 0.05
+      effects:
+      - !type:Polymorph
+        prototype: ForcedCarpSentient
+        conditions:
+        - !type:ReagentCondition
+          reagent: Carpolin
+          min: 9
+      - !type:AdjustReagent
+        reagent: Carpolin
+        amount: -10
+        conditions:
+        - !type:ReagentCondition
+          reagent: Carpolin
+          min: 9 # keep it the same as above
+      - !type:PopupMessage
+        type: Local
+        messages: [ "reagent-popup-carpolin" ]
+        probability: 0.3
+      - !type:HealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: Carpolin
+          min: 1
+        - !type:MetabolizerTypeCondition
+          type: [ Animal ]
+        damage:
+          types:
+            Poison: 0.06
+
+# CREATED BY Goldminermac
+# https://github.com/space-wizards/space-station-14/pull/31149
+# LICENSED UNDER THE MIT LICENSE
+# SEE README.MD AND LICENSE.TXT IN THE ROOT OF THIS REPOSITORY FOR MORE INFORMATION
+- type: reagent
+  id: Profanol
+  name: reagent-name-profanol
+  group: Toxins
+  desc: reagent-desc-profanol
+  physicalDesc: reagent-physical-desc-pungent
+  flavor: offensive
+  color: "#BF5E5E"
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 0.1
+      effects:
+      - !type:GenericStatusEffect
+        key: Vulgarity
+        component: VulgarAccent
+# END OF MIT-LICENSED CODE
+
+- type: reagent
+  id: Copium
+  name: reagent-name-copium
+  group: Special
+  desc: reagent-desc-copium
+  physicalDesc: reagent-physical-desc-comforting
+  flavor: tears
+  color: "#fcb8f5"
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:PopupMessage
+        type: Local
+        visualType: Large
+        messages: [ "reagent-popup-copium-1", "reagent-popup-copium-2", "reagent-popup-copium-3", "reagent-popup-copium-4", "reagent-popup-copium-5", "reagent-popup-copium-6", "reagent-popup-copium-7", "reagent-popup-copium-8", "reagent-popup-copium-9", "reagent-popup-copium-10", "reagent-popup-copium-11", "reagent-popup-copium-12" ]
+        probability: 0.2
+
+- type: reagent
+  id: CatDrugs
+  name: reagent-name-cat-drugs
+  group: Toxins
+  desc: reagent-desc-cat-drugs
+  physicalDesc: reagent-physical-desc-fuzzy
+  flavor: fizzy
+  color: "#ffff40"
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 0.1
+      effects:
+      - !type:Emote
+        emote: CatMeow
+        showInChat: true
+        force: true
+        probability: 0.5
+      - !type:Polymorph
+        prototype: Cat
+        conditions:
+        - !type:MetabolizerTypeCondition
+          type: [ Animal ]
+          inverted: true
+        - !type:ReagentCondition
+          reagent: CatDrugs
+          min: 50
+      - !type:AdjustReagent
+        reagent: CatDrugs
+        amount: -20
+        conditions:
+        - !type:ReagentCondition
+          reagent: CatDrugs
+          min: 50
+
+- type: reagent
+  id: Nostalgia
+  name: reagent-name-nostalgia
+  group: Special
+  desc: reagent-desc-nostalgia
+  physicalDesc: reagent-physical-desc-chalky
+  flavor: old
+  color: "#375dcf"
+
+- type: reagent
+  id: Tilenol
+  name: reagent-name-tilenol
+  group: Special
+  desc: reagent-desc-tilenol
+  physicalDesc: reagent-physical-desc-robust
+  flavor: robust
+  color: "#ffd648"
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 0.1
+      effects:
+      - !type:GenericStatusEffect
+        key: Centered
+        time: 10
+        component: TileMovement

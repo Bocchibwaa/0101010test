@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+
+namespace Content.Goobstation.Shared.SpecialAnimation;
+
+/// <summary>
+/// Raised on some client to play a spell card animation.
+/// </summary>
+[ImplicitDataDefinitionForInheritors]
+[Serializable, NetSerializable]
+public sealed partial class SpecialAnimationEvent : EntityEventArgs
+{
+    public SpecialAnimationEvent(SpecialAnimationData animationData)
+    {
+        AnimationData = animationData;
+    }
+
+    public SpecialAnimationData AnimationData;
+}

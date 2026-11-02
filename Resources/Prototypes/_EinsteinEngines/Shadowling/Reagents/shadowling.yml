@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reagent
+  id: ShadowlingToxin
+  name: reagent-name-shadowling-toxin
+  desc: reagent-desc-shadowling-toxin
+  physicalDesc: reagent-physical-desc-syrupy
+  color: "#702963"
+  group: Narcotics
+  flavor: sharp
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:EvenHealthChange
+        conditions:
+        - !type:WhitelistCondition
+          whitelist:
+            components:
+            - Shadowling
+            - Thrall
+          guidebookText: entity-condition-shadowling-or-thrall
+        damage:
+          Burn: -12
+          Brute: -12
+          Toxin: -12
+          Airloss: -12
+
+      - !type:ModifyStatusEffect
+        conditions:
+        - !type:WhitelistCondition
+          blacklist:
+            components:
+            - Shadowling
+            - Thrall
+          guidebookText: entity-condition-not-shadowling-or-thrall
+        - !type:ReagentCondition
+          reagent: ShadowlingToxin
+          min: 5
+        effectProto: StatusEffectBlindness
+        time: 3

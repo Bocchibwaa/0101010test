@@ -1,0 +1,143 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadMailCarrier
+  name: mail carrier's hat
+  description: Smells like a good pension.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Head/Hats/mailman.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Head/Hats/mailman.rsi
+
+- type: entity
+  parent: ClothingHeadHeadHatBaseFlippable
+  id: ClothingHeadHatPropeller
+  name: propeller hat
+  description: Aw gee willickers!
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Head/Hats/propeller.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Head/Hats/propeller.rsi
+  - type: Tag
+    tags:
+    - ClothMade
+    - WhitelistChameleon
+
+- type: entity
+  parent: [ClothingHeadHatPropeller, ClothingHeadHeadHatBaseFlipped]
+  id: ClothingHeadHatPropellerFlipped
+  components:
+  - type: Tag
+    tags:
+    - ClothMade
+    - WhitelistChameleon
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatImam
+  name: imam head wrap
+  description: Praise Allah.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Head/Hats/imam.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Head/Hats/imam.rsi
+  - type: Tag
+    tags:
+    - ClothMade
+    - WhitelistChameleon
+  - type: HideLayerClothing
+    slots:
+    - Hair
+
+- type: entity
+  parent: [ClothingHeadBase, BaseCommandContraband] # Trauma
+  id: ClothingHeadHatBeretHeadOfSecurityAdvanced
+  name: head of security's parade beret
+  description: A particularly gilded beret, designed for the Head of Security.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Head/Hats/hos-expi.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Head/Hats/hos-expi.rsi
+  - type: Tag
+    tags:
+    - ClothMade
+    - WhitelistChameleon
+  - type: Armor
+    coverage:
+    - Head
+    traumaDeductions:
+      Dismemberment: 0.2
+      OrganDamage: 0.2
+      BoneDamage: 0.2
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.7
+        Slash: 0.7
+        Piercing: 0.7
+        Ballistic: 0.7
+        Heat: 0.8
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatBeretSeniorBotanist
+  name: botanical beret
+  description: A green beret featuring a small blue flower given to experienced botanists.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Head/Hats/beret_botany.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Head/Hats/beret_botany.rsi
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadSanabi
+  name: brigadier general hat
+  description: Smells like steel.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Head/Hats/sanabi.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Head/Hats/sanabi.rsi
+
+- type: entity
+  parent: [ ClothingHeadBase, BaseJanitorContraband ]
+  id: ClothingHeadHatJanitorCap
+  name: janitorial cap
+  description: An extravagant purple cap for only the BEST of janitorial workers.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Head/Hats/janitor_cap.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Head/Hats/janitor_cap.rsi
+  - type: Item
+    sprite: _Goobstation/Clothing/Head/Hats/janitor_cap.rsi
+  - type: Tag
+    tags:
+    - ClothMade
+    - Recyclable
+    - WhitelistChameleon
+    - HamsterWearable
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatTinfoilHat
+  name: tinfoil hat
+  description: A high tech helmet crafted from aluminum foil.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Clothing/Head/Hats/tinfoil_hat.rsi
+  - type: Clothing
+    sprite: _Goobstation/Clothing/Head/Hats/tinfoil_hat.rsi
+  - type: Tag
+    tags:
+    - Recyclable
+    - WhitelistChameleon
+  - type: ClothingGrantComponent
+    component:
+      - type: PossessionImmune

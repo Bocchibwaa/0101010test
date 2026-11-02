@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: soundCollection
+  id: FirePunch
+  files:
+    - /Audio/_Goobstation/Weapons/firepunch1.ogg
+    - /Audio/_Goobstation/Weapons/firepunch2.ogg
+    - /Audio/_Goobstation/Weapons/firepunch3.ogg
+    - /Audio/_Goobstation/Weapons/firepunch4.ogg

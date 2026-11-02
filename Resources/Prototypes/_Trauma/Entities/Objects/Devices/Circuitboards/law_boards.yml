@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: [ BaseSiliconLawboard, BaseRevMajorContraband ]
+  id: RevCircuitBoard
+  name: law board (Revolutionary)
+  description: An electronics board containing the Revolutionary lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: RevLawset
+    lawUploadSound: /Audio/Ambience/Antag/silicon_lawboard_antimov.ogg
+  - type: StaticPrice
+    price: 10000
+
+- type: entity
+  parent: BaseSiliconLawboard
+  id: VampireCircuitBoard
+  name: law board (Vampire)
+  description: An electronics board containing the Vampire lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: VampireLawset
+
+- type: entity
+  parent: BaseSiliconLawboard
+  id: GreatWallCircuitBoard
+  name: law board (Great Wall)
+  description: An electronics board containing the Great Wall lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: GreatWallLawset
+
+- type: entity
+  parent: BaseSiliconLawboard
+  id: BureaucracyCircuitBoard
+  name: law board (Bureaucracy)
+  description: An electronics board containing the Bureaucracy lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: BureaucracyLawset
+
+- type: entity
+  parent: BaseSiliconLawboard
+  id: ConspiracyCircuitBoard
+  name: law board (Conspiracy)
+  description: An electronics board containing the Conspiracy lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: ConspiracyLawset
+
+- type: entity
+  parent: BaseSiliconLawboard
+  id: MotivationalCircuitBoard
+  name: law board (Motivational Speaker)
+  description: An electronics board containing the Motivational Speaker lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: MotivationalLawset
+
+- type: entity
+  parent: BaseSiliconLawboard
+  id: MadScientistCircuitBoard
+  name: law board (Mad Scientist)
+  description: An electronics board containing the Mad Scientist lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: MadScientistLawset
+
+- type: entity
+  parent: BaseSiliconLawboard
+  id: GhostCircuitBoard
+  name: law board (Ghost)
+  description: An electronics board containing the Ghost lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: GhostLawset
+
+- type: entity
+  parent: BaseSiliconLawboard
+  id: SilenceCircuitBoard
+  name: law board (Silence)
+  description: An electronics board containing the Silence lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: SilenceLawset
+
+- type: entity
+  parent: BaseSiliconLawboard
+  id: StrategySimulatorCircuitBoard
+  name: law board (Strategy Simulator)
+  description: An electronics board containing the Strategy Simulator lawset.
+  components:
+  - type: SiliconLawProvider
+    laws: StrategySimulatorLawset

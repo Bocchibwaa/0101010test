@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Shadowling.Components;
+using Content.Goobstation.Shared.Shadowling.Components.Abilities.PreAscension;
+using Content.Shared.Actions;
+using Content.Shared.DoAfter;
+using Content.Shared.Mindshield;
+using Content.Shared.Popups;
+
+namespace Content.Goobstation.Shared.Shadowling.Systems.Abilities.PreAscension;
+
+/// <summary>
+/// This handles the Enthrall Abilities
+/// </summary>
+public sealed partial class ShadowlingEnthrallSystem : EntitySystem
+{
+    [Dependency] private MindShieldSystem _mindShield = default!;
+    [Dependency] private SharedShadowlingSystem _shadowling = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+
+    [SubscribeLocalEvent]
+    private void OnStartup(Entity<ShadowlingEnthrallComponent> ent, ref MapInitEvent args)
+        => _actions.AddAction(ent.Owner, ref ent.Comp.ActionEnt, ent.Comp.ActionId);
+
+    [SubscribeLocalEvent]
+    private void OnShutdown(Entity<ShadowlingEnthrallComponent> ent, ref ComponentShutdown args)
+        => _actions.RemoveAction(ent.Owner, ent.Comp.ActionEnt);
+
+    [SubscribeLocalEvent]
+    private void OnEnthrall(EntityUid uid, ShadowlingEnthrallComponent comp, EnthrallEvent args)
+    {
+        if (args.Handled)
+            return;
+
+        var target = args.Target;
+        var time = comp.EnthrallTime;
+
+        if (TryComp<EnthrallResistanceComponent>(target, out var enthrallRes))
+            time += enthrallRes.ExtraTime;
+
+        var doAfterArgs = new DoAfterArgs(
+            EntityManager,
+            uid,
+            time,
+            new EnthrallDoAfterEvent(),
+            uid,
+            target)
+        {
+            CancelDuplicate = true,
+            BreakOnDamage = true,
+        };
+
+        if (!_shadowling.CanEnthrall(uid, target))
+            return;
+
+        // Basic Enthrall -> Can't melt Mindshields
+        if (_mindShield.IsShielded(target))
+        {
+            _popup.PopupEntity(Loc.GetString("shadowling-enthrall-mindshield"), uid, uid, PopupType.SmallCaution);
+            return;
+        }
+
+        _popup.PopupEntity(Loc.GetString("shadowling-target-being-thralled"), target, target, PopupType.LargeCaution);
+
+        _doAfter.TryStartDoAfter(doAfterArgs);
+        args.Handled = true;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnEnthrallDoAfter(EntityUid uid, ShadowlingEnthrallComponent comp, EnthrallDoAfterEvent args)
+    {
+        if (args.Handled
+            || args.Cancelled)
+            return;
+
+        _shadowling.DoEnthrall(uid, comp.EnthrallComponents, args);
+        args.Handled = true;
+    }
+}

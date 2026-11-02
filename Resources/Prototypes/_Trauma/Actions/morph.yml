@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  abstract: true
+  parent: BaseAction
+  id: BaseMorphAction
+  components:
+  - type: Sprite
+    sprite: _Trauma/Mobs/morph.rsi
+
+- type: entity
+  parent: BaseMorphAction
+  id: ActionMorphReplicate
+  name: Replicate
+  description: Copies your cells to create a replica of yourself. Costs 150 biomass.
+  components:
+  - type: Sprite
+    layers:
+    - state: morph
+  - type: InstantAction
+    event: !type:MorphReplicateActionEvent
+
+- type: entity
+  parent: BaseMorphAction
+  id: ActionMorph
+  name: Morph
+  description: Warps your body to mimic the appearance of almost anything.
+  components:
+  - type: Sprite
+    sprite: Objects/Consumable/Drinks/mug_one.rsi
+    layers:
+    - state: icon
+  - type: Action
+    itemIconStyle: BigAction
+  - type: TargetAction
+    interactOnMiss: false
+  - type: EntityTargetAction
+    whitelist:
+      components:
+      - MobState
+      - Anchorable
+      - Item
+      tags:
+      - Bot
+    event: !type:MorphActionEvent
+
+- type: entity
+  parent: BaseMorphAction
+  id: ActionUnMorph
+  name: Un-Morph
+  description: Tries to revert you to your original form if you are morphed.
+  components:
+  - type: Sprite
+    sprite: Objects/Devices/chameleon_projector.rsi
+    layers:
+    - state: icon
+  - type: InstantAction
+    event: !type:UnMorphActionEvent
+
+- type: entity
+  parent: ActionDevour
+  id: ActionMorphDevour
+  description: Attempt to eat an item or creature, increasing your biomass.
+  components:
+  - type: EntityTargetAction
+    whitelist:
+      components:
+      - MobState
+      - Item

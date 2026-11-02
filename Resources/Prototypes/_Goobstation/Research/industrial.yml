@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: technology
+  id: AdvancedPowerGeneration
+  name: research-technology-advanced-power-generation
+  icon:
+    sprite: Structures/Power/Generation/Tesla/coil.rsi
+    state: coil
+  discipline: Industrial
+  tier: 1
+  cost: 10000
+  recipeUnlocks:
+  - TeslaCoilCircuitboard
+  - RadiationCollectorCircuitboard
+  position: 1,1
+  technologyPrerequisites:
+  - PowerGeneration
+
+- type: technology
+  id: BluespaceConstructionStorage
+  name: research-technology-bluespace-construction-storage
+  icon:
+    sprite: _NF/Objects/Specific/Engineering/construction_bag.rsi
+    state: icon
+  discipline: Industrial
+  tier: 3
+  cost: 5000
+  recipeUnlocks:
+  - ConstructionBagOfHolding
+  technologyPrerequisites:
+  - AdvancedToolsTechnology
+  position: 3, -4

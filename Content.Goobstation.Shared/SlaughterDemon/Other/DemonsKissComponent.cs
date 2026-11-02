@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.FixedPoint;
+using Content.Shared.Damage;
+
+namespace Content.Goobstation.Shared.SlaughterDemon.Other;
+
+/// <summary>
+/// Deals damage to the slaughter demon, and expels you from its stomach
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+public sealed partial class DemonsKissComponent : Component
+{
+    /// <summary>
+    ///  Damage to deal to the demon.
+    /// Hardcoded cuz its un-yamlabble as a status effect that can only be achieved through drinking.
+    /// </summary>
+    [DataField]
+    public DamageSpecifier Damage = new()
+    {
+        DamageDict = new()
+        {
+            { "Blunt", 25},
+            { "Slash",  25},
+        }
+    };
+
+    /// <summary>
+    ///  Whether to eject the entity, or not
+    /// </summary>
+    [DataField]
+    public bool Eject = true;
+}

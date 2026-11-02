@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: stack
+  id: HexNut
+  name: stack-hex-nut
+  icon: { sprite: _Goobstation/Objects/Materials/materials.rsi, state: hex_1 }
+  spawn: MaterialHexNut
+  maxCount: 10
+
+- type: stack
+  id: Screw
+  name: stack-screw
+  icon: { sprite: _Goobstation/Objects/Materials/materials.rsi, state: screw_1 }
+  spawn: MaterialScrew
+  maxCount: 10

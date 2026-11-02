@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Players.PlayTimeTracking;
+using Content.Shared.Roles;
+using Content.Shared.StatusIcon;
+
+namespace Content.Goobstation.Client.Administration.TimeTransferPanel;
+
+[GenerateTypedNameReferences]
+public sealed partial class TimeTransferEntry : BoxContainer
+{
+    public static readonly ProtoId<PlayTimeTrackerPrototype> OverallTracker = "Overall";
+
+    public string PlaytimeTracker;
+    public string JobName;
+
+    public TimeTransferEntry(JobPrototype? jobProto, SpriteSystem spriteSystem, IPrototypeManager prototypeManager)
+    {
+        RobustXamlLoader.Load(this);
+        IoCManager.InjectDependencies(this);
+
+        PlaytimeTracker = jobProto?.PlayTimeTracker ?? OverallTracker;
+        JobLabel.Text = JobName = jobProto?.LocalizedName ?? Loc.GetString("time-transfer-overall-checkbox");
+
+        if (prototypeManager.TryIndex<JobIconPrototype>(jobProto?.Icon, out var jobIcon))
+            JobIcon.Texture = spriteSystem.Frame0(jobIcon.Icon);
+    }
+
+    public void UpdateGroupVisibility(bool inGrouped)
+    {
+        TimeLabel.Visible = !inGrouped;
+        TimeEdit.Visible = !inGrouped;
+        GroupCheckbox.Visible = inGrouped;
+    }
+
+    public string GetJobTimeString()
+    {
+        return TimeEdit.Text != null ? TimeEdit.Text : "";
+    }
+
+    public bool InGroup()
+    {
+        return GroupCheckbox.Pressed;
+    }
+}

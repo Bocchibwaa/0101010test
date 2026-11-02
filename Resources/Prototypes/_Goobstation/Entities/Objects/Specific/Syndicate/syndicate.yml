@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseUplinkRadio
+  # Goobstation - Telecrystal rework
+  id: LoneOpsUplink225TC
+  suffix: 225 TC, LoneOps
+  components:
+  - type: Store
+    balance:
+      Telecrystal: 225
+  - type: Tag
+    tags:
+    - NukeOpsUplink
+    - LoneOpsUplink
+    #- NukeOpsCommanderUplink Trauma - So zed bundle is commander only

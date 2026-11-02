@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: constructionGraph
+  id: BarricadePlasteel
+  graph:
+  - node: start
+    actions:
+    - !type:DeleteEntity
+    edges:
+    - to: base
+      completed:
+      - !type:SnapToGrid
+      steps:
+      - material: Plasteel
+        amount: 6
+        doAfter: 8
+    - to: folding
+      completed:
+      - !type:SnapToGrid
+      steps:
+      - material: Plasteel
+        amount: 8
+        doAfter: 4
+  - node: base
+    entity: BarricadePlasteel
+    edges:
+    - to: start
+      completed:
+      - !type:GivePrototype
+        prototype: SheetPlasteel1
+        amount: 6
+      conditions:
+      - !type:EntityAnchored
+        anchored: false
+      steps:
+      - tool: Screwing
+        doAfter: 1
+      - tool: Prying
+        doAfter: 2
+  - node: folding
+    entity: BarricadePlasteelFolding
+    edges:
+    - to: start
+      completed:
+      - !type:GivePrototype
+        prototype: SheetPlasteel1
+        amount: 8
+      conditions:
+      - !type:EntityAnchored
+        anchored: false
+      steps:
+      - tool: Screwing
+        doAfter: 1
+      - tool: Prying
+        doAfter: 5

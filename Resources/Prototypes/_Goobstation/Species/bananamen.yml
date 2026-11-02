@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: species
+  id: BananaMen
+  name: species-name-bananamen
+  roundStart: false
+  prototype: MobBananaMen
+  dollPrototype: AppearanceBananaMen
+  skinColoration: NoColor

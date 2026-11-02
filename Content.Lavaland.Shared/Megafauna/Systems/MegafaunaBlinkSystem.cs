@@ -1,0 +1,132 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Lavaland.Shared.Megafauna.Components;
+using Content.Lavaland.Shared.Megafauna.Events;
+using Content.Lavaland.Shared.Procedural.Components;
+using Content.Shared.Coordinates.Helpers;
+using Content.Shared.Popups;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Map;
+using Robust.Shared.Timing;
+
+namespace Content.Lavaland.Shared.Megafauna.Systems;
+
+/// <summary>
+/// This handles... rider major
+/// </summary>
+public sealed partial class MegafaunaBlinkSystem : EntitySystem
+{
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedTransformSystem _xform = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private EntityQuery<LavalandMapComponent> _lavalandMapQuery = default!;
+    [Dependency] private EntityQuery<MegafaunaBlinkComponent> _blinkQuery = default!;
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var blinkQuery = EntityQueryEnumerator<MegafaunaActiveBlinkComponent>();
+        while (blinkQuery.MoveNext(out var uid, out var blink))
+        {
+            if (blink.BlinkTime == null
+                || _timing.CurTime < blink.BlinkTime)
+                continue;
+
+            if (!blink.Coordinates.IsValid(EntityManager))
+            {
+                RemComp(uid, blink);
+                continue;
+            }
+
+            _xform.SetCoordinates(uid, blink.Coordinates.SnapToGrid(EntityManager));
+            _audio.PlayPredicted(blink.Sound, blink.Coordinates, uid);
+            RemComp(uid, blink);
+        }
+    }
+
+    [SubscribeLocalEvent]
+    private void OnBlinkAction(Entity<MegafaunaBlinkComponent> ent, ref MegafaunaBlinkActionEvent args)
+    {
+        if (args.Handled
+            || !args.Target.IsValid(EntityManager))
+            return;
+
+        var xform = Transform(ent);
+        if (!_lavalandMapQuery.HasComp(xform.MapUid))
+        {
+            _popup.PopupEntity("The staff's power is weakened here!", ent, args.Performer);
+            return;
+        }
+
+        var comp = ent.Comp;
+        Blink(ent, args.Target, comp.Delay, comp.Sound);
+
+        if (comp.SpawnOnUsed is { } onUsed)
+            PredictedSpawnAtPosition(onUsed, xform.Coordinates);
+
+        if (comp.SpawnOnTarget is { } onTarget)
+            PredictedSpawnAtPosition(onTarget, args.Target);
+
+        args.Handled = true;
+    }
+
+    public void Blink(
+        EntityUid ent,
+        EntityCoordinates coords,
+        TimeSpan duration,
+        SoundSpecifier? sound = null)
+    {
+        var blinkComp = EnsureComp<MegafaunaActiveBlinkComponent>(ent);
+        blinkComp.BlinkTime = _timing.CurTime + duration;
+        blinkComp.Coordinates = coords;
+        blinkComp.Sound = sound;
+        Dirty(ent, blinkComp);
+    }
+
+    public void Blink(
+        EntityUid ent,
+        EntityUid target,
+        TimeSpan duration,
+        SoundSpecifier? sound = null)
+        => Blink(ent, Transform(target).Coordinates, duration, sound);
+
+    [SubscribeLocalEvent]
+    private void OnMapInit(Entity<MegafaunaBlinkInactiveComponent> ent, ref MapInitEvent args)
+    {
+        if (ent.Comp.FixedPosition)
+            ent.Comp.Marker = PredictedSpawnAtPosition(ent.Comp.MarkerId, Transform(ent).Coordinates);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnStartup(Entity<MegafaunaBlinkInactiveComponent> ent, ref MegafaunaStartupEvent args)
+    {
+        if (!ent.Comp.FixedPosition
+            && ent.Comp.Marker == null)
+            ent.Comp.Marker = PredictedSpawnAtPosition(ent.Comp.MarkerId, Transform(ent).Coordinates);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnShutdown(Entity<MegafaunaBlinkInactiveComponent> ent, ref MegafaunaShutdownEvent args)
+    {
+        if (ent.Comp.Marker == null
+            || !_blinkQuery.TryComp(ent, out var blinkComp))
+            return;
+
+        Blink(ent.Owner, ent.Comp.Marker.Value, blinkComp.Delay, blinkComp.Sound);
+        PredictedQueueDel(ent.Comp.Marker);
+        ent.Comp.Marker = null;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDelete(Entity<MegafaunaBlinkInactiveComponent> ent, ref EntityTerminatingEvent args)
+    {
+        if (TerminatingOrDeleted(ent.Comp.Marker))
+            return;
+
+        PredictedQueueDel(ent.Comp.Marker);
+        ent.Comp.Marker = null;
+    }
+}

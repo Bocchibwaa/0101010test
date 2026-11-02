@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# major
+- type: entity
+  abstract: true
+  parent: BaseGameRule
+  id: BaseSlaughterDemonRule
+  components:
+  - type: AntagSpawner
+    prototype: BaseMobSlaughterDemon
+  - type: AntagSelection
+    agentName: slaughter-round-end-agent-name
+    selectionTime: Never
+    antags:
+    - !type:FixedAntagCount
+      proto: SlaughterDemon
+  - type: AntagRandomSpawn
+  - type: AntagObjectives
+    objectives:
+    - SlaughterKillTheWizardObjective
+    - SlaughterKillEveryoneObjective
+  - type: AntagPlayerEffects
+    effects:
+    - !type:NestedEffect
+      proto: SlaughterDemonSkills
+
+- type: entity
+  parent: BaseSlaughterDemonRule
+  id: SlaughterDemonRule
+  components:
+  - type: SlaughterDemonRule
+
+- type: entity
+  parent: [ SlaughterDemonRule, BaseAntagGhostRoleRule ]
+  id: SlaughterDemonSummon
+
+# laughter
+- type: entity
+  parent: BaseSlaughterDemonRule
+  id: LaughterDemonRule
+  components:
+  - type: LaughterDemonRule
+  - type: AntagSpawner
+    prototype: MobLaughterDemon
+  - type: AntagSelection
+    agentName: laughter-round-end-agent-name
+    antags:
+    - !type:FixedAntagCount
+      proto: LaughterDemon
+  - type: AntagObjectives
+    objectives:
+    - SlaughterHugAndTickleObjective
+
+- type: entity
+  parent: [ LaughterDemonRule, BaseAntagGhostRoleRule ]
+  id: LaughterDemonSummon
+
+# midround
+- type: entity
+  parent: SlaughterDemonSummon
+  id: SlaughterDemonMidround
+  components:
+  - type: AntagSelection
+    agentName: lesser-slaughter-round-end-agent-name
+    antags:
+    - !type:FixedAntagCount
+      proto: SlaughterDemonMidround
+  - type: AntagSpawner
+    prototype: MobLesserSlaughterDemon
+  - type: StationEvent
+    weight: 1
+    earliestStart: 30
+    minimumPlayers: 50
+    duration: null
+    maxOccurrences: 1
+  - type: AntagObjectives
+    objectives:
+    - SlaughterDevourObjective
+    - AnnihilateAllJanitorsObjectiveFluff
+    - SpareCrewObjectiveFluff
+    - HuntTheBraveObjectiveFluff
+    - HuntTheCowardsObjectiveFluff
+    - ShowCrewPowerObjectiveFluff
+    - DriveInsaneObjectiveFluff
+    - SpreadBloodObjectiveFluff

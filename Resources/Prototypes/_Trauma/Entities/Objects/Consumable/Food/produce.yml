@@ -1,0 +1,426 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: [ FoodProduceBase, BaseSlicingRefinable ]
+  id: FoodLemonade
+  name: lemonade
+  description: When life gives you lemons, commit arson. With the lemons.
+  suffix: Food
+  components:
+  - type: FlavorProfile
+    flavors:
+    - sour
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Napalm
+        Quantity: 5
+      - ReagentId: Vitamin
+        Quantity: 4
+      - ReagentId: ChlorineTrifluoride
+        Quantity: 1
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/lemonade.rsi
+  - type: Item
+    heldPrefix: produce
+  - type: Produce
+    plantId: LemonadePlants
+  - type: Extractable
+    juiceSolution:
+      reagents:
+      - ReagentId: JuiceLemonade # lol
+        Quantity: 10
+  - type: Tag
+    tags:
+    - Fruit
+  - type: Edible
+    trash:
+    - LemonGrenade
+  - type: ToolRefinable
+    refineResult:
+    - id: LemonGrenade
+
+- type: entity
+  parent: [ FoodProduceBase, BaseSlicingRefinable ]
+  id: FoodCoconut
+  name: coconut
+  description: Should probably split it before eating...
+  components:
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Blunt: 20 # PVZ parity
+  - type: StaminaDamageOnCollide
+    damage: 15 # PLANTS VERSUS ZOMBIES PARITY
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/coconut.rsi
+  - type: Item
+    size: Normal
+    heldPrefix: produce
+  - type: DamageOnLand
+    damage:
+      types:
+        Blunt: 25
+  - type: Damageable
+  - type: Injurable
+    damageContainer: Inorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 25
+      behaviors:
+      - !type:SpillBehavior
+        solution: food
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:SpawnEntitiesBehavior
+            spawn:
+              FoodCoconutHalf:
+                min: 1
+                max: 2
+      - !type:PlaySoundBehavior
+        sound:
+          collection: WoodDestroy
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Nutriment
+        Quantity: 20
+      - ReagentId: Vitamin
+        Quantity: 10
+      - ReagentId: CoconutWater
+        Quantity: 10
+  - type: Extractable
+    juiceSolution:
+      reagents:
+      - ReagentId: CoconutWater
+        Quantity: 30
+  - type: CartridgeAmmo
+    proto: BulletCoconut # lol
+    deleteOnSpawn: true
+  - type: Produce
+    plantId: CoconutPlants
+  - type: Tag
+    tags:
+    - Fruit
+    - CannonBall # lmao
+  - type: ToolRefinable
+    refineResult:
+    - id: FoodCoconutHalf
+      amount: 2
+  - type: Edible
+    trash:
+    - TrashCoconutShell
+  - type: PhysicalComposition
+    materialComposition:
+      Wood: 100 # lol
+
+- type: entity
+  parent: [ FoodProduceBase, ProduceSliceBase, BaseSlicingRefinable ]
+  id: FoodCoconutHalf
+  name: coconut half
+  description: The perfect defense... if you're an octopus. A botanist would kill for one of these.
+  components:
+  - type: Item
+    size: Small
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Nutriment
+        Quantity: 10
+      - ReagentId: Vitamin
+        Quantity: 5
+      - ReagentId: CoconutWater
+        Quantity: 5
+  - type: Extractable
+    juiceSolution:
+      reagents:
+      - ReagentId: CoconutWater
+        Quantity: 15
+  - type: Produce
+    plantId: CoconutPlants
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/coconut.rsi
+    state: half
+  - type: Edible
+    trash:
+    - TrashCoconutShell
+  - type: ToolRefinable
+    refineResult:
+    - id: TrashCoconutShell
+  - type: PhysicalComposition
+    materialComposition:
+      Wood: 50 # lol
+  - type: Tag
+    tags:
+    - Fruit
+    - Slice
+
+- type: entity
+  parent: DrinkBaseCup
+  id: TrashCoconutShell
+  name: coconut shell
+  description: The shell of a coconut, kinda useless.
+  components:
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/coconut.rsi
+    state: cup
+  - type: PhysicalComposition
+    materialComposition:
+      Wood: 50 # lol
+  - type: Solution
+    solution:
+      maxVol: 15 # because i cant get the fill sprites to work
+
+- type: entity
+  parent: FoodProduceBase
+  id: FoodCherryBomb
+  name: cherry
+  description: Juicy red cherry with a bomb inside.
+  suffix: bomb
+  components:
+  - type: FlavorProfile
+    flavors:
+      - cherry
+  - type: Solution
+    solution:
+      maxVol: 8
+      reagents:
+      - ReagentId: Nutriment
+        Quantity: 3
+      - ReagentId: Vitamin
+        Quantity: 3
+  - type: Sprite
+    sprite: _Goobstation/Objects/Specific/Hydroponics/cherry.rsi
+  - type: Produce
+    plantId: CherryBombPlants
+  - type: Extractable
+    juiceSolution:
+      reagents:
+      - ReagentId: JuiceCherry
+        Quantity: 5
+  - type: Tag
+    tags:
+    - Fruit
+  - type: FoodSequenceElement
+    entries:
+      Taco: Cherry
+      Burger: Cherry
+  - type: Damageable
+  - type: Injurable
+    damageContainer: Inorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 1
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:SpillBehavior
+        solution: food
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/Effects/snap.ogg
+      - !type:ExplodeBehavior
+  - type: DamageOnLand
+    damage:
+      types:
+        Blunt: 3
+  - type: Explosive
+    explosionType: Default
+    maxIntensity: 0.01
+    intensitySlope: 1
+    totalIntensity: 0.01
+
+- type: entity
+  parent: TrashMimanaPeel
+  id: MimanaPeelStealthy
+  name: mimana peel
+  suffix: Stealthy
+  components:
+  - type: Stealth
+    maxVisibility: 1
+  - type: StealthOnMove
+    passiveVisibilityRate: -0.5
+    movementVisibilityRate: 0.6
+
+- type: entity
+  parent: FoodApple
+  id: FoodDeliciousApple
+  name: delicious looking apple
+  description: It's a delicious piece of Eden.
+  components:
+  - type: Produce
+    plantId: DeliciousApplePlants
+  - type: Tag
+    tags:
+    - Fruit
+    - DeliciousLookingApple
+
+- type: entity
+  parent: FoodApple
+  id: FoodMethApple
+  name: meth apple
+  description: It's a meth up'ed piece of Eden.
+  components:
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/meth_apple.rsi
+  - type: Produce
+    plantId: MethApplePlants
+  - type: Solution
+    solution:
+      maxVol: 14
+      reagents:
+      - ReagentId: Nutriment
+        Quantity: 10
+      - ReagentId: Vitamin
+        Quantity: 4
+      - ReagentId: Desoxyephedrine
+        Quantity: 5
+  - type: Tag
+    tags:
+    - Fruit
+    - MethApple
+
+- type: entity
+  parent: FoodCorn
+  id: FoodClearCorn
+  name: clear corn
+  description: Corn, but clear!
+  components:
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/clear_corn.rsi
+  - type: Produce
+    plantId: ClearCornPlants
+  - type: Tag
+    tags:
+    - ClearCorn
+  - type: Solution
+    solution:
+      maxVol: 100
+      reagents:
+      - ReagentId: Cornmeal
+        Quantity: 15
+      - ReagentId: Nutriment
+        Quantity: 5
+      - ReagentId: Ethanol
+        Quantity: 15
+
+- type: entity
+  parent: FoodProduceBase
+  id: FoodPeanut
+  name: peanut
+  description: A pea, but with nut.
+  components:
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/peanut.rsi
+  - type: Produce
+    plantId: PeanutPlants
+  - type: Tag
+    tags:
+    - Peanut
+
+- type: entity
+  parent: FoodProduceBase
+  id: FoodMagicMushroom
+  name: magic mushrooms
+  description: Mushrooms with just a little bit of magic.
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Nutriment
+        Quantity: 5
+      - ReagentId: THC
+        Quantity: 15
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/magicmushrooms.rsi
+  - type: Produce
+    plantId: MagicMushroomsPlants
+  - type: Tag
+    tags:
+    - MagicMushroom
+    - Mushroom
+
+- type: entity
+  parent: FoodProduceBase
+  id: FoodSynthMeat
+  name: synthmeat
+  description: Synthetic meat grown in hydroponics.
+  components:
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/synthmeat.rsi
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Synthflesh
+        Quantity: 40
+      - ReagentId: UncookedAnimalProteins
+        Quantity: 10
+      - ReagentId: GastroToxin
+        Quantity: 10
+  - type: Produce
+    plantId: SynthMeatPlants
+  - type: Tag
+    tags:
+    - SynthMeat
+
+- type: entity
+  parent: FoodProduceBase
+  id: MelonBalloon
+  name: melon balloon
+  description: Who knew that melons could fly!
+  components:
+  - type: Sprite
+    state: icon
+    sprite: _Trauma/Objects/Fun/balloons/red_balloon.rsi
+  - type: Produce
+    plantId: BalloonWatermelonPlants
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 1
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/_Goobstation/BalloonEffect/balloon_pop.ogg
+          params:
+            variation: 0.125
+            volume: -4
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:SpillBehavior
+        solution: food
+  - type: Solution
+    solution:
+      maxVol: 75
+  - type: Tag
+    tags:
+    - BalloonMelon
+
+- type: entity
+  parent: ProduceBaseRuminant
+  id: SteelWheatBushel
+  name: steel wheat bushel
+  description: Sigh... steel wheat... a-grain? # metal grains
+  components:
+  - type: Sprite
+    sprite: _Trauma/Objects/Specific/Hydroponics/steel_wheat.rsi
+  - type: Produce
+    plantId: SteelWheatPlants
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Nutriment
+        Quantity: 5
+      - ReagentId: Lead
+        Quantity: 0.1
+      - ReagentId: Iron
+        Quantity: 2
+  - type: Tag
+    tags:
+    - Wheat
+    - SteelWheat

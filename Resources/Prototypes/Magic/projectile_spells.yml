@@ -1,0 +1,56 @@
+- type: entity
+  parent: BaseAction
+  id: ActionFireball
+  name: Fireball
+  description: Fires an explosive fireball towards the clicked location.
+  components:
+  - type: Magic
+    # <Trauma>
+    requiresSpeech: true
+    school: Explosion
+    # </Trauma>
+  - type: Action
+    useDelay: 6 # Trauma - was 15
+    itemIconStyle: BigAction
+    raiseOnUser: true
+    sound: !type:SoundPathSpecifier
+      path: /Audio/Magic/fireball.ogg
+  - type: Sprite
+    sprite: _Goobstation/Wizard/actions.rsi # Trauma
+    layers:
+    - state: fireball
+  - type: TargetAction
+    range: 60
+    checkCanAccess: false
+  # <Trauma>
+  - type: EntityTargetAction
+    canTargetSelf: false
+  # </Trauma>
+  - type: WorldTargetAction
+    event: !type:ProjectileSpellEvent
+      projectileSpeed: 20 # Trauma
+      prototype: ProjectileFireball
+  - type: SpeakOnAction
+    dialogueDataset: DatasetActionFireballDialogue
+  - type: ActionUpgrade
+    effectedLevels:
+      2: ActionFireballII
+      3: ActionFireballIII
+
+- type: entity
+  parent: ActionFireball
+  id: ActionFireballII
+  name: Fireball II
+  description: Fires a fireball, but faster!
+  components:
+  - type: Action
+    useDelay: 4 # Trauma - was 10
+
+- type: entity
+  parent: ActionFireball
+  id: ActionFireballIII
+  name: Fireball III
+  description: The fastest fireball in the west!
+  components:
+  - type: Action
+    useDelay: 2 # Trauma - was 8

@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionRiseFish
+  name: Summon Carp Horde
+  description: Summons 3 carps on the spot to protect you from danger!
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Actions/dragon.rsi
+    layers:
+    - state: carp_horde
+  - type: Action
+    useDelay: 90
+    priority: 4
+  - type: InstantAction
+    event: !type:DragonSpawnCarpHordeActionEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionDragonRoar
+  name: Wing flap
+  description: Flap your wings to stun all enemies around you!
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Actions/dragon.rsi
+    layers:
+    - state: wing_flap
+  - type: Action
+    useDelay: 45
+    priority: 5
+  - type: InstantAction
+    event: !type:DragonRoarActionEvent

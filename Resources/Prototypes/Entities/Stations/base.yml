@@ -1,0 +1,198 @@
+- type: entity
+  id: BaseStation
+  abstract: true
+  components:
+    - type: StationData
+
+- type: entity
+  id: BaseStationCargo
+  abstract: true
+  components:
+    - type: StationBankAccount
+    - type: StationCargoOrderDatabase
+      orders:
+        Cargo: [ ]
+        Engineering: [ ]
+        Medical: [ ]
+        Science: [ ]
+        Security: [ ]
+        Service: [ ]
+    - type: StationCargoBountyDatabase
+
+- type: entity
+  id: BaseStationJobsSpawning
+  abstract: true
+  components:
+    - type: StationJobs
+      availableJobs: {}
+    - type: StationSpawning
+
+- type: entity
+  id: BaseStationRecords
+  abstract: true
+  components:
+    - type: StationRecords
+
+- type: entity
+  id: BaseStationArrivals
+  abstract: true
+  components:
+    - type: StationArrivals
+
+- type: entity
+  id: BaseStationShuttles
+  abstract: true
+  components:
+    - type: StationCargoShuttle
+      path: /Maps/_Trauma/Shuttles/cargo.yml # Trauma
+    - type: GridSpawn
+      groups:
+        # <Trauma>
+        mining: !type:GridSpawnGroup
+          paths:
+          - /Maps/_Trauma/Shuttles/mining.yml
+        # <Trauma>
+        trade: !type:GridSpawnGroup
+          addComponents:
+            - type: ProtectedGrid
+            - type: TradeStation
+          paths:
+            - /Maps/_Trauma/Shuttles/trading_outpost.yml # Trauma
+          nameDataset: TradeStationNames
+        # <Trauma>
+        vgroid: !type:DungeonSpawnGroup # Trauma, made this spawn first
+          hide: false
+          nameGrid: true
+          minimumDistance: 400 # Was 300
+          maximumDistance: 600 # Was 350
+          nameDataset: NamesBorer
+          stationGrid: false
+          addComponents:
+          - type: Gravity
+            enabled: true
+            inherent: true
+          - type: IFF
+            color: "#d67e27"
+          protos:
+          - VGRoid
+        # </Trauma>
+        # Spawn last
+        ruins: !type:GridSpawnGroup
+          hide: false
+          nameGrid: false
+          minCount: 3 # Trauma, was 2
+          maxCount: 5 # Trauma, was 2
+          minimumDistance: 200 # Trauma, was 100
+          maximumDistance: 300 # Trauma, was 300
+          stationGrid: false
+          paths:
+          - /Maps/Ruins/abandoned_outpost.yml
+          - /Maps/Ruins/atmos_interchange.yml
+          - /Maps/Ruins/chunked_tcomms.yml
+          - /Maps/Ruins/biodome_satellite.yml
+          - /Maps/Ruins/derelict.yml
+          - /Maps/_Goobstation/Ruins/goobdjstation.yml # goob - this was so fucking bad
+          - /Maps/Ruins/empty_flagship.yml
+          - /Maps/Ruins/hydro_outpost.yml
+          - /Maps/Ruins/old_ai_sat.yml
+          - /Maps/Ruins/ruined_prison_ship.yml
+          - /Maps/Ruins/syndicate_dropship.yml
+          - /Maps/Ruins/whiteship_ancient.yml
+          - /Maps/Ruins/whiteship_bluespacejumper.yml
+          - /Maps/Ruins/wrecklaimer.yml
+          - /Maps/Ruins/displaced_telescience.yml
+          addComponents:
+          - type: Gravity
+            enabled: true
+            inherent: true
+          - type: IFF
+            color: "#b14918"
+        wrecks: !type:DungeonSpawnGroup
+          hide: true
+          nameGrid: false
+          minimumDistance: 100 # Trauma, was 150
+          maximumDistance: 200 # Trauma, was 300
+          stationGrid: false
+          minCount: 10 # Trauma, was 12 make 32 when grid bug fixed
+          maxCount: 10 # Trauma. was 16 make 64 when grid bug fixed
+          addComponents:
+          - type: IFF
+            flags: HideLabel
+            color: "#88b0d1"
+          protos:
+          - ChunkDebrisSmall
+          - ChunkDebrisSmall
+          - ChunkDebrisSmall
+          - ChunkDebrisSmall
+          - ChunkDebris
+
+- type: entity
+  id: BaseStationCentcomm
+  abstract: true
+  components:
+    - type: StationCentcomm
+      map: /Maps/_Trauma/centcomm.yml # Trauma
+
+- type: entity
+  id: BaseStationEvacuation
+  abstract: true
+  components:
+    - type: StationEmergencyShuttle
+
+- type: entity
+  id: BaseStationExpeditions
+  abstract: true
+  components:
+    - type: SalvageExpeditionData
+
+- type: entity
+  id: BaseStationMagnet
+  abstract: true
+  components:
+    - type: SalvageMagnetData
+
+- type: entity
+  id: BaseStationSalvageJobs
+  abstract: true
+  components:
+  - type: SalvageJobsData
+    rankThresholds:
+      0:
+        title: salvage-job-rank-title-0
+        bountyGroup: SalvageJobTier1
+      3:
+        title: salvage-job-rank-title-1
+        bountyGroup: SalvageJobTier2
+        unlockedMarket: SalvageJobReward2
+      6:
+        title: salvage-job-rank-title-2
+        bountyGroup: SalvageJobTier3
+        unlockedMarket: SalvageJobReward3
+    maxRank:
+      title: salvage-job-rank-title-MAX
+      unlockedMarket: SalvageJobRewardMAX
+
+- type: entity
+  id: BaseStationSiliconLawCrewsimov
+  abstract: true
+  components:
+  - type: SiliconLawProvider
+    laws: Crewsimov
+
+- type: entity
+  id: BaseStationNews
+  abstract: true
+  components:
+    - type: StationNews
+
+- type: entity
+  id: BaseStationDeliveries
+  abstract: true
+  components:
+  - type: CargoDeliveryData
+
+- type: entity
+  id: BaseStationAllEventsEligible
+  abstract: true
+  components:
+    - type: StationEventEligible # For when someone makes this more granular in the future.

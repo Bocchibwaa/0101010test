@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Science
+- type: entity
+  parent: Holopad
+  id: HolopadScienceXenobiology
+  suffix: Xenobio
+  components:
+  - type: Label
+    localizedLabel: station-beacon-xenobio
+
+- type: entity
+  parent: Holopad
+  id: HolopadScienceGenetics
+  suffix: Genetics
+  components:
+  - type: Label
+    localizedLabel: station-beacon-genetics
+
+- type: entity
+  parent: Holopad
+  id: HolopadEngineeringReactor
+  suffix: Reactor
+  components:
+  - type: Label
+    localizedLabel: station-beacon-reactor

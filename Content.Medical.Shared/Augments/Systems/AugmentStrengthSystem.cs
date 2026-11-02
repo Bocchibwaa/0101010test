@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Shared.Item.ItemToggle;
+using Content.Trauma.Common.Weapons;
+
+namespace Content.Medical.Shared.Augments;
+
+public sealed partial class AugmentStrengthSystem : EntitySystem
+{
+    [Dependency] private ItemToggleSystem _toggle = default!;
+
+    [SubscribeLocalEvent]
+    private void OnGetMeleeDamage(Entity<AugmentStrengthComponent> ent, ref GetUserMeleeDamageEvent args)
+    {
+        if (_toggle.IsActivated(ent.Owner))
+            args.Damage *= ent.Comp.Modifier;
+    }
+}

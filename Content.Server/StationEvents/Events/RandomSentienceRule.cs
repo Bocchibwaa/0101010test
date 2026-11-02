@@ -1,0 +1,98 @@
+// <Trauma>
+using Content.Trauma.Common.StationEvents;
+// </Trauma>
+using System.Linq;
+using Content.Shared.Dataset;
+using Content.Server.Ghost.Roles.Components;
+using Content.Server.StationEvents.Components;
+using Content.Shared.GameTicking.Components;
+using Content.Shared.Random.Helpers;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
+using Content.Shared.Station.Components;
+
+namespace Content.Server.StationEvents.Events;
+
+/// <summary>
+/// Handler for events that create ghost roles on random entities with <see cref="SentienceTargetComponent"/>.
+/// </summary>
+/// <seealso cref="RandomSentienceRuleComponent"/>
+public sealed partial class RandomSentienceRule : StationEventSystem<RandomSentienceRuleComponent>
+{
+    private static readonly ProtoId<LocalizedDatasetPrototype> DataSourceNames = "RandomSentienceEventData";
+    private static readonly ProtoId<LocalizedDatasetPrototype> IntelligenceLevelNames = "RandomSentienceEventStrength";
+
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private IRobustRandom _random = default!;
+
+    protected override void Started(Entity<RandomSentienceRuleComponent, GameRuleComponent> ent, ref GameRuleStartedEvent args)
+    {
+        if (!Station.TryGetRandomStation<StationEventEligibleComponent>(out var station))
+            return;
+
+        var targetList = new List<Entity<SentienceTargetComponent>>();
+        var query = EntityQueryEnumerator<SentienceTargetComponent, TransformComponent>();
+        while (query.MoveNext(out var targetUid, out var target, out var xform))
+        {
+            if (Station.GetOwningStation(targetUid, xform) != station.Value.Owner)
+                continue;
+
+            targetList.Add((targetUid, target));
+        }
+
+        var toMakeSentient = _random.Next(ent.Comp1.MinSentiences, ent.Comp1.MaxSentiences);
+
+        var groups = new HashSet<string>();
+
+        for (var i = 0; i < toMakeSentient && targetList.Count > 0; i++)
+        {
+            // weighted random to pick a sentience target
+            var totalWeight = targetList.Sum(x => x.Comp.Weight);
+            // This initial target should never be picked.
+            // It's just so that target doesn't need to be nullable and as a safety fallback for id floating point errors ever mess up the comparison in the foreach.
+            var target = targetList[0];
+            var chosenWeight = _random.NextFloat(totalWeight);
+            var currentWeight = 0.0;
+            foreach (var potentialTarget in targetList)
+            {
+                currentWeight += potentialTarget.Comp.Weight;
+                if (currentWeight > chosenWeight)
+                {
+                    target = potentialTarget;
+                    break;
+                }
+            }
+            targetList.Remove(target);
+
+            RemComp<SentienceTargetComponent>(target);
+            var ghostRole = EnsureComp<GhostRoleComponent>(target);
+            EnsureComp<GhostTakeoverAvailableComponent>(target);
+            ghostRole.RoleName = MetaData(target).EntityName;
+            ghostRole.RoleDescription = Loc.GetString("station-event-random-sentience-role-description", ("name", ghostRole.RoleName));
+            groups.Add(Loc.GetString(target.Comp.FlavorKind));
+            // <Trauma>
+            var ev = new RandomSentienceEvent(target);
+            RaiseLocalEvent(target, ref ev, true);
+            // </Trauma>
+        }
+
+        if (groups.Count == 0)
+            return;
+
+        var groupList = groups.ToList();
+        var kind1 = groupList.Count > 0 ? groupList[0] : "???";
+        var kind2 = groupList.Count > 1 ? groupList[1] : "???";
+        var kind3 = groupList.Count > 2 ? groupList[2] : "???";
+
+        ChatSystem.DispatchStationAnnouncement(
+            station.Value,
+            Loc.GetString("station-event-random-sentience-announcement",
+                ("kind1", kind1), ("kind2", kind2), ("kind3", kind3), ("amount", groupList.Count),
+                ("data", _random.Pick(_prototype.Index(DataSourceNames))),
+                ("strength", _random.Pick(_prototype.Index(IntelligenceLevelNames)))
+            ),
+            playDefaultSound: false,
+            colorOverride: Color.Gold
+        );
+    }
+}

@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using System.Diagnostics.CodeAnalysis;
+using Content.Shared.StatusIcon;
+using Robust.Client.UserInterface.RichText;
+
+namespace Content.Goobstation.UIKit.UserInterface.RichText;
+
+public sealed partial class IconTag : IMarkupTagHandler
+{
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private IEntityManager _entMan = default!;
+    private SpriteSystem? _spriteSystem;
+
+    public string Name => "icon";
+
+    public bool TryCreateControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
+    {
+        if (!node.Attributes.TryGetValue("src", out var id) || id.StringValue == null)
+        {
+            control = null;
+            return false;
+        }
+        _spriteSystem ??= _entMan.System<SpriteSystem>();
+        var texture = _prototype.TryIndex<JobIconPrototype>(id.StringValue, out var iconPrototype)
+            ? _spriteSystem.Frame0(iconPrototype.Icon)
+            : null;
+        var icon = new TextureRect
+        {
+            Texture = texture,
+            SetWidth = 20,
+            SetHeight = 20,
+            Stretch = TextureRect.StretchMode.Scale,
+            MouseFilter = Control.MouseFilterMode.Stop,
+        };
+        if (node.Attributes.TryGetValue("tooltip", out var tooltip) && tooltip.StringValue != null)
+            icon.ToolTip = tooltip.StringValue;
+        control = icon;
+        return true;
+    }
+}

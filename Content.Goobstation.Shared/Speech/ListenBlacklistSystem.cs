@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Speech;
+using Content.Shared.Speech;
+using Content.Shared.Whitelist;
+
+namespace Content.Goobstation.Shared.Speech;
+
+/// <summary>
+/// Handles <see cref="ListenAttemptEvent"/> for <see cref="ListenBlacklistComponent"/>.
+/// </summary>
+public sealed partial class ListenBlacklistSystem : EntitySystem
+{
+    [Dependency] private EntityWhitelistSystem _whitelist = default!;
+
+    [SubscribeLocalEvent]
+    private void OnListenAttempt(Entity<ListenBlacklistComponent> ent, ref ListenAttemptEvent args)
+    {
+        if (_whitelist.IsWhitelistPass(ent.Comp.Blacklist, args.Source))
+            args.Cancel();
+    }
+}

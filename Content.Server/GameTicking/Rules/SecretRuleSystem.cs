@@ -1,0 +1,181 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Content.Server.Administration.Logs;
+using Content.Server.GameTicking.Rules.Components;
+using Content.Shared.GameTicking.Components;
+using Content.Shared.Random;
+using Content.Shared.CCVar;
+using Content.Shared.Database;
+using Content.Shared.GameTicking;
+using Content.Shared.GameTicking.Prototypes;
+using Content.Shared.GameTicking.Rules;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
+using Robust.Shared.Configuration;
+using Robust.Shared.Utility;
+
+namespace Content.Server.GameTicking.Rules;
+
+/// <summary>
+/// The handler for secret rules, rules that randomly pick from a set of subrules in secret.
+/// </summary>
+/// <seealso cref="SecretRuleComponent"/>
+public sealed partial class SecretRuleSystem : GameRuleSystem<SecretRuleComponent>
+{
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IAdminLogManager _adminLogger = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+    }
+
+    protected override void Added(Entity<SecretRuleComponent, GameRuleComponent> ent, ref GameRuleAddedEvent args)
+    {
+        base.Added(ent, ref args);
+        var weights = _configurationManager.GetCVar(CCVars.SecretWeightPrototype);
+
+        if (!TryPickPreset(weights, out var preset))
+        {
+            Log.Error($"{ToPrettyString(ent.Owner)} failed to pick any preset. Removing rule.");
+            Del(ent);
+            return;
+        }
+
+        Log.Info($"Selected {preset.ID} as the secret preset.");
+        _adminLogger.Add(LogType.EventStarted, $"Selected {preset.ID} as the secret preset.");
+
+        foreach (var rule in preset.Rules)
+        {
+            if (GameTicker.IsIgnored(rule))
+                continue;
+
+            Entity<GameRuleComponent>? ruleEnt;
+
+            // if we're pre-round (i.e. will only be added)
+            // then just add rules. if we're added in the middle of the round (or at any other point really)
+            // then we want to start them as well
+            if (GameTicker.RunLevel <= GameRunLevel.InRound)
+                ruleEnt = GameTicker.AddGameRule(rule);
+            else
+                GameTicker.StartGameRule(rule, out ruleEnt);
+
+            if (ruleEnt == null)
+                continue;
+
+            ent.Comp1.AdditionalGameRules.Add(ruleEnt.Value);
+        }
+    }
+
+    // TODO: We PROBABLY SHOULD NOT BE DOING THIS as the only time Secret ends naturally is end of round which already cleans up these rules.
+    // TODO: IN ADDITION We should end secret once it spawns its rules so we don't tick it :V or pause it?
+    protected override void Ended(Entity<SecretRuleComponent> rule, ref GameRuleEndedEvent args)
+    {
+        base.Ended(rule, ref args);
+
+        foreach (var gameRule in rule.Comp.AdditionalGameRules)
+        {
+            GameTicker.EndGameRule(gameRule);
+        }
+    }
+
+    private bool TryPickPreset(ProtoId<WeightedRandomPrototype> weights, [NotNullWhen(true)] out GamePresetPrototype? preset)
+    {
+        var options = ProtoMan.Index(weights).Weights.ShallowClone();
+        var players = GameTicker.ReadyPlayerCountEffective(); // Trauma, used to be ReadyPlayerCount()
+
+        GamePresetPrototype? selectedPreset = null;
+        var sum = options.Values.Sum();
+        while (options.Count > 0)
+        {
+            var accumulated = 0f;
+            var rand = _random.NextFloat(sum);
+            string minReadyKeyCheck = ""; // Trauma
+            foreach (var (key, weight) in options)
+            {
+                // <Trauma>
+                accumulated += weight;
+                if (accumulated < rand)
+                {
+                    minReadyKeyCheck = key;
+                    continue;
+                }
+                // </Trauma>
+
+                if (!ProtoMan.TryIndex(key, out selectedPreset))
+                    Log.Error($"Invalid preset {selectedPreset} in secret rule weights: {weights}");
+
+                options.Remove(key);
+                sum -= weight;
+                break;
+            }
+            // <Trauma> Removes any presets that which the minimum players is not the ready count.
+            if (minReadyKeyCheck != null && selectedPreset != null &&
+                selectedPreset.MinPlayers < GameTicker.ReadyPlayerCountEffective())
+            {
+                options.Remove(minReadyKeyCheck);
+                continue;
+            }
+            // </Trauma>
+
+            if (CanPick(selectedPreset, players))
+            {
+                preset = selectedPreset;
+                return true;
+            }
+
+            if (selectedPreset != null)
+                Log.Info($"Excluding {selectedPreset.ID} from secret preset selection.");
+        }
+
+        preset = null;
+        return false;
+    }
+
+    public bool CanPickAny()
+    {
+        var secretPresetId = _configurationManager.GetCVar(CCVars.SecretWeightPrototype);
+        return CanPickAny(secretPresetId);
+    }
+
+    /// <summary>
+    /// Can any of the given presets be picked, taking into account the currently available player count?
+    /// </summary>
+    public bool CanPickAny(ProtoId<WeightedRandomPrototype> weightedPresets)
+    {
+        var ids = ProtoMan.Index(weightedPresets).Weights.Keys
+            .Select(x => new ProtoId<GamePresetPrototype>(x));
+
+        return CanPickAny(ids);
+    }
+
+    /// <summary>
+    /// Can any of the given presets be picked, taking into account the currently available player count?
+    /// </summary>
+    public bool CanPickAny(IEnumerable<ProtoId<GamePresetPrototype>> protos)
+    {
+        var players = GameTicker.ReadyPlayerCountEffective(); // Trauma, used to be ReadyPlayerCount()
+        foreach (var id in protos)
+        {
+            if (!ProtoMan.TryIndex(id, out var selectedPreset))
+                Log.Error($"Invalid preset {selectedPreset} in secret rule weights: {id}");
+
+            if (CanPick(selectedPreset, players))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Can the given preset be picked, taking into account the currently available player count?
+    /// </summary>
+    private bool CanPick([NotNullWhen(true)] GamePresetPrototype? selected, int players)
+    {
+        if (selected == null)
+            return false;
+
+        return players >= GameTicker.GetMinimumPlayerCount(selected);
+    }
+}

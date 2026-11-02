@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: combo
+  id: NinjutsuTakedown
+  attacks:
+  - Hug
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit3.ogg
+  conditions:
+  - !type:HasStatusEffectCondition
+    inverted: true
+    effectProto: StatusEffectMuted # can't spam it on the same person immediately, note this ignores the mute trait
+    failMessage: martial-arts-fail-target-muted
+  opponentEffects:
+  - !type:ModifyStatusEffect
+    effectProto: NinjutsuTakedownStatusEffect
+    time: 5
+  - !type:ModifyStatusEffect
+    effectProto: StatusEffectMuted
+    time: 10
+
+- type: combo
+  id: BiteTheDust
+  attacks:
+  - Harm
+  - Grab
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit3.ogg
+  opponentEffects:
+  - !type:ModifyParalysis
+    time: 9
+  - !type:HealthChange
+    targetPart: Chest
+    damage:
+      types:
+        Slash: 10
+
+- type: combo
+  id: DirtyKill
+  attacks:
+  - Disarm
+  - Disarm
+  userEffects:
+  - !type:PlaySoundEffect
+    sound: /Audio/Weapons/genhit2.ogg
+  opponentEffects:
+  - !type:ModifyParalysis
+    time: 7
+  - !type:HealthChange
+    targetPart: Chest
+    damage:
+      types:
+        Slash: 20

@@ -1,0 +1,238 @@
+using Content.Shared.Damage;
+using Content.Shared.Damage.Events;
+using Content.Shared.Examine;
+using Content.Shared.Projectiles;
+using Content.Shared.Power;
+using Content.Shared.Power.EntitySystems;
+using Content.Shared.PowerCell;
+using Content.Shared.Weapons.Hitscan.Components;
+using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Events;
+using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
+
+namespace Content.Shared.Weapons.Ranged.Systems;
+
+public abstract partial class SharedGunSystem
+{
+    [Dependency] private SharedBatterySystem _battery = default!;
+
+    protected virtual void InitializeBattery()
+    {
+        SubscribeLocalEvent<BatteryAmmoProviderComponent, ComponentStartup>(OnBatteryStartup);
+        SubscribeLocalEvent<BatteryAmmoProviderComponent, AfterAutoHandleStateEvent>(OnAfterAutoHandleState);
+        SubscribeLocalEvent<BatteryAmmoProviderComponent, TakeAmmoEvent>(OnBatteryTakeAmmo);
+        SubscribeLocalEvent<BatteryAmmoProviderComponent, GetAmmoCountEvent>(OnBatteryAmmoCount);
+        SubscribeLocalEvent<BatteryAmmoProviderComponent, ExaminedEvent>(OnBatteryExamine);
+        SubscribeLocalEvent<BatteryAmmoProviderComponent, DamageExamineEvent>(OnBatteryDamageExamine);
+        SubscribeLocalEvent<BatteryAmmoProviderComponent, PowerCellChangedEvent>(OnPowerCellChanged);
+        SubscribeLocalEvent<BatteryAmmoProviderComponent, ChargeChangedEvent>(OnChargeChanged);
+    }
+
+    private void OnBatteryExamine(Entity<BatteryAmmoProviderComponent> ent, ref ExaminedEvent args)
+    {
+        if (!ent.Comp.Examinable) return; // Goob
+        args.PushMarkup(Loc.GetString("gun-battery-examine", ("color", AmmoExamineColor), ("count", ent.Comp.Shots)));
+    }
+
+    private void OnBatteryDamageExamine(Entity<BatteryAmmoProviderComponent> ent, ref DamageExamineEvent args)
+    {
+        var proto = ProtoMan.Index<EntityPrototype>(ent.Comp.Prototype);
+        DamageSpecifier? damageSpec = null;
+        var damageType = string.Empty;
+
+        if (proto.TryComp<ProjectileComponent>(out var projectileComp, Factory))
+        {
+            if (!projectileComp.Damage.Empty)
+            {
+                damageType = Loc.GetString("damage-projectile");
+                damageSpec = projectileComp.Damage * Damageable.UniversalProjectileDamageModifier;
+            }
+        }
+        else if (proto.TryComp<HitscanBasicDamageComponent>(out var hitscanComp, Factory))
+        {
+            if (!hitscanComp.Damage.Empty)
+            {
+                damageType = Loc.GetString("damage-hitscan");
+                damageSpec = hitscanComp.Damage * Damageable.UniversalHitscanDamageModifier;
+            }
+        }
+        if (damageSpec == null)
+            return;
+
+        _damageExamine.AddDamageExamine(args.Message, Damageable.ApplyUniversalAllModifiers(damageSpec), damageType);
+
+        // <Goob> - partial armor penetration
+        var ap = GetProjectilePenetration(ent.Comp.Prototype);
+        if (ap == 0)
+            return;
+
+        var abs = Math.Abs(ap);
+        args.Message.AddMarkupPermissive("\n" + Loc.GetString("armor-penetration", ("arg", ap/abs), ("abs", abs)));
+        // </Goob>
+    }
+
+    private void OnBatteryTakeAmmo(Entity<BatteryAmmoProviderComponent> ent, ref TakeAmmoEvent args)
+    {
+        var shots = Math.Min(args.Shots, ent.Comp.ShotsFloat / args.FireCostMultiplier); // Trauma - use ShotsFloat and FireCostMultiplier
+
+        if (shots < 1f) // Trauma - "== 0" -> "< 1f"
+            return;
+
+        // <Trauma> - wrap loop in if statement
+        if (args.SpawnProjectiles)
+        {
+            for (var i = 0; i < shots; i++)
+            {
+                args.Ammo.Add(GetShootable(ent, args.Coordinates));
+            }
+        }
+        // </Trauma>
+
+        TakeCharge(ent, ent.Comp.FireCost * args.FireCostMultiplier * shots); // Trauma - use FireCostMultiplier
+    }
+
+    private void OnBatteryAmmoCount(Entity<BatteryAmmoProviderComponent> ent, ref GetAmmoCountEvent args)
+    {
+        args.Count = (int) (ent.Comp.ShotsFloat / args.FireCostMultiplier); // Trauma - use ShotsFloat and FireCostMultiplier
+        args.Capacity = (int) (ent.Comp.CapacityFloat / args.FireCostMultiplier); // Trauma - use CapacityFloat and FireCostMultiplier
+    }
+
+    /// <inhereitdoc cref="TakeCharge(EntityUid,float,int)"/>
+    public void TakeCharge(Entity<BatteryAmmoProviderComponent> ent, int shots = 1)
+    {
+        TakeCharge(ent, ent.Comp.FireCost, shots);
+    }
+
+    /// <summary>
+    /// Use up the required amount of battery charge for firing.
+    /// </summary>
+    public void TakeCharge(EntityUid gun, float fireCost, int shots = 1)
+    {
+        _battery.ChangeCharge(gun, -fireCost * shots);
+        // UpdateShots is already called by the resulting ChargeChangedEvent
+    }
+
+    private (EntityUid? Entity, IShootable) GetShootable(BatteryAmmoProviderComponent component, EntityCoordinates coordinates)
+    {
+        var ent = PredictedSpawnAtPosition(component.Prototype, coordinates); // Trauma - predict this shit
+        return (ent, EnsureShootable(ent));
+    }
+
+    public void UpdateShots(Entity<BatteryAmmoProviderComponent> ent)
+    {
+        // <Trauma> - use GetBatteryShotsFloat and float version of shots and capacity
+        var oldShots = ent.Comp.ShotsFloat;
+        var oldCapacity = ent.Comp.CapacityFloat;
+        (var newShots, var newCapacity) = GetBatteryShotsFloat(ent);
+
+        // Only dirty if necessary.
+        if (Math.Abs(oldShots - newShots) + Math.Abs(oldCapacity - newCapacity) < 1e-4f)
+            return;
+
+        ent.Comp.Shots = (int) newShots;
+        if ((int) newCapacity > 0) // Don't make the capacity 0 when removing a power cell as this will make it be visualized as full instead of empty.
+            ent.Comp.Capacity = (int) newCapacity;
+
+        ent.Comp.ShotsFloat = newShots;
+        if (newCapacity > 0)
+            ent.Comp.CapacityFloat = newCapacity;
+        // </Trauma>
+
+        // Update the ammo counter predictively if the change was predicted. On the server this does nothing.
+        UpdateAmmoCount(ent.Owner);
+
+        Dirty(ent); // Dirtying will update the client's ammo counter in an AfterAutoHandleStateEvent subscription in case it was not predicted.
+
+        if (!TryComp<AppearanceComponent>(ent, out var appearance))
+            return;
+
+        // <Trauma> - newShots -> ent.Comp.Shots; newCapacity -> ent.Comp.Capacity
+        // Update the visuals.
+        Appearance.SetData(ent.Owner, AmmoVisuals.HasAmmo, ent.Comp.Shots != 0, appearance);
+        Appearance.SetData(ent.Owner, AmmoVisuals.IsFull, ent.Comp.Shots == ent.Comp.Capacity, appearance);
+        Appearance.SetData(ent.Owner, AmmoVisuals.AmmoCount, ent.Comp.Shots, appearance);
+        if (ent.Comp.Capacity > 0) // Don't make the capacity 0 when removing a power cell as this will make it be visualized as full instead of empty.
+            Appearance.SetData(ent.Owner, AmmoVisuals.AmmoMax, ent.Comp.Capacity, appearance);
+        // </Trauma>
+    }
+
+    // For server side changes the client's ammo counter needs to be updated as well.
+    private void OnAfterAutoHandleState(Entity<BatteryAmmoProviderComponent> ent, ref AfterAutoHandleStateEvent args)
+    {
+        UpdateAmmoCount(ent); // Need to have prediction set to true because the state is applied repeatedly while prediction is running.
+    }
+
+    // For when a power cell gets inserted or removed.
+    private void OnPowerCellChanged(Entity<BatteryAmmoProviderComponent> ent, ref PowerCellChangedEvent args)
+    {
+        UpdateShots(ent);
+    }
+
+    // If the entity is has a PowerCellSlotComponent then this event is relayed from the power cell to the slot entity.
+    private void OnChargeChanged(Entity<BatteryAmmoProviderComponent> ent, ref ChargeChangedEvent args)
+    {
+        // Update the visuals and charge counter UI.
+        UpdateShots(ent);
+        // Queue the update for when the autorecharge reaches enough charge for another shot.
+        UpdateNextUpdate(ent, args.CurrentCharge, args.MaxCharge, args.CurrentChargeRate);
+    }
+
+    private void UpdateNextUpdate(Entity<BatteryAmmoProviderComponent> ent, float currentCharge, float maxCharge, float currentChargeRate)
+    {
+        // Don't queue any updates if charge is constant.
+        ent.Comp.NextUpdate = null;
+        // ETA of the next full charge.
+        if (currentChargeRate > 0f && currentCharge != maxCharge)
+        {
+            ent.Comp.NextUpdate = Timing.CurTime + TimeSpan.FromSeconds((ent.Comp.FireCost - (currentCharge % ent.Comp.FireCost)) / currentChargeRate);
+            ent.Comp.ChargeTime = TimeSpan.FromSeconds(ent.Comp.FireCost / currentChargeRate);
+        }
+        else if (currentChargeRate < 0f && currentCharge != 0f)
+        {
+            ent.Comp.NextUpdate = Timing.CurTime + TimeSpan.FromSeconds(-(currentCharge % ent.Comp.FireCost) / currentChargeRate);
+            ent.Comp.ChargeTime = TimeSpan.FromSeconds(-ent.Comp.FireCost / currentChargeRate);
+        }
+        Dirty(ent);
+    }
+
+    // Shots are only chached, not a DataField, so we need to refresh this when the game is loaded.
+    private void OnBatteryStartup(Entity<BatteryAmmoProviderComponent> ent, ref ComponentStartup args)
+    {
+        if (_netManager.IsClient && !IsClientSide(ent.Owner))
+            return; // Don't overwrite the server state in cases where the battery is not predicted.
+
+        UpdateShots(ent);
+    }
+
+    /// <summary>
+    /// Gets the current and maximum amount of shots from this entity's battery.
+    /// This works for BatteryComponent and PowercellSlotComponent.
+    /// </summary>
+    public (int, int) GetShots(Entity<BatteryAmmoProviderComponent> ent)
+    {
+        var charge = _battery.GetCharge(ent);
+        var currentShots = (int)(charge.Charge / ent.Comp.FireCost);
+        var maxShots = (int)(charge.MaxCharge / ent.Comp.FireCost);
+
+        return (currentShots, maxShots);
+    }
+
+    /// <summary>
+    /// Update loop for refreshing the ammo counter for charging/draining batteries.
+    /// </summary>
+    private void UpdateBattery(float frameTime)
+    {
+        var curTime = Timing.CurTime;
+        var hitscanQuery = EntityQueryEnumerator<BatteryAmmoProviderComponent>();
+        while (hitscanQuery.MoveNext(out var uid, out var provider))
+        {
+            if (provider.NextUpdate == null || curTime < provider.NextUpdate)
+                continue;
+            UpdateShots((uid, provider));
+            provider.NextUpdate += provider.ChargeTime; // Queue another update for when we reach the next full charge.
+            Dirty(uid, provider);
+            // TODO: Stop updating when full or empty.
+        }
+    }
+}

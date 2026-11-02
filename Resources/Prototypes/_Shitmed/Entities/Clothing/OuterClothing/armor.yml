@@ -1,0 +1,129 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: [ ClothingOuterBase, AllowSuitStorageClothing, BaseMajorContraband ]
+  id: ClothingOuterArmorAbductor
+  name: agent vest
+  components:
+  - type: Sprite
+    sprite: _Shitmed/Clothing/OuterClothing/Armor/abductor.rsi
+  - type: AbductorVest
+  - type: ModifyDelayedKnockdown
+    cancel: true
+  - type: StaminaResistance
+    damageCoefficient: 0.25
+  - type: ItemSwitch
+    state: stealth
+    states:
+      Stealth: !type:ItemSwitchState
+        verb: Stealth
+        hidden: true
+        sprite:
+          sprite: _Shitmed/Clothing/OuterClothing/Armor/abductor.rsi
+          state: icon
+        components:
+        - type: AbductorVestDisguise
+        - type: Armor
+          traumaDeductions:
+            Dismemberment: 0.4
+            OrganDamage: 0.4
+            BoneDamage: 0.4
+            VeinsDamage: 0
+          coverage:
+          - Torso
+          - Arm
+          - Leg
+          - Tail
+          - Hand
+          - Foot
+          modifiers:
+            coefficients:
+              Blunt: 0.7
+              Slash: 0.7
+              Heat: 0.8
+              Piercing: 0.7
+              Ballistic: 0.7
+              Radiation: 0.1
+              Caustic: 0.4
+        - type: ExplosionResistance
+          damageCoefficient: 0.85
+        - type: Clothing
+          sprite: _Shitmed/Clothing/OuterClothing/Armor/abductor.rsi
+          slots:
+          - outerClothing
+
+      Combat: !type:ItemSwitchState
+        verb: Combat
+        hidden: true
+        sprite:
+          sprite: _Shitmed/Clothing/OuterClothing/Armor/abductor.rsi
+          state: combat-icon
+        components:
+        - type: Armor
+          traumaDeductions:
+            Dismemberment: 0.4
+            OrganDamage: 0.4
+            BoneDamage: 0.4
+            VeinsDamage: 0
+          coverage:
+          - Torso
+          - Arm
+          - Leg
+          - Tail
+          modifiers:
+            coefficients:
+              Blunt: 0.5
+              Slash: 0.5
+              Heat: 0.5
+              Piercing: 0.5
+              Ballistic: 0.5
+              Radiation: 0.1
+              Caustic: 0.4
+            flatReductions: # This is done so shotguns are worse against armor
+              Ballistic: 2
+        - type: StaminaResistance
+          damageCoefficient: 0.5
+        - type: ExplosionResistance
+          damageCoefficient: 0.5
+        - type: Clothing
+          sprite: _Shitmed/Clothing/OuterClothing/Armor/abductor.rsi
+          slots:
+          - outerClothing
+          equippedPrefix: combat
+
+- type: entity
+  parent: [ ClothingOuterStorageBase, AllowSuitStorageClothing, BaseMajorContraband]
+  id: ClothingOuterCoatAbductor
+  name: alien lab coat
+  description: A suit of alien origin that protects from various injuries, as well as from chemical spills.
+  components:
+  - type: Sprite
+    sprite: _Shitmed/Clothing/OuterClothing/Coats/abductor.rsi
+  - type: Clothing
+    sprite: _Shitmed/Clothing/OuterClothing/Coats/abductor.rsi
+  - type: Armor
+    coverage:
+    - Torso
+    - Arm
+    - Leg
+    - Tail
+    traumaDeductions:
+      Dismemberment: 0.3
+      OrganDamage: 0.3
+      BoneDamage: 0.3
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.8
+        Slash: 0.8
+        Heat: 0.8
+        Piercing: 0.8
+        Radiation: 0.8
+        Caustic: 0.4
+  - type: ExplosionResistance
+    damageCoefficient: 0.75
+  - type: StaminaResistance
+    damageCoefficient: 0.4
+  - type: ModifyDelayedKnockdown
+    delayDelta: 3
+    knockdownTimeDelta: -3

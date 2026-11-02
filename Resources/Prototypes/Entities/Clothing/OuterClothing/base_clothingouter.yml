@@ -1,0 +1,304 @@
+- type: entity
+  abstract: true
+  parent: Clothing
+  id: ClothingOuterBase
+  components:
+  # <Trauma>
+  - type: EmitSoundOnPickup
+    sound:
+      collection: GenericPickup
+      params:
+        volume: -9
+  - type: EmitSoundOnDrop
+    sound:
+      collection: GenericDrop
+      params:
+        volume: -9
+  - type: EmitSoundOnLand
+    sound:
+      collection: GenericDrop
+      params:
+        volume: -9
+  - type: Clothing
+    slots:
+    - outerClothing
+    equipSound:
+      collection: GenericEquip
+  # </Trauma>
+  - type: Sprite
+    state: icon
+
+- type: entity
+  abstract: true
+  parent: ClothingOuterBase
+  id: ClothingOuterBaseLarge
+  components:
+  # <Trauma>
+  - type: HideClothingLayerClothing
+    hiddenSlots:
+    - jumpsuit
+  - type: Tag
+    tags:
+    - WhitelistChameleon
+  # </Trauma>
+  - type: Item
+    size: Huge
+  - type: Clothing
+    slots:
+    - outerClothing
+  - type: ClothingSpeedModifier
+    walkModifier: 0.9
+    sprintModifier: 0.9
+  - type: HeldSpeedModifier
+
+- type: entity
+  abstract: true
+  parent: [ ClothingOuterBaseLarge, TemperatureProtectionGood ]
+  id: ClothingOuterBaseLargeInsulated
+
+- type: entity
+  abstract: true
+  parent: [ ClothingOuterBaseLarge, TemperatureProtectionGreat ]
+  id: ClothingOuterBaseLargeFireproof
+  components:
+  - type: FireProtection
+    reduction: 0.65
+
+- type: entity
+  abstract: true
+  parent: ClothingOuterBase
+  id: ClothingOuterStorageBase
+  components:
+  - type: Item
+    size: Normal
+    shape:
+    - 0,0,1,2
+  - type: Storage
+    grid:
+    - 0,0,2,1
+    maxItemSize: Small
+  - type: ContainerContainer
+    containers:
+      storagebase: !type:Container
+        ents: []
+  - type: UserInterface
+    interfaces:
+      enum.StorageUiKey.Key:
+        type: StorageBoundUserInterface
+  - type: StaticPrice
+    price: 70
+
+- type: entity
+  abstract: true
+  parent: [SolutionFood, SolutionNormal, ClothingOuterStorageBase]
+  id: ClothingOuterStorageEdible
+  components:
+  - type: Edible
+    requiresSpecialDigestion: true
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Fiber
+        Quantity: 60
+
+- type: entity
+  abstract: true
+  parent: [ ClothingOuterStorageEdible, TemperatureProtectionMinimal]
+  id: ClothingOuterJacketBase
+
+- type: entity
+  abstract: true
+  parent: [ClothingOuterStorageBase, BaseFoldable]
+  id: ClothingOuterStorageFoldableBase
+  components:
+  - type: Foldable
+    canFoldInsideContainer: true
+    unfoldVerbText: fold-zip-verb
+    foldVerbText: fold-unzip-verb
+  - type: FoldableClothing
+    foldedEquippedPrefix: open
+    foldedHeldPrefix: open
+  - type: Sprite
+    layers:
+    - state: icon
+      map: [ "unfoldedLayer" ]
+    - state: icon-open
+      map: ["foldedLayer"]
+      visible: false
+
+- type: entity
+  abstract: true
+  parent: ClothingOuterStorageFoldableBase
+  id: ClothingOuterStorageFoldableBaseOpened
+  suffix: opened
+  components:
+  - type: Foldable
+    folded: true
+  - type: Clothing
+    equippedPrefix: open
+  - type: Item
+    heldPrefix: open
+  - type: Sprite
+    layers:
+    - state: icon
+      map: [ "unfoldedLayer" ]
+      visible: false
+    - state: icon-open
+      map: ["foldedLayer"]
+      visible: true
+
+- type: entity
+  abstract: true
+  parent: ClothingOuterJacketBase
+  id: ClothingOuterJacketToggleableBase
+  components:
+  # <Trauma>
+  - type: UserInterface
+    interfaces:
+      enum.ToggleClothingUiKey.Key:
+        type: ToggleableClothingBoundUserInterface
+      enum.StorageUiKey.Key:
+        type: StorageBoundUserInterface
+  - type: ToggleableClothing
+    clothingPrototypes: # changed to dict for modsuits
+      head: ClothingHeadHatHoodWinterDefault
+  # </Trauma>
+  - type: ContainerContainer
+    containers:
+      toggleable-clothing: !type:Container {}
+      storagebase: !type:Container
+        ents: []
+
+- type: entity
+  abstract: true
+  parent: [ClothingOuterBaseLargeInsulated, AllowSuitStorageClothing]
+  id: ClothingOuterEVASuitBase
+  name: base EVA Suit
+  components:
+  # <Trauma>
+  - type: IgniteFromGasImmunity
+    parts:
+    - Torso
+    - ArmLeft
+    - ArmRight
+    - LegLeft
+    - LegRight
+    - FootLeft
+    - FootRight
+  - type: CosmicTransmutable
+    transmuteTo: ClothingOuterHardsuitCosmicCult
+  # </Trauma>
+# SlotBlocker blocked until UI change
+#  - type: SlotBlock
+#    slots: [innerclothing, feet]
+  - type: PressureProtection
+    highPressureMultiplier: 0.6
+    lowPressureMultiplier: 1000
+  - type: ClothingSpeedModifier
+    walkModifier: 0.8
+    sprintModifier: 0.8
+  - type: ProtectedFromStepTriggers
+    slots: WITHOUT_POCKET
+  - type: DamageOnInteractProtection
+    damageProtection:
+      flatReductions:
+        Heat: 10 # the average lightbulb only does around four damage!
+    slots: OUTERCLOTHING
+  - type: HideLayerClothing
+    slots:
+    - Tail
+
+- type: entity
+  abstract: true
+  parent: [ ClothingOuterEVASuitBase, GeigerCounterClothing ]
+  id: ClothingOuterHardsuitBase
+  name: base hardsuit
+  components:
+  - type: PressureProtection
+    highPressureMultiplier: 0.3
+  - type: ClothingSpeedModifier
+    walkModifier: 0.6
+    sprintModifier: 0.6
+  - type: Item
+    size: Ginormous
+    shape:
+    - 0,0,4,5
+  - type: Armor
+    coverage: # Shitmed
+    - Torso
+    - Arm
+    - Hand
+    - Leg
+    - Foot
+    - Tail
+    - Wings
+    traumaDeductions: # having a suit on saves your limbs
+      Dismemberment: 0.2
+      OrganDamage: 0.2
+      BoneDamage: 0.2
+      VeinsDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.90
+        Slash: 0.90
+        Piercing: 0.95
+        Heat: 0.90
+        Radiation: 0.25
+  - type: ToggleableClothing
+    verbText: toggle-clothing-verb-helmet
+  - type: ContainerContainer
+    containers:
+      toggleable-clothing: !type:Container {}
+  - type: UserInterface
+    interfaces:
+      enum.ToggleClothingUiKey.Key:
+        type: ToggleableClothingBoundUserInterface
+  - type: GroupExamine
+  - type: Tag
+    tags:
+    - PlasmamanSafe # Trauma
+    - Hardsuit
+    - WhitelistChameleon
+
+- type: entity
+  parent: ClothingOuterEVASuitBase
+  id: ClothingOuterEVASuitBaseToggleable
+  abstract: true
+  components:
+  - type: ToggleableClothing
+    #slot: head # Trauma - killed by modsuits
+    verbText: toggle-clothing-verb-helmet
+    #action: ActionToggleSuitPiece # Trauma
+  - type: ContainerContainer
+    containers:
+      toggleable-clothing: !type:Container {} # Trauma - removed Slot
+
+- type: entity
+  abstract: true
+  parent: ClothingOuterBase
+  id: ClothingOuterBaseToggleable
+  name: hoodie with hood
+  components:
+  - type: ToggleableClothing # Goobstation - Modsuits change
+    clothingPrototypes:
+      head: ClothingHeadHatHoodWinterDefault
+    verbText: toggle-clothing-verb-hood
+  - type: ContainerContainer
+    containers:
+      toggleable-clothing: !type:Container {}
+      storagebase: !type:Container
+        ents: []
+  - type: UserInterface
+    interfaces:
+      enum.ToggleClothingUiKey.Key:
+        type: ToggleableClothingBoundUserInterface
+
+- type: entity
+  abstract: true
+  parent: ClothingOuterBase
+  id: ClothingOuterBaseMedium
+  components:
+  - type: Item
+    size: Large
+    shape:
+    - 0,0,2,3

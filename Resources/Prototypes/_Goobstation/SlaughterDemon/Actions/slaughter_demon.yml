@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: BloodCrawlAction
+  name: Blood Crawl
+  description: JAUNT ANYWHERE WHENEVER YOU ARE ON BLOOD
+  components:
+  - type: Sprite
+    sprite: _Goobstation/SlaughterDemon/abilities.rsi
+    layers:
+    - state: crawl
+  - type: Action
+    useDelay: 4
+  - type: InstantAction
+    event: !type:BloodCrawlEvent
+
+- type: entity
+  parent: BaseAction
+  id: DemonicWhisperAction
+  name: Demonic Whisper
+  description: SEND A MESSAGE TO THEIR SOUL, FROM HELL
+  components:
+  - type: Sprite
+    sprite: _Goobstation/SlaughterDemon/abilities.rsi
+    layers:
+    - state: whisper
+  - type: Action
+    itemIconStyle: NoItem
+  - type: TargetAction
+    interactOnMiss: false
+    range: 15
+  - type: EntityTargetAction
+    canTargetSelf: false
+    event: !type:DemonicWhisperEvent

@@ -1,0 +1,64 @@
+- type: entity
+  name: chainsaw
+  parent: [BaseItem, KnifeDurabilitySharpenOnly, BaseBotanyContraband] # Trauma - Durability and contraband
+  id: Chainsaw
+  description: A very large chainsaw. Usually you use this for cutting down trees... usually.
+  components:
+  # <Trauma>
+  - type: WeaponClass
+    class: Tool
+  - type: BoneSaw
+    speed: 0.5 # TODO: arm-mounted version becomes 0.65
+  - type: SurgeryTool
+    startSound:
+      path: /Audio/Weapons/chainsaw_pull.ogg
+    endSound:
+      path: /Audio/Weapons/chainsaw_rev.ogg
+  - type: Sharp
+  # </Trauma>
+  - type: Tool
+    qualities:
+    - Slicing
+    - Sawing
+  - type: Wieldable
+    wieldSound: !type:SoundPathSpecifier
+      path: /Audio/Weapons/chainsaw_pull.ogg
+  - type: Sprite
+    sprite: Objects/Weapons/Melee/chainsaw.rsi
+    state: icon
+  - type: MeleeWeapon
+    heavyStaminaCost: 10 # goob edit
+    autoAttack: true
+    angle: 0
+    wideAnimationRotation: -135
+    attackRate: 10 # Trauma, was 4
+    damage:
+      types:
+        Slash: 1
+        # Blunt: 2
+        # Structural: 4
+      woundSeverityMultipliers:
+        Slash: 2
+        Blunt: 2
+    soundHit:
+      path: /Audio/Weapons/chainsaw_rev.ogg
+      params:
+        volume: -2
+  - type: IncreaseDamageOnWield
+    damage:
+      types:
+        Slash: 1 # Trauma, was 4
+        Structural: 10 # Trauma, was 4
+  - type: Item
+    size: Large
+  # <Trauma>
+    shape:
+    - 0,0,1,1
+    - 1,1,4,1
+    storedRotation: 45
+    storedOffset: -15,6
+  # </Trauma>
+    sprite: Objects/Weapons/Melee/chainsaw.rsi
+  - type: DisarmMalus
+  - type: UseDelay
+    delay: 1

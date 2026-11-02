@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Chemistry;
+using Content.Goobstation.Shared.Clothing;
+using Content.Goobstation.Shared.Devil;
+using Content.Goobstation.Shared.Disease;
+using Content.Goobstation.Shared.Disease.Components;
+using Content.Goobstation.Shared.Flashbang;
+using Content.Goobstation.Shared.Stunnable;
+using Content.Shared.Flash;
+using Content.Shared.Inventory;
+using Content.Shared.Inventory.Events;
+using Content.Trauma.Common.Wizard;
+
+namespace Content.Goobstation.Shared.Inventory;
+
+public partial class GoobInventorySystem
+{
+    [Dependency] private InventorySystem _inventorySystem = default!;
+
+    public void InitializeRelays()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<InventoryComponent, DelayedKnockdownAttemptEvent>(RelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, GetFlashbangedEvent>(RefRelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, FlashDurationMultiplierEvent>(RelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, GetSpellInvocationEvent>(RelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, GetMessageColorOverrideEvent>(RelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, ClothingAutoInjectRelayedEvent>(RelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, ModifyStunTimeEvent>(RefRelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, IsEyesCoveredCheckEvent>(RelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, RefreshEquipmentHudEvent<Overlays.ThermalVisionComponent>>(RefRelayInventoryEvent);
+
+        // disease
+        SubscribeLocalEvent<InventoryComponent, DiseaseOutgoingSpreadAttemptEvent>(RefRelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, DiseaseIncomingSpreadAttemptEvent>(RefRelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, RefreshEquipmentHudEvent<ShowDiseaseIconsComponent>>(RefRelayInventoryEvent);
+    }
+
+    private void RefRelayInventoryEvent<T>(EntityUid uid, InventoryComponent component, ref T args) where T : IInventoryRelayEvent
+    {
+        _inventorySystem.RelayEvent((uid, component), ref args);
+    }
+
+    private void RelayInventoryEvent<T>(EntityUid uid, InventoryComponent component, T args) where T : IInventoryRelayEvent
+    {
+        _inventorySystem.RelayEvent((uid, component), args);
+    }
+}

@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Devil.Contract;
+using Content.Medical.Common.Body;
+using Content.Shared.Inventory;
+
+namespace Content.Goobstation.Shared.Devil;
+
+/// <summary>
+/// Raised on a devil when their power level changes.
+/// </summary>
+/// <param name="User">The Devil whos power level is changing</param>
+/// <param name="NewLevel">The new level they are reaching.</param>
+[ByRefEvent]
+public record struct PowerLevelChangedEvent(EntityUid User, DevilPowerLevel NewLevel);
+
+/// <summary>
+/// Raised on a devil when the amount of souls in their storage changes.
+/// </summary>
+/// <param name="User">The Devil gaining souls.</param>
+/// <param name="Victim">The entity losing its soul.</param>
+/// <param name="Amount">How many souls they are gaining.</param>
+[ByRefEvent]
+public record struct SoulAmountChangedEvent(EntityUid User, EntityUid Victim, int Amount);
+
+/// <summary>
+/// Raised on an entity to see if their eyes are covered.
+/// This just checks for the identity blocker comp.
+/// </summary>
+/// <param name="Target"></param>
+public sealed class IsEyesCoveredCheckEvent : EntityEventArgs, IInventoryRelayEvent
+{
+    public SlotFlags TargetSlots => SlotFlags.EYES | SlotFlags.MASK | SlotFlags.HEAD;
+
+    public bool IsEyesProtected;
+}
+
+// Contract Events
+
+[ImplicitDataDefinitionForInheritors]
+public abstract partial class BaseDevilContractEvent : EntityEventArgs
+{
+    /// <summary>
+    /// The contract using this event.
+    /// </summary>
+    public DevilContractComponent? Contract;
+
+    /// <summary>
+    /// The target affected by this contract.
+    /// </summary>
+    public EntityUid Target;
+}
+
+public sealed partial class DevilContractSoulOwnershipEvent : BaseDevilContractEvent;
+
+public sealed partial class DevilContractLosePartEvent : BaseDevilContractEvent
+{
+    [DataField(required: true)]
+    public BodyPartType Part;
+}
+
+public sealed partial class DevilContractLoseOrganEvent : BaseDevilContractEvent;
+
+public sealed partial class DevilContractChanceEvent : BaseDevilContractEvent;

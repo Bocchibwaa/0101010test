@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: ForcedStealthStatusEffect
+  name: camouflage
+  components:
+  - type: ForcedStealthStatusEffect
+    visibility: 0
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: ChangeFactionStatusEffect
+  name: faction change
+  components:
+  - type: ChangeFactionStatusEffect
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectFireImmune
+  name: burning immunity
+  components:
+  - type: GrantComponentsStatusEffect
+    components:
+    - type: SpecialHighTempImmunity
+    - type: FireImmunity
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectAshStormImmune
+  name: ash storm immunity
+  components:
+  - type: GrantComponentsStatusEffect
+    components:
+    - type: AshStormImmune

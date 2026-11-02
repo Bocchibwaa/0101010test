@@ -1,0 +1,67 @@
+# region Base
+- type: construction
+  abstract: true
+  id: BaseWebObject
+  graph: WebObjects
+  category: construction-category-clothing
+  entityWhitelist:
+    tags:
+    - SpiderCraft
+  objectType: Item
+  # <Trauma>
+  theory:
+    SpiderCraftKnowledge: 0
+  practical:
+    TailoringKnowledge: 4
+  # </Trauma>
+# endregion Base
+
+# region Web Objects
+- type: construction
+  parent: BaseWebObject
+  id: TileWeb
+  targetNode: tile
+  category: construction-category-tiles
+  # <Trauma>
+  practical:
+    TailoringKnowledge: 2
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseWebObject
+  id: ClothingOuterWinterWeb
+  targetNode: coat
+
+- type: construction
+  parent: BaseWebObject
+  id: ClothingUniformJumpsuitWeb
+  targetNode: jumpsuit
+
+- type: construction
+  parent: BaseWebObject
+  id: ClothingUniformJumpskirtWeb
+  targetNode: jumpskirt
+
+- type: construction
+  parent: BaseWebObject
+  id: SilkWovenCloth
+  name: construction-recipe-silk-woven-cloth
+  targetNode: cloth
+  category: construction-category-materials
+  # <Trauma>
+  practical: null
+  useQuality: false
+  # </Trauma>
+
+- type: construction
+  parent: BaseWebObject
+  id: WebShield
+  targetNode: shield
+  category: construction-category-weapons
+
+- type: construction
+  parent: BaseWebObject
+  id: ClothingShoesBootsWinterWeb
+  targetNode: boots
+# endregion Web Objects

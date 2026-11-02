@@ -1,0 +1,18 @@
+# vocal emotes
+- type: emote
+  id: Hiss
+  name: chat-emote-name-hiss
+  category: Vocal
+  icon: _Goobstation/Interface/Emotes/hiss.png
+  whitelist:
+    tags:
+    - ReptilianEmotes
+  blacklist:
+    components:
+    - BorgChassis
+  chatMessages: [ chat-emote-msg-hiss ]
+  chatTriggers:
+    - hiss
+    - hisses
+    - hissing
+    - hissed

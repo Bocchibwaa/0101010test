@@ -1,0 +1,286 @@
+# region Base
+- type: construction
+  abstract: true
+  id: BaseUtility
+  category: construction-category-utilities
+  placementMode: SnapgridCenter
+  # <Trauma>
+  theory:
+    ElectronicsKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 2
+  # </Trauma>
+
+- type: construction
+  abstract: true
+  parent: BaseUtility
+  id: BaseUtilityWallmount
+  canBuildInImpassable: true
+  # <Trauma> - its chuddy and theres no reason you cant have a battery on the floor
+  # conditions:
+  #- !type:WallmountCondition
+  # </Trauma>
+# endregion Base
+
+# region Surveillance
+- type: construction
+  parent: BaseUtility
+  id: camera
+  graph: SurveillanceCamera
+  targetNode: camera
+  conditions:
+  - !type:AgainstWall
+    offset: 0 # expects a wall to the north when the camera is in its north facing
+
+- type: construction
+  parent: BaseUtilityWallmount
+  id: WallmountTelescreen
+  graph: WallmountTelescreen
+  targetNode: Telescreen
+
+- type: construction
+  parent: BaseUtilityWallmount
+  id: StationMap
+  graph: StationMap
+  targetNode: station_map
+  category: construction-category-structures
+# endregion Surveillance
+
+# region Power
+- type: construction
+  parent: BaseUtilityWallmount
+  id: APC
+  graph: APC
+  targetNode: apc
+
+- type: construction
+  parent: BaseUtility
+  id: CableTerminal
+  graph: CableTerminal
+  targetNode: cable_terminal
+
+- type: construction
+  parent: BaseUtilityWallmount
+  id: WallmountSubstation
+  graph: WallmountSubstation
+  targetNode: substation
+
+- type: construction
+  parent: BaseUtilityWallmount
+  id: WallmountGenerator
+  graph: WallmountGenerator
+  targetNode: generator
+
+- type: construction
+  parent: WallmountGenerator
+  id: WallmountGeneratorAPU
+  targetNode: APU
+  # <Trauma>
+  practical:
+    ElectronicsKnowledge: 3 # 6 kW!!
+  # </Trauma>
+# endregion Power
+
+# region Disposals
+- type: construction
+  parent: BaseUtility
+  id: DisposalUnit
+  graph: DisposalMachine
+  targetNode: disposal_unit
+  # <Trauma>
+  theory:
+    ElectronicsKnowledge: 0
+    InfrastructureKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: DisposalUnit
+  id: MailingUnit
+  targetNode: mailing_unit
+
+- type: construction
+  parent: BaseUtility
+  id: DisposalPipe
+  graph: DisposalPipe
+  targetNode: pipe
+  # <Trauma>
+  theory:
+    InfrastructureKnowledge: 0 # it's a fucking pipe
+  practical:
+    MetalworkingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalTagger
+  targetNode: tagger
+  # <Trauma>
+  theory:
+    ElectronicsKnowledge: 0
+    InfrastructureKnowledge: 0
+  practical:
+    MetalworkingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalSignaller
+  targetNode: signaller
+  # <Trauma>
+  theory:
+    ElectronicsKnowledge: 0
+    InfrastructureKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 1
+    MetalworkingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalTrunk
+  targetNode: trunk
+  # <Trauma>
+  theory:
+    InfrastructureKnowledge: 0 # it's a hole in a pipe
+  practical:
+    MetalworkingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalRouter
+  targetNode: router
+  mirror: DisposalRouterFlipped
+  # <Trauma>
+  theory:
+    InfrastructureKnowledge: 0
+  practical:
+    MetalworkingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalRouterFlipped
+  hide: true
+  targetNode: routerflipped
+  mirror: DisposalRouter
+  # <Trauma>
+  theory:
+    InfrastructureKnowledge: 0
+  practical:
+    MetalworkingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalSignalRouter
+  targetNode: signal_router
+  mirror: DisposalSignalRouterFlipped
+  # <Trauma>
+  theory:
+    ElectronicsKnowledge: 0
+    InfrastructureKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 1
+    MetalworkingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalSignalRouterFlipped
+  hide: true
+  targetNode: signal_router_flipped
+  mirror: DisposalSignalRouter
+  # <Trauma>
+  theory:
+    ElectronicsKnowledge: 0
+    InfrastructureKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 1
+    MetalworkingKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalJunction
+  targetNode: junction
+  mirror: DisposalJunctionFlipped
+
+- type: construction
+  parent: DisposalJunction # Trauma
+  id: DisposalJunctionFlipped
+  hide: true
+  targetNode: junctionflipped
+  mirror: DisposalJunction
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalYJunction
+  targetNode: yJunction
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalXJunction
+  targetNode: xJunction
+
+- type: construction
+  parent: DisposalPipe
+  id: DisposalBend
+  targetNode: bend
+# endregion Disposals
+
+# region Intercom
+- type: construction
+  parent: BaseUtilityWallmount
+  id: IntercomAssembly
+  graph: Intercom
+  targetNode: intercom
+  category: construction-category-structures
+# endregion Intercom
+
+# region Timers
+- type: construction
+  parent: BaseUtilityWallmount
+  id: SignalTimer
+  graph: Timer
+  targetNode: signal
+
+- type: construction
+  parent: SignalTimer
+  id: ScreenTimer
+  targetNode: screen
+  # <Trauma>
+  theory:
+    ElectronicsKnowledge: 0
+    InfrastructureKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 1
+  # </Trauma>
+
+- type: construction
+  parent: SignalTimer
+  id: BrigTimer
+  targetNode: brig
+  # <Trauma>
+  theory:
+    ElectronicsKnowledge: 0
+    InfrastructureKnowledge: 0
+  practical:
+    ElectronicsKnowledge: 1
+  # </Trauma>
+# endregion Timers
+
+# region Defenses
+- type: construction
+  parent: BaseUtilityWallmount
+  id: WeaponEnergyTurretControlPanel
+  graph: WeaponEnergyTurretControlPanel
+  targetNode: finish
+  # <Trauma>
+  theory:
+    ElectronicsKnowledge: 3
+    InfrastructureKnowledge: 1
+  # </Trauma>
+# endregion Defenses

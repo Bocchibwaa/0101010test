@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  abstract: true
+  parent: FoodBase
+  id: BasePerishableFood
+  components:
+  - type: Perishable
+    rotAfter: 1200
+    molsPerSecondPerUnitMass: 0
+  - type: RotInto
+    entity: FoodRot
+    stage: 1
+  - type: AtmosExposed
+  - type: Temperature
+    temperature: 290
+    heatCapacity: 15000 # most items are 5kg :(
+  - type: TemperatureDamage
+  - type: InternalTemperature
+  - type: BurnableFood
+    burnTemp: 550
+
+# FoodInjectableBase without perishable stuff
+- type: entity
+  abstract: true
+  parent: FoodBase
+  id: FoodUnperishableInjectableBase
+  components:
+  - type: SpaceGarbage
+  - type: InjectableSolution
+    solution: food
+  - type: RefillableSolution
+    solution: food
+
+# FoodProduceBase without perishable stuff
+- type: entity
+  abstract: true
+  parent: FoodBase
+  id: FoodProduceUnperishableBase
+  components:
+  - type: Solution
+  - type: Sprite
+    state: produce
+  - type: Produce
+  - type: PotencyVisuals
+  - type: Appearance
+  - type: Extractable
+    grindableSolutionName: food

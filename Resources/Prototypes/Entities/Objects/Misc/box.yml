@@ -1,0 +1,94 @@
+- type: entity
+  abstract: true
+  parent: BaseStorageItem
+  id: BoxBase
+  components:
+  # <Trauma>
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_Goobstation/Items/handling/cardboardbox_pickup.ogg
+      params:
+        volume: -3
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_Goobstation/Items/handling/cardboardbox_drop.ogg
+      params:
+        volume: -3
+  - type: EmitSoundOnLand
+    sound:
+      path: /Audio/_Goobstation/Items/handling/cardboardbox_drop.ogg
+      params:
+        volume: -3
+  # </Trauma>
+  - type: Sprite
+    sprite: Objects/Storage/boxes.rsi
+  - type: Item
+    sprite: Objects/Storage/boxes.rsi
+    size: Large
+    shape:
+    - 0,0,2,2
+  - type: Storage
+    maxItemSize: Small
+    grid:
+    - 0,0,2,2
+  - type: ContainerContainer
+    containers:
+      storagebase: !type:Container
+  - type: StaticPrice
+    price: 10
+
+- type: entity
+  abstract: true
+  parent: BoxBase
+  id: BoxBaseSmall
+  components:
+  - type: Item
+    size: Normal
+    shape:
+    - 0,0,1,1
+  - type: Storage
+    grid:
+    - 0,0,1,1
+  - type: StaticPrice # Half of the "regular" box
+    price: 5
+
+- type: entity
+  abstract: true
+  parent: BaseBoxSurvival
+  id: BoxBaseHug
+  components:
+  - type: Item
+    heldPrefix: hug
+
+- type: entity
+  parent: BoxBase
+  id: ToteBase
+  name: circuit tote
+  description: A large tote for carrying circuit boards.
+  components:
+  - type: Sprite
+    layers:
+      - state: box # Trauma - no vg-esque sprites
+        map: ["enum.StorageFillLayers.Fill"]
+      - state: circuit
+  - type: Appearance
+  #- type: StorageFillVisualizer # Trauma - no vg-esque sprites
+  #  maxFillLevels: 3
+  #  fillBaseName: tote
+  - type: Storage
+    maxItemSize: Small
+    grid:
+    - 0,0,5,2
+    whitelist:
+      components:
+      - MachineBoard
+      - Circuitboard
+  - type: Construction
+    graph: ToteBase
+    node: totebase
+  - type: PhysicalComposition
+    materialComposition:
+      Cardboard: 75
+      Cloth: 25
+  - type: StaticPrice
+    price: 15

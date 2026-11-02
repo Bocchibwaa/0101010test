@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  abstract: true
+  parent: MarkerBase
+  id: BaseSpawnPointGhostBingle
+  name: bingle spawn point
+  components:
+  - type: GhostRole
+    name: ghost-role-information-bingle-name
+    description: ghost-role-information-bingle-description
+    rules: ghost-role-information-bingle-rules
+    mindRoles:
+    - MindRoleGhostRoleTeamAntagonist
+    raffle: null # no raffle for spammed role fuck you
+  - type: GhostRoleMobSpawner
+  - type: Sprite
+    sprite: Markers/jobs.rsi
+    layers:
+    - state: green
+    - sprite: _Goobstation/Mobs/Bingle/bingle.rsi
+      state: icon
+
+# Random spawner
+- type: entity
+  parent: MarkerBase
+  id: SpawnPointGhostBingle
+  name: random bingle spawner
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Mobs/Bingle/bingle.rsi
+    state: alive
+  - type: EntityTableSpawner
+    table: !type:GroupSelector
+      children:
+      - id: SpawnPointGhostBingleHunk
+      - id: SpawnPointGhostBingleSlavering
+      - id: SpawnPointGhostBingleBoney
+
+- type: entity
+  parent: BaseSpawnPointGhostBingle
+  id: SpawnPointGhostBingleHunk
+  suffix: Hunk
+  components:
+  - type: GhostRoleMobSpawner
+    prototype: MobBingleHunk
+
+- type: entity
+  parent: BaseSpawnPointGhostBingle
+  id: SpawnPointGhostBingleSlavering
+  suffix: Slavering
+  components:
+  - type: GhostRoleMobSpawner
+    prototype: MobBingleSlavering
+
+- type: entity
+  parent: BaseSpawnPointGhostBingle
+  id: SpawnPointGhostBingleBoney
+  suffix: Boney
+  components:
+  - type: GhostRoleMobSpawner
+    prototype: MobBingleBoney
+
+- type: entity
+  parent: BaseSpawnPointGhostBingle
+  id: SpawnPointGhostBinglePrime
+  suffix: Prime
+  components:
+  - type: GhostRoleMobSpawner
+    prototype: MobBinglePrimeTrauma

@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Content.Goobstation.Shared.Wraith.Curses;
+using Content.Shared.StatusIcon.Components;
+
+namespace Content.Goobstation.Client.Wraith.Curses;
+
+public sealed partial class CurseHolderSystem : SharedCurseHolderSystem
+{
+    /// <inheritdoc/>
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<CurseHolderComponent, GetStatusIconsEvent>(OnGetStatusIcons);
+    }
+
+    private void OnGetStatusIcons(Entity<CurseHolderComponent> ent, ref GetStatusIconsEvent args)
+    {
+        if (ent.Comp.CurseStatusIcons.Count == 0)
+            return;
+
+        foreach (var curseIcon in ent.Comp.CurseStatusIcons)
+        {
+            var icon = ProtoMan.Index(curseIcon);
+            args.StatusIcons.Add(icon);
+        }
+    }
+}

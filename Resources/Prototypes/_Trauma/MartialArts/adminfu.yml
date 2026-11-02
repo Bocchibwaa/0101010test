@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: combo
+  id: InstantStun
+  attacks:
+  - Disarm
+
+- type: combo
+  id: InstantDeath
+  attacks:
+  - Harm
+
+- type: combo
+  id: InstantRejuvenate
+  attacks:
+  - Hug

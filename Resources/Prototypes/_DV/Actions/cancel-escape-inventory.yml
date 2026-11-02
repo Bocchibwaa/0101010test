@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseAction
+  id: ActionCancelEscape
+  name: Stop escaping
+  description: Calm down and sit peacefuly in your carrier's inventory
+  components:
+  - type: Sprite
+    sprite: _DV/Actions/escapeinventory.rsi
+    layers:
+    - state: cancel-escape
+  - type: Action
+    useDelay: 2
+  - type: InstantAction
+    event: !type:EscapeInventoryCancelActionEvent

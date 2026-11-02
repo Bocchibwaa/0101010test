@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Robust.Client.Player;
+using Robust.Shared.Enums;
+
+namespace Content.Goobstation.Client.BerserkerImplant;
+
+public sealed partial class BerserkerImplantOverlay : Overlay
+{
+    [Dependency] private IPrototypeManager _proto = default!;
+
+    public override bool RequestScreenTexture => true;
+    public override OverlaySpace Space => OverlaySpace.WorldSpace;
+    private readonly ShaderInstance _blurShader;
+
+    public Color TintColor = new();
+
+    public float BlurAmount = 0f;
+
+    public static readonly ProtoId<ShaderPrototype> BlurryVisionX = "BlurryVisionX";
+
+    public BerserkerImplantOverlay()
+    {
+        IoCManager.InjectDependencies(this);
+
+        _blurShader = _proto.Index(BlurryVisionX).InstanceUnique();
+    }
+
+    protected override void Draw(in OverlayDrawArgs args)
+    {
+        if (ScreenTexture == null)
+            return;
+
+        var worldHandle = args.WorldHandle;
+        var worldBounds = args.WorldBounds;
+
+        _blurShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
+        _blurShader.SetParameter("BLUR_AMOUNT", BlurAmount);
+
+        worldHandle.UseShader(_blurShader);
+        worldHandle.DrawRect(worldBounds, TintColor);
+        worldHandle.UseShader(null);
+    }
+}

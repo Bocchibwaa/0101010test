@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Robust.Client.UserInterface.CustomControls;
+
+namespace Content.Goobstation.Client.Stack
+{
+    [GenerateTypedNameReferences]
+    public sealed partial class StackCustomSplitWindow : DefaultWindow
+    {
+        private int _max = Int32.MaxValue;
+        private int _min = 1;
+
+        public StackCustomSplitWindow()
+        {
+            RobustXamlLoader.Load(this);
+            AmountLineEdit.OnTextChanged += OnValueChanged;
+        }
+
+        public void SetMax(int max)
+        {
+          _max = max;
+          MaximumAmount.Text = Loc.GetString("comp-stack-split-size", ("size", _max));
+        }
+
+        private void OnValueChanged(LineEdit.LineEditEventArgs args)
+        {
+            if (!int.TryParse((string?)AmountLineEdit.Text, out var amount)  || amount > _max || amount < _min)
+                ApplyButton.Disabled = true;
+            else
+                ApplyButton.Disabled = false;
+        }
+    }
+}

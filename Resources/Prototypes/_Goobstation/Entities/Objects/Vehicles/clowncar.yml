@@ -1,0 +1,144 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseGroundVehicle
+  id: VehicleClowncarBase
+  name: clown car
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Objects/Vehicles/clowncar.rsi
+    layers:
+    - state: clowncar
+    noRot: true
+  - type: Vehicle
+    renderOver: North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest
+    requiredHands: 1
+    hornSound:
+      collection: BikeHorn
+      params:
+        variation: 0.125
+  - type: MovementSpeedModifier
+    weightlessModifier: 0
+    acceleration: 1
+    friction: 1
+    baseWalkSpeed: 4.5
+    baseSprintSpeed: 7
+  - type: ItemSlots
+    slots:
+      key_slot:
+        name: vehicle-slot-component-slot-name-keys
+        whitelist:
+          requireAll: true
+          tags:
+          - VehicleKey
+          - BikeHorn
+        insertSound:
+          path: /Audio/Effects/Vehicle/vehiclestartup.ogg
+          params:
+            volume: -3
+  - type: Strap
+    buckleOnInteractHand: false
+    allowOthersToUnbuckle: false
+    unbuckleSound:
+      collection: ClowncarCrash
+    whitelist:
+      components:
+      - Clown # clown only
+  - type: UnpoweredFlashlight
+  - type: PointLight
+    enabled: false
+    lightMask: ConeSingle
+    autoRot: true
+    radius: 3.5
+    softness: 2
+    netsync: false
+  - type: ContainerContainer
+    containers:
+      clowncar_container: !type:Container
+  - type: ExtendedContainer
+    containerName: clowncar_container
+    deleteContentsOnBreak: false
+    capacity: 6
+    insertSound:
+      collection: ClowncarLoad
+      params:
+        volume: 4
+    removeSound:
+      collection: ClowncarCrash
+  - type: DragInsertContainer
+    containerId: clowncar_container
+    entryDelay: 2
+    useVerbs: false
+  - type: RemoveFromContainerOnCollide
+    container: clowncar_container
+    requiredVelocity: 3
+    removeEverything: true
+    collidableEntities:
+      components:
+      - HumanoidProfile
+      - Item
+      - KnockedDown
+      - Puddle
+      - Airlock
+      - Door
+      - Strap
+      - Body
+      - Holopad
+  - type: Clowncar
+  - type: TriggerOnSolutionInsert # bringing a full glass of car bomb in blows the car up
+    reagent: IrishCarBomb
+    minAmount: 30
+  - type: Explosive # Explosive banana peel
+    explosionType: Default
+    totalIntensity: 25
+    intensitySlope: 5
+    maxIntensity: 3
+    canCreateVacuum: false
+    deleteAfterExplosion: false
+    repeatable: true # if it managed to survuve.
+  - type: ExplodeOnTrigger
+  - type: TriggerOnDamage # car leaks lube when hit
+    keyOut: damaged
+    probability: 0.33
+  - type: SpawnOnTrigger
+    keysIn: [ damaged ]
+    proto: PuddleSpaceLube
+    predicted: true
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: ClowncarDamageContainer
+  - type: Jukebox
+  - type: ActivatableUI
+    key: enum.JukeboxUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.JukeboxUiKey.Key:
+        type: JukeboxBoundUserInterface
+
+- type: entity
+  parent: VehicleClowncarBase
+  id: VehicleClowncarAntag
+  description: How someone could even fit in there is byond me.
+  components:
+  - type: InsertToContainerOnCollide
+    container: clowncar_container
+    requiredVelocity: 3
+    insertableEntities:
+      components:
+      - HumanoidProfile
+    blacklistedEntities:
+      components:
+      - KnockedDown
+  - type: ExtendedContainer
+    capacity: 50
+
+- type: entity
+  parent: VehicleClowncarBase
+  id: VehicleClowncarTrainee
+  name: trainee clown car
+  description: Carry mostly willing passengers around! Be careful with collisions!.
+  components:
+  - type: ExtendedContainer
+    capacity: 5

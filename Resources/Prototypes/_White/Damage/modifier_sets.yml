@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: damageModifierSet
+  id: Xenomorph
+  coefficients:
+    Blunt: 0.5
+    Slash: 1.5
+    Piercing: 0.80
+    Cold: 0
+    Heat: 2.0
+    Poison: 0
+
+- type: damageModifierSet
+  id: XenomorphDungeon
+  coefficients:
+    Blunt: 1
+    Slash: 1
+    Piercing: 1
+    Cold: 0
+    Heat: 1.5
+    Poison: 0
+
+- type: damageModifierSet
+  id: Resin
+  coefficients:
+    Blunt: 0.3
+    Slash: 0.5
+    Piercing: 0.8
+    Heat: 1.5
+    Shock: 0
