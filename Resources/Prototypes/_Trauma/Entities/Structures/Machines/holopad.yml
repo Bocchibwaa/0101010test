@@ -24,3 +24,11 @@
   components:
   - type: Label
     localizedLabel: station-beacon-reactor
+
+- type: entity
+  parent: Holopad
+  id: HolopadMedicalPsychologist
+  suffix: Psychologist
+  components:
+  - type: Label
+    localizedLabel: station-beacon-psychology
