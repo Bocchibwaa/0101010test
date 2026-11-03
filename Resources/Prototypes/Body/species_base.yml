@@ -11,6 +11,7 @@
   save: false
   components:
   # <Trauma>
+  - type: DynamicShadowCaster
   - type: BagAccess
   - type: Targeting
   - type: BodyStatus

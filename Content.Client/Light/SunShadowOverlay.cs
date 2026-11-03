@@ -12,6 +12,20 @@ namespace Content.Client.Light;
 
 public sealed partial class SunShadowOverlay : Overlay
 {
+    // Trauma - start
+    public readonly record struct SunShadowExtraArgs(
+        DrawingHandleWorld Handle,
+        Matrix3x2 WorldToTarget,
+        Vector2 Direction,
+        Robust.Shared.Graphics.IEye Eye,
+        Box2Rotated Bounds,
+        MapId MapId,
+        EntityUid Grid);
+
+    /// <summary>Lets other code draw extra white shapes into the sun shadow mask.</summary>
+    public event Action<SunShadowExtraArgs>? ExtraShadows;
+    // Trauma - end
+
     private static readonly ProtoId<ShaderPrototype> MixShader = "Mix";
 
     public override OverlaySpace Space => OverlaySpace.BeforeLighting;
@@ -72,7 +86,7 @@ public sealed partial class SunShadowOverlay : Overlay
             }
         }
 
-        var lightScale = viewport.LightRenderTarget.Size / (Vector2)viewport.Size;
+        var lightScale = viewport.LightRenderTarget.Size / (Vector2) viewport.Size;
         var scale = viewport.RenderScale / (Vector2.One / lightScale);
 
         foreach (var grid in _grids)
@@ -141,6 +155,11 @@ public sealed partial class SunShadowOverlay : Overlay
 
                         worldHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, points, Color.White);
                     }
+                    // Trauma - start
+                    ExtraShadows?.Invoke(new SunShadowExtraArgs(worldHandle, invMatrix, direction, eye, expandedBounds, mapId, grid.Owner));
+                    worldHandle.UseShader(null);
+                    // Trauma - end
+
                 },
                 Color.Transparent);
 
