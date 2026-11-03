@@ -1,0 +1,29 @@
+- type: shader
+  id: DynamicShadowCast
+  kind: source
+  path: "/Textures/_Trauma/Shaders/dynamic_shadow_cast.swsl"
+  params:
+    shadowStrength: 1.0
+    tipStrength: 0.45
+    shadowOrigin: 0, 0
+    shadowAxis: 0, 1
+
+- type: shader
+  id: DynamicShadowAccumulate
+  kind: source
+  path: "/Textures/_Trauma/Shaders/dynamic_shadow_accumulate.swsl"
+
+- type: shader
+  id: DynamicShadowComposite
+  kind: source
+  path: "/Textures/_Trauma/Shaders/dynamic_shadow_composite.swsl"
+  params:
+    darkness: 3.35
+    maxAlpha: 0.95
+    blurRadius: 1.0
+    texelSize: 0.001, 0.001
+
+- type: shader
+  id: DynamicShadowSunSilhouette
+  kind: source
+  path: "/Textures/_Trauma/Shaders/dynamic_shadow_sun_silhouette.swsl"

@@ -1,0 +1,18 @@
+light_mode unshaded;
+
+uniform highp mat3 shadowMatrix;
+
+void vertex() {
+    highp vec3 world = modelMatrix * vec3(aPos, 1.0);
+    VERTEX = (projectionMatrix * viewMatrix * (shadowMatrix * world)).xy;
+}
+
+void fragment() {
+    if (zTexture(UV).a < 0.5) {
+        discard;
+    }
+
+    // Same solid white as the wall polygons.
+    COLOR = vec4(1.0);
+    MODULATE = vec4(1.0);
+}

@@ -1,0 +1,8 @@
+light_mode unshaded;
+blend_mode add;
+
+void fragment() {
+    highp vec4 t = zTexture(UV);
+    // Untouched pixels are (0,0,0,0) -> adds nothing.
+    COLOR = vec4(t.r * t.a, 0.0, 0.0, 1.0);
+}

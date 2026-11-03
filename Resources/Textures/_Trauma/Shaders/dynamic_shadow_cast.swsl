@@ -1,0 +1,29 @@
+light_mode unshaded;
+
+uniform highp mat3 shadowMatrix;
+uniform highp float shadowStrength;
+uniform highp float tipStrength;
+uniform highp vec2 shadowOrigin; // feet, in render target pixels
+uniform highp vec2 shadowAxis;   // feet -> tip, in render target pixels
+
+void vertex() {
+    highp vec3 world = modelMatrix * vec3(aPos, 1.0);
+    highp vec3 local = shadowMatrix * world;
+    VERTEX = (projectionMatrix * viewMatrix * local).xy;
+}
+
+void fragment() {
+    highp float a = zTexture(UV).a * MODULATE.a;
+    if (a < 0.5) {
+        discard;
+    }
+
+    // 0 at the feet, 1 at the tip. Depends only on screen position, so every
+    // sprite layer writes the same value and layers can't stack.
+    highp float t = clamp(
+        dot(FRAGCOORD.xy - shadowOrigin, shadowAxis) / max(dot(shadowAxis, shadowAxis), 0.0001),
+        0.0, 1.0);
+
+    COLOR = vec4(shadowStrength * mix(1.0, tipStrength, t), 0.0, 0.0, 1.0);
+    MODULATE = vec4(1.0);
+}

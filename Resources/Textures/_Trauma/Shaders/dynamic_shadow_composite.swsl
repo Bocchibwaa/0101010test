@@ -1,0 +1,20 @@
+light_mode unshaded;
+
+uniform highp float darkness;
+uniform highp float maxAlpha;
+uniform highp float blurRadius;
+uniform highp vec2 texelSize;
+
+void fragment() {
+    highp vec2 o = texelSize * blurRadius;
+
+    highp float s = zTexture(UV).r * 4.0;
+    s += (zTexture(UV + vec2( o.x, 0.0)).r + zTexture(UV + vec2(-o.x, 0.0)).r
+        + zTexture(UV + vec2(0.0,  o.y)).r + zTexture(UV + vec2(0.0, -o.y)).r) * 2.0;
+    s += zTexture(UV + vec2( o.x,  o.y)).r + zTexture(UV + vec2(-o.x,  o.y)).r
+       + zTexture(UV + vec2( o.x, -o.y)).r + zTexture(UV + vec2(-o.x, -o.y)).r;
+    s /= 16.0;
+
+    // Soft ceiling: more overlap is always darker, never a hard clamp.
+    COLOR = vec4(0.0, 0.0, 0.0, maxAlpha * (1.0 - exp(-s * darkness)));
+}
