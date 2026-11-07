@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Made by Bocchibwaa for testing",
+  "size": { "x": 112, "y": 112 },
+  "metaAtlas": false,
+  "load": { "filter": true },
+  "states": [
+    { "name": "test", "directions": 4 }
+  ]
+}
+

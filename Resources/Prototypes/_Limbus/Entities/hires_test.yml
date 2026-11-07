@@ -1,0 +1,96 @@
+- type: entity
+  parent: BaseMob
+  id: LimbusHiResTestMob
+  name: hi-res test mob
+  description: 112px directional test character.
+  components:
+  - type: Sprite
+    sprite: _Limbus/Test/hires_test.rsi
+    layers:
+    - state: test
+      shader: LimbusSharpBilinear
+    scale: 0.2857143,0.2857143   # 112px * 2/7 = 32px = 1 tile
+    noRot: true
+    drawdepth: Mobs
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 3
+    baseSprintSpeed: 4.5
+
+
+
+# Regular 32px human, no shader, for comparison
+- type: entity
+  parent: BaseMob
+  id: LimbusHumanTestPlain
+  name: human test (plain)
+  components:
+  - type: Sprite
+    sprite: Mobs/Species/Human/parts.rsi
+    noRot: true
+    drawdepth: Mobs
+    layers:
+    - state: torso_m
+      color: "#e8b59b"
+    - state: head_m
+      color: "#e8b59b"
+    - state: l_arm
+      color: "#e8b59b"
+    - state: r_arm
+      color: "#e8b59b"
+    - state: l_hand
+      color: "#e8b59b"
+    - state: r_hand
+      color: "#e8b59b"
+    - state: l_leg
+      color: "#e8b59b"
+    - state: r_leg
+      color: "#e8b59b"
+    - state: l_foot
+      color: "#e8b59b"
+    - state: r_foot
+      color: "#e8b59b"
+
+# Same human, filtered RSI + sharp bilinear shader
+- type: entity
+  parent: BaseMob
+  id: LimbusHumanTestSharp
+  name: human test (sharp bilinear)
+  components:
+  - type: Sprite
+    sprite: _Limbus/Test/human_parts_filtered.rsi
+    noRot: true
+    drawdepth: Mobs
+    layers:
+    - state: torso_m
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+    - state: head_m
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+    - state: l_arm
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+    - state: r_arm
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+    - state: l_hand
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+    - state: r_hand
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+    - state: l_leg
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+    - state: r_leg
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+    - state: l_foot
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+    - state: r_foot
+      color: "#e8b59b"
+      shader: LimbusSharpBilinear
+
+
+

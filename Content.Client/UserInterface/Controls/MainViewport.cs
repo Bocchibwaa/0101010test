@@ -4,14 +4,21 @@ using Content.Shared.CCVar;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Configuration;
 
+
 namespace Content.Client.UserInterface.Controls
 {
+
+
+
+
     /// <summary>
     ///     Wrapper for <see cref="ScalingViewport"/> that listens to configuration variables.
     ///     Also does NN-snapping within tolerances.
     /// </summary>
     public sealed partial class MainViewport : UIWidget
     {
+
+
         [Dependency] private IConfigurationManager _cfg = default!;
         [Dependency] private ViewportManager _vpManager = default!;
 
@@ -31,7 +38,20 @@ namespace Content.Client.UserInterface.Controls
             AddChild(Viewport);
 
             _cfg.OnValueChanged(CCVars.ViewportScalingFilterMode, _ => UpdateCfg(), true);
+            // Limbus: re-apply viewport settings when the min render scale changes.
+            _cfg.OnValueChanged(CCVars.LimbusMinRenderScale, _ => UpdateCfg(), true);
         }
+
+        // Limbus: high-res sprites need at least this world render scale.
+        // Class-level method, outside the constructor.
+        private int LimbusRenderScale(int baseScale)
+        {
+            var min = Math.Clamp(_cfg.GetCVar(CCVars.LimbusMinRenderScale), 1, 6);
+            return Math.Max(baseScale, min);
+        }
+
+
+
 
         protected override void EnteredTree()
         {
@@ -72,8 +92,16 @@ namespace Content.Client.UserInterface.Controls
 
                     if (renderScaleUp)
                     {
-                        Viewport.RenderScaleMode = ScalingViewportRenderScaleMode.CeilInt;
+                        var needed = (int) MathF.Ceiling(MathF.Max(
+                            PixelSize.X / (float) Viewport.ViewportSize.X,
+                            PixelSize.Y / (float) Viewport.ViewportSize.Y));
+
+                        Viewport.RenderScaleMode = ScalingViewportRenderScaleMode.Fixed;
+                        Viewport.FixedRenderScale = LimbusRenderScale(needed);
+                        // Rendering bigger than the screen, then shrinking: smooth it.
+                        Viewport.StretchMode = ScalingViewportStretchMode.Bilinear;
                     }
+
                     else
                     {
                         Viewport.RenderScaleMode = ScalingViewportRenderScaleMode.Fixed;
@@ -90,11 +118,18 @@ namespace Content.Client.UserInterface.Controls
             Viewport.FixedStretchSize = Viewport.ViewportSize * fixedFactor;
             Viewport.StretchMode = ScalingViewportStretchMode.Nearest;
 
+            Viewport.FixedStretchSize = Viewport.ViewportSize * fixedFactor;
+
             if (renderScaleUp)
             {
+                var renderScale = LimbusRenderScale(fixedFactor);
                 Viewport.RenderScaleMode = ScalingViewportRenderScaleMode.Fixed;
-                Viewport.FixedRenderScale = fixedFactor;
+                Viewport.FixedRenderScale = renderScale;
+                Viewport.StretchMode = renderScale > fixedFactor
+                    ? ScalingViewportStretchMode.Bilinear   // downsampling 4x -> 2x/3x
+                    : ScalingViewportStretchMode.Nearest;   // 1:1, keep it crisp
             }
+
             else
             {
                 // Snapping but forced to render scale at scale 1 so...

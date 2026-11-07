@@ -1,0 +1,18 @@
+// Limbus: "sharp bilinear" sampling for hi-res sprites.
+// Magnified  -> crisp texel blocks with 1-screen-pixel antialiased seams.
+// Minified   -> plain bilinear (requires the RSI to be loaded with filter: true).
+
+void fragment() {
+    highp vec2 texSize = 1.0 / TEXTURE_PIXEL_SIZE;
+    highp vec2 pix = UV * texSize;              // position in texels
+
+    // How many texels one screen pixel covers. Capped at 1.0 so that
+    // when zoomed out we fall back to ordinary bilinear filtering.
+    highp vec2 fw = clamp(fwidth(pix), vec2(0.0001), vec2(1.0));
+
+    highp vec2 seam = floor(pix + 0.5);         // nearest texel boundary
+    highp vec2 d = pix - seam;
+    pix = seam + clamp(d / fw, vec2(-0.5), vec2(0.5));
+
+    COLOR = zTexture(pix / texSize);
+}
