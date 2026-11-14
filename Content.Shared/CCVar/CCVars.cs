@@ -15,6 +15,11 @@ namespace Content.Shared.CCVar;
 public sealed partial class CCVars : CVars
 {
     // Only debug stuff lives here.
+    /// <summary>
+
+    public static readonly CVarDef<int> LimbusMinRenderScale =
+        CVarDef.Create("viewport.limbus_min_render_scale", 4, CVar.CLIENTONLY | CVar.ARCHIVE);
+
 
 #if DEBUG
     [CVarControl(AdminFlags.Debug)]

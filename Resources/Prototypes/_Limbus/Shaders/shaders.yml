@@ -1,0 +1,4 @@
+- type: shader
+  id: LimbusSharpBilinear
+  kind: source
+  path: "/Textures/Shaders/_Limbus/sharp_bilinear.swsl"
