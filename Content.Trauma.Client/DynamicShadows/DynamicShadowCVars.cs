@@ -21,4 +21,12 @@ public sealed class DynamicShadowCVars
     /// <summary>Raycast lights against walls so lights in other rooms don't cast shadows.</summary>
     public static readonly CVarDef<bool> Occlusion =
         CVarDef.Create("trauma.dynamic_shadows_occlusion", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+    /// <summary>1 = full resolution, 2 = half (4x cheaper on GPU), 4 = quarter.</summary>
+    public static readonly CVarDef<int> Resolution =
+        CVarDef.Create("trauma.dynamic_shadows_resolution", 2, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+    /// <summary>Max lamp shadows per entity (1-3). Lower = fewer passes and draw calls.</summary>
+    public static readonly CVarDef<int> MaxPerEntity =
+        CVarDef.Create("trauma.dynamic_shadows_max_per_entity", 3, CVar.CLIENTONLY | CVar.ARCHIVE);
+
 }

@@ -47,7 +47,7 @@ public sealed partial class FreezeContactsSystem : EntitySystem
         SubscribeLocalEvent<FrozenComponent, ThrowAttemptEvent>(OnAttempt);
         SubscribeLocalEvent<FrozenComponent, InteractionAttemptEvent>(OnInteractAttempt);
         SubscribeLocalEvent<FrozenComponent, ComponentStartup>(MoveUpdate);
-        SubscribeLocalEvent<FrozenComponent, ComponentShutdown>(MoveUpdate);
+        SubscribeLocalEvent<FrozenComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<FrozenComponent, ComponentInit>(OnInit);
         SubscribeLocalEvent<FrozenComponent, ComponentRemove>(OnRemove);
         SubscribeLocalEvent<FrozenComponent, UpdateCanMoveEvent>(OnUpdateCanMove);
@@ -116,6 +116,12 @@ public sealed partial class FreezeContactsSystem : EntitySystem
     {
         _blocker.UpdateCanMove(uid);
     }
+
+    private void OnShutdown(EntityUid uid, FrozenComponent component, ref ComponentShutdown args)
+    {
+        _blocker.UpdateCanMove(uid);
+    }
+
 
     private void OnInteractAttempt(Entity<FrozenComponent> ent, ref InteractionAttemptEvent args)
     {

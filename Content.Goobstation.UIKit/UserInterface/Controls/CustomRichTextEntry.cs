@@ -139,10 +139,13 @@ public struct CustomRichTextEntry
 
         if (IsInBox && maxSizeX > 0)
             maxSizeX -= Margin * uiScale;
-
+#pragma warning disable CS0618
         int? breakLine;
         var wordWrap = new CustomWordWrap(maxSizeX);
         var context = new MarkupDrawingContext();
+
+#pragma warning restore CS0618
+
         context.Font.Push(defaultFont);
         context.Color.Push(_defaultColor);
 

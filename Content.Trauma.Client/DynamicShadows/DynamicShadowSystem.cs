@@ -13,6 +13,7 @@ public sealed partial class DynamicShadowSystem : EntitySystem
     private DynamicShadowOverlay _shadowOverlay = default!;
     private SunShadowOverlay? _sunOverlay;
 
+
     public override void Initialize()
     {
         base.Initialize();
@@ -23,6 +24,9 @@ public sealed partial class DynamicShadowSystem : EntitySystem
         Subs.CVar(_cfg, DynamicShadowCVars.Blur, v => _shadowOverlay.BlurRadius = v, true);
         Subs.CVar(_cfg, DynamicShadowCVars.Occlusion, v => _shadowOverlay.UseOcclusion = v, true);
         Subs.CVar(_cfg, DynamicShadowCVars.Enabled, SetEnabled, true);
+        Subs.CVar(_cfg, DynamicShadowCVars.Resolution, v => _shadowOverlay.ResolutionDivisor = Math.Clamp(v, 1, 4), true);
+        Subs.CVar(_cfg, DynamicShadowCVars.MaxPerEntity, v => _shadowOverlay.MaxSlots = Math.Clamp(v, 1, DynamicShadowOverlay.SlotCount), true);
+
     }
 
     public override void FrameUpdate(float frameTime)
