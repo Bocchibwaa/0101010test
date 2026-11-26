@@ -91,6 +91,8 @@ public sealed partial class MessagingControls : TabContainer
     {
         if (_broadcastDisplayEntity.IsValid())
             _entMan.DeleteEntity(_broadcastDisplayEntity);
+
+        base.ExitedTree();
     }
 
     private void SyncButtonState()

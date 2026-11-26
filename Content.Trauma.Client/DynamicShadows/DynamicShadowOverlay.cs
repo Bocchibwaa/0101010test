@@ -11,6 +11,8 @@ using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Graphics;
+
 
 namespace Content.Trauma.Client.DynamicShadows;
 
@@ -29,6 +31,10 @@ public sealed partial class DynamicShadowOverlay : Overlay
     /// <summary>Max lamp shadows per caster. Each slot is added on top of the others.</summary>
     public const int SlotCount = 3;
 
+    private const float OcclusionRefresh = 0.15f;
+    private const float OcclusionMoveSq = 0.25f * 0.25f;
+    private static readonly TimeSpan OcclusionForget = TimeSpan.FromSeconds(1);
+
     private const float LightSearchRange = 12f;
     private const float CasterSearchRange = 4f;
     private const float MinLightDistance = 0.35f;
@@ -39,6 +45,37 @@ public sealed partial class DynamicShadowOverlay : Overlay
     /// Higher = darker, but overlaps always stay darker than single shadows.
     /// </summary>
     private const float Darkness = 3.35f;
+    private readonly List<(SpriteComponent.Layer Layer, ShaderInstance? Shader)> _swapped = new();
+
+    /// <summary>
+    /// Renders a sprite with every layer forced to the given shader, then restores the layers' own shaders.
+    /// Layers with their own shader (unshaded, displacement, etc.) would otherwise switch to it mid-sprite.
+    /// </summary>
+    private void RenderSilhouette(Entity<SpriteComponent> ent, DrawingHandleWorld handle, ShaderInstance shader,
+        Angle eyeRot, Angle worldRot, Vector2 worldPos)
+    {
+        _swapped.Clear();
+        foreach (var l in ent.Comp.AllLayers)
+        {
+            if (l is SpriteComponent.Layer { Shader: not null } layer)
+            {
+                _swapped.Add((layer, layer.Shader));
+                layer.Shader = shader;
+            }
+        }
+
+        handle.UseShader(shader);
+        try
+        {
+            _sprite.RenderSprite(ent, handle, eyeRot, worldRot, worldPos);
+        }
+        finally
+        {
+            foreach (var (layer, old) in _swapped)
+                layer.Shader = old;
+            _swapped.Clear();
+        }
+    }
 
     /// <summary>Must be 1 or less; alpha can't go above 1.</summary>
     private const float MaxShadowAlpha = 0.95f;
@@ -54,6 +91,9 @@ public sealed partial class DynamicShadowOverlay : Overlay
 
     private readonly EntityLookupSystem _lookup;
     private readonly LightTreeSystem _lightTree;
+    public int ResolutionDivisor = 2;
+    public int MaxSlots = SlotCount;
+
     private readonly OccluderSystem _occluder;
     private readonly SharedContainerSystem _container;
     private readonly SharedTransformSystem _xform;
@@ -82,13 +122,22 @@ public sealed partial class DynamicShadowOverlay : Overlay
     private readonly List<LightSample> _lights = new();
     private readonly List<ShadowCandidate> _candidates = new();
 
+    private sealed class CasterState
+    {
+        public uint LastSeenFrame;
+        public float Visibility = 1f;
+        public readonly Dictionary<EntityUid, ShadowState> Shadows = new();
+        public readonly Dictionary<EntityUid, OcclusionEntry> Occlusion = new();
+    }
+
+    private readonly record struct OcclusionEntry(bool Occluded, Vector2 Anchor, Vector2 LightPos, TimeSpan Expires);
     private readonly Dictionary<EntityUid, CasterState> _states = new();
+
     private readonly List<EntityUid> _deadCasters = new();
     private readonly List<EntityUid> _deadShadows = new();
     private readonly List<ShadowState> _sortBuffer = new();
 
-    /// <summary>Sprite alpha after the viewcone ran, from the last lamp pass. Used by the sun pass.</summary>
-    private readonly Dictionary<EntityUid, float> _visibility = new();
+
 
     private readonly List<ShadowDraw>[] _slotDraws = new List<ShadowDraw>[SlotCount];
 
@@ -156,15 +205,20 @@ public sealed partial class DynamicShadowOverlay : Overlay
         if (!BuildDraws(up, right, frame))
             return;
 
+        var div = ResolutionDivisor;
+        var targetSize = new Vector2i(Math.Max(1, viewport.Size.X / div), Math.Max(1, viewport.Size.Y / div));
+
         var res = _resources.GetForViewport(viewport, static _ => new CachedResources());
-        EnsureTargets(res, viewport.Size);
+        EnsureTargets(res, targetSize);
         var scratch = res.Scratch!;
         var accum = res.Accum!;
 
-        var worldToLocal = scratch.GetWorldToLocalMatrix(eye, viewport.RenderScale);
+        var worldToLocal = scratch.GetWorldToLocalMatrix(eye, viewport.RenderScale / div);
+
         var height = (float) scratch.Size.Y;
         var shaderIndex = 0;
-        var firstSlot = true;
+
+        var first = true;
 
         for (var slot = 0; slot < SlotCount; slot++)
         {
@@ -172,11 +226,12 @@ public sealed partial class DynamicShadowOverlay : Overlay
             if (draws.Count == 0)
                 continue;
 
-            // Weakest first: where same-slot shadows overlap, the strongest replaces the rest.
             draws.Sort(static (a, b) => a.Strength.CompareTo(b.Strength));
 
-            // 1) This slot's silhouettes into scratch. Layers replace each other -> no self-stacking.
-            handle.RenderInRenderTarget(scratch, () =>
+            // First non-empty slot goes straight into accum; later ones go via scratch + additive.
+            var dest = first ? accum : scratch;
+
+            handle.RenderInRenderTarget(dest, () =>
             {
                 foreach (var draw in draws)
                 {
@@ -190,26 +245,28 @@ public sealed partial class DynamicShadowOverlay : Overlay
                     shader.SetParameter("shadowOrigin", new Vector2(originLocal.X, height - originLocal.Y));
                     shader.SetParameter("shadowAxis", new Vector2(axisLocal.X, -axisLocal.Y));
 
-                    handle.UseShader(shader);
-                    _sprite.RenderSprite((draw.Uid, draw.Sprite), handle, eyeRot, draw.WorldRot, draw.WorldPos);
+                    RenderSilhouette((draw.Uid, draw.Sprite), handle, shader, eyeRot, draw.WorldRot, draw.WorldPos);
                 }
 
                 handle.UseShader(null);
                 handle.SetTransform(Matrix3x2.Identity);
             }, Color.Transparent);
 
-            // 2) Add scratch onto the accumulator. Slots add -> overlapping shadows get darker.
-            handle.RenderInRenderTarget(accum, () =>
+            if (!first)
             {
-                handle.SetTransform(worldToLocal);
-                handle.UseShader(_accumulateShader);
-                handle.DrawTextureRect(scratch.Texture, bounds);
-                handle.UseShader(null);
-                handle.SetTransform(Matrix3x2.Identity);
-            }, firstSlot ? Color.Transparent : null);
+                handle.RenderInRenderTarget(accum, () =>
+                {
+                    handle.SetTransform(worldToLocal);
+                    handle.UseShader(_accumulateShader);
+                    handle.DrawTextureRect(scratch.Texture, bounds);
+                    handle.UseShader(null);
+                    handle.SetTransform(Matrix3x2.Identity);
+                }, null);
+            }
 
-            firstSlot = false;
+            first = false;
         }
+
 
         // 3) Blur + darkness curve + draw on the floor.
         _compositeShader.SetParameter("darkness", Darkness * Opacity);
@@ -245,31 +302,33 @@ public sealed partial class DynamicShadowOverlay : Overlay
     /// </summary>
     private void UpdateTargets(MapId mapId, Vector2 up, uint frame)
     {
-        _visibility.Clear();
 
         foreach (var (uid, comp) in _casters)
         {
-            if (!CanCast(uid, out var sprite))
-            {
-                _visibility[uid] = 0f;
-                continue;
-            }
+            _states.TryGetValue(uid, out var state);
 
-            _visibility[uid] = sprite.Color.A;
+            // Another viewport already handled this caster this frame.
+            if (state != null && state.LastSeenFrame == frame)
+                continue;
+
+            if (!CanCast(uid, out var sprite))
+                continue;
 
             var xform = _xformQuery.GetComponent(uid);
             var anchor = _xform.GetWorldPosition(xform) + up * comp.FootOffset;
 
-            if (!_states.TryGetValue(uid, out var state))
+            if (state == null)
             {
                 state = new CasterState();
                 _states[uid] = state;
             }
 
             state.LastSeenFrame = frame;
+            state.Visibility = sprite.Color.A;
 
             foreach (var shadow in state.Shadows.Values)
                 shadow.Target = 0f;
+
 
             _candidates.Clear();
             var total = 0f;
@@ -286,7 +345,7 @@ public sealed partial class DynamicShadowOverlay : Overlay
                     continue;
 
                 var dir = delta / dist;
-                if (UseOcclusion && IsOccluded(mapId, light, uid, dir, dist))
+                if (UseOcclusion && IsOccludedCached(mapId, state, light, uid, anchor, dir, dist))
                     continue;
 
                 var length = Math.Clamp(comp.MinLength + dist * comp.LengthPerTile, comp.MinLength, comp.MaxLength);
@@ -304,7 +363,7 @@ public sealed partial class DynamicShadowOverlay : Overlay
             var scale = total > 1f ? 1f / total : 1f;
 
             _candidates.Sort(static (a, b) => b.Contribution.CompareTo(a.Contribution));
-            var count = Math.Min(_candidates.Count, Math.Clamp(comp.MaxShadows, 1, SlotCount));
+            var count = Math.Min(_candidates.Count, Math.Clamp(comp.MaxShadows, 1, MaxSlots));
 
             for (var i = 0; i < count; i++)
             {
@@ -328,6 +387,7 @@ public sealed partial class DynamicShadowOverlay : Overlay
             return;
 
         var k = 1f - MathF.Pow(2f, -dt / FadeHalfLife);
+        var now = _timing.RealTime;
 
         _deadCasters.Clear();
         foreach (var (uid, state) in _states)
@@ -338,6 +398,7 @@ public sealed partial class DynamicShadowOverlay : Overlay
                 continue;
             }
 
+            // Fade shadows toward their targets, drop fully faded ones.
             _deadShadows.Clear();
             foreach (var (source, shadow) in state.Shadows)
             {
@@ -348,6 +409,17 @@ public sealed partial class DynamicShadowOverlay : Overlay
 
             foreach (var source in _deadShadows)
                 state.Shadows.Remove(source);
+
+            // Drop cached raycasts for lights we haven't checked in a while.
+            _deadShadows.Clear();
+            foreach (var (lightUid, entry) in state.Occlusion)
+            {
+                if (now - entry.Expires > OcclusionForget)
+                    _deadShadows.Add(lightUid);
+            }
+
+            foreach (var lightUid in _deadShadows)
+                state.Occlusion.Remove(lightUid);
         }
 
         foreach (var uid in _deadCasters)
@@ -433,7 +505,8 @@ public sealed partial class DynamicShadowOverlay : Overlay
                 continue;
 
             // Viewcone alpha from last frame (unknown = visible; those are off-screen anyway).
-            var alpha = _visibility.GetValueOrDefault(uid, 1f);
+            var alpha = _states.TryGetValue(uid, out var st) ? st.Visibility : 1f;
+
             if (alpha < 0.5f)
                 continue;
 
@@ -450,8 +523,7 @@ public sealed partial class DynamicShadowOverlay : Overlay
             var shader = GetPooled(_sunPool, SunShaderProto, index++);
             shader.SetParameter("shadowMatrix", matrix * args.WorldToTarget);
 
-            handle.UseShader(shader);
-            _sprite.RenderSprite((uid, sprite), handle, eyeRot, worldRot, worldPos);
+            RenderSilhouette((uid, sprite), handle, shader, eyeRot, worldRot, worldPos);
         }
 
         handle.UseShader(null);
@@ -466,8 +538,9 @@ public sealed partial class DynamicShadowOverlay : Overlay
         if (!_spriteQuery.TryComp(uid, out sprite) || !sprite.Visible || sprite.ContainerOccluded)
             return false;
 
-        return !_container.IsEntityInContainer(uid) && !HasLayerShader(sprite);
+        return !_container.IsEntityInContainer(uid);
     }
+
 
     private static Matrix3x2 BuildShadowMatrix(Vector2 anchor, Vector2 up, Vector2 right, Vector2 dir, float length, float width)
     {
@@ -494,6 +567,28 @@ public sealed partial class DynamicShadowOverlay : Overlay
             static (ent, ignore) => ent.Owner == ignore.Item1 || ent.Owner == ignore.Item2);
 
         return hit != null;
+    }
+    private bool IsOccludedCached(MapId mapId, CasterState state, in LightSample light, EntityUid caster,
+        Vector2 anchor, Vector2 dir, float dist)
+    {
+        var now = _timing.RealTime;
+
+        if (state.Occlusion.TryGetValue(light.Uid, out var entry)
+            && now < entry.Expires
+            && (entry.Anchor - anchor).LengthSquared() < OcclusionMoveSq
+            && (entry.LightPos - light.Position).LengthSquared() < OcclusionMoveSq)
+        {
+            return entry.Occluded;
+        }
+
+        var occluded = IsOccluded(mapId, light, caster, dir, dist);
+
+        // Spread refreshes over ~8 frames so they don't all happen together.
+        var jitter = Math.Abs((caster.Id * 31 + light.Uid.Id) % 8) * 0.01;
+        state.Occlusion[light.Uid] = new OcclusionEntry(occluded, anchor, light.Position,
+            now + TimeSpan.FromSeconds(OcclusionRefresh + jitter));
+
+        return occluded;
     }
 
     private static bool HasLayerShader(SpriteComponent sprite)
@@ -522,8 +617,10 @@ public sealed partial class DynamicShadowOverlay : Overlay
 
         res.Dispose();
         var format = new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb);
-        res.Scratch = _clyde.CreateRenderTarget(size, format, name: "dynamic-shadow-scratch");
-        res.Accum = _clyde.CreateRenderTarget(size, format, name: "dynamic-shadow-accum");
+        var sampling = new TextureSampleParameters { Filter = true };
+        res.Scratch = _clyde.CreateRenderTarget(size, format, sampling, name: "dynamic-shadow-scratch");
+        res.Accum = _clyde.CreateRenderTarget(size, format, sampling, name: "dynamic-shadow-accum");
+
     }
 
     protected override void DisposeBehavior()
@@ -560,11 +657,7 @@ public sealed partial class DynamicShadowOverlay : Overlay
         float Strength,
         float TipStrength);
 
-    private sealed class CasterState
-    {
-        public uint LastSeenFrame;
-        public readonly Dictionary<EntityUid, ShadowState> Shadows = new();
-    }
+
 
     private sealed class ShadowState
     {

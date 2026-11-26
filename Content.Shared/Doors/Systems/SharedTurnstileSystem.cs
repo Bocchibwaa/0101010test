@@ -121,9 +121,9 @@ public abstract partial class SharedTurnstileSystem : EntitySystem
         var rotateAngle = rot.ToWorldVec().ToAngle();
 
         var diff = Math.Abs(approachAngle - rotateAngle);
-        diff %= MathHelper.TwoPi;
+        diff %= MathF.Tau;
         if (diff > Math.PI)
-            diff = MathHelper.TwoPi - diff;
+            diff = MathF.Tau - diff;
 
         return diff < Math.PI / 4;
     }

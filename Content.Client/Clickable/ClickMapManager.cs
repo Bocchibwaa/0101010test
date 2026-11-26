@@ -182,7 +182,7 @@ namespace Content.Client.Clickable
 #if USE_ROBUST
                     pixelSpan[i].ToRgba32(ref rgba);
 #else
-                    rgba = pixelSpan[i].ToRgba32(); // Trauma - replaced ref rgba with return value
+                    pixelSpan[i].ToRgba32(ref rgba); // Trauma - replaced ref rgba with return value
 #endif
                     if (rgba.A >= threshByte)
                     {

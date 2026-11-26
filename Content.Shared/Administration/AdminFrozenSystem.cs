@@ -17,7 +17,6 @@ public sealed partial class AdminFrozenSystem : EntitySystem
 {
     [Dependency] private ActionBlockerSystem _blocker = default!;
     [Dependency] private PullingSystem _pulling = default!;
-
     public override void Initialize()
     {
         SubscribeLocalEvent<AdminFrozenComponent, UseAttemptEvent>(OnAttempt);
@@ -25,7 +24,7 @@ public sealed partial class AdminFrozenSystem : EntitySystem
         SubscribeLocalEvent<AdminFrozenComponent, ThrowAttemptEvent>(OnAttempt);
         SubscribeLocalEvent<AdminFrozenComponent, InteractionAttemptEvent>(OnInteractAttempt);
         SubscribeLocalEvent<AdminFrozenComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<AdminFrozenComponent, ComponentShutdown>(UpdateCanMove);
+        SubscribeLocalEvent<AdminFrozenComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<AdminFrozenComponent, UpdateCanMoveEvent>(OnUpdateCanMove);
         SubscribeLocalEvent<AdminFrozenComponent, PullAttemptEvent>(OnPullAttempt);
         SubscribeLocalEvent<AdminFrozenComponent, AttackAttemptEvent>(OnAttempt);
@@ -105,6 +104,11 @@ public sealed partial class AdminFrozenSystem : EntitySystem
     {
         _blocker.UpdateCanMove(uid);
     }
+    private void OnShutdown(EntityUid uid, AdminFrozenComponent component, ref ComponentShutdown args)
+    {
+        _blocker.UpdateCanMove(uid);
+    }
+
 
     private void OnEmoteAttempt(EntityUid uid, AdminFrozenComponent component, EmoteAttemptEvent args)
     {

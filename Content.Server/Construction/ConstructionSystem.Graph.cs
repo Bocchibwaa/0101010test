@@ -367,9 +367,8 @@ namespace Content.Server.Construction
             // Transform transferring.
             var newTransform = Transform(newUid);
             TransformSystem.AttachToGridOrMap(newUid, newTransform); // in case in hands or a container
-#pragma warning disable CS0618 // Setting anchored state directly, AnchorEntity/Unanchor requires an initialized entity.
-            newTransform.Anchored = transform.Anchored;
-#pragma warning restore CS0618
+            var wasAnchored = transform.Anchored;
+
 
             // Container transferring.
             if (containerManager != null)
@@ -417,6 +416,9 @@ namespace Content.Server.Construction
             }
 
             EntityManager.InitializeAndStartEntity(newUid);
+            if (wasAnchored)
+                TransformSystem.AnchorEntity(newUid, Transform(newUid));
+
 
             // <Trauma> - stupid fucking chuds put the events in server idc to refactor them
             var goidaEv = new ConstructionChangedEvent(newUid, uid, userUid);

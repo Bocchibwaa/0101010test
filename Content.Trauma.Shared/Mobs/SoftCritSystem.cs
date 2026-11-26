@@ -42,7 +42,8 @@ public sealed partial class SoftCritSystem : EntitySystem
         base.Initialize();
 
         SubscribeLocalEvent<SoftCritMobComponent, ComponentStartup>(RefreshSpeed);
-        SubscribeLocalEvent<SoftCritMobComponent, ComponentShutdown>(RefreshSpeed);
+        SubscribeLocalEvent<SoftCritMobComponent, ComponentShutdown>(OnShutdown);
+
 
         Subs.CVar(_cfg, TraumaCVars.SoftCritMoveSpeed, x => SoftCritSpeed = x, true);
         Subs.CVar(_cfg, TraumaCVars.SoftCritInhaleModifier, x => InhaleVolumeModifier = x, true);
@@ -58,6 +59,11 @@ public sealed partial class SoftCritSystem : EntitySystem
     {
         _movement.RefreshMovementSpeedModifiers(uid);
     }
+    private void OnShutdown(EntityUid uid, SoftCritMobComponent ent, ref ComponentShutdown args)
+    {
+        _movement.RefreshMovementSpeedModifiers(uid);
+    }
+
 
     [SubscribeLocalEvent]
     private void OnAttemptStopPulling(Entity<MobStateComponent> ent, ref AttemptStopPullingEvent args)
