@@ -74,6 +74,7 @@ public sealed partial class MenuButton : ContainerButton
 
     protected override void EnteredTree()
     {
+        base.EnteredTree();
         _inputManager.OnKeyBindingAdded += OnKeyBindingChanged;
         _inputManager.OnKeyBindingRemoved += OnKeyBindingChanged;
         _inputManager.OnInputModeChanged += OnKeyBindingChanged;
@@ -84,6 +85,8 @@ public sealed partial class MenuButton : ContainerButton
         _inputManager.OnKeyBindingAdded -= OnKeyBindingChanged;
         _inputManager.OnKeyBindingRemoved -= OnKeyBindingChanged;
         _inputManager.OnInputModeChanged -= OnKeyBindingChanged;
+
+        base.ExitedTree();
     }
 
 

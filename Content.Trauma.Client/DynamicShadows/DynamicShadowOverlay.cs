@@ -45,6 +45,37 @@ public sealed partial class DynamicShadowOverlay : Overlay
     /// Higher = darker, but overlaps always stay darker than single shadows.
     /// </summary>
     private const float Darkness = 3.35f;
+    private readonly List<(SpriteComponent.Layer Layer, ShaderInstance? Shader)> _swapped = new();
+
+    /// <summary>
+    /// Renders a sprite with every layer forced to the given shader, then restores the layers' own shaders.
+    /// Layers with their own shader (unshaded, displacement, etc.) would otherwise switch to it mid-sprite.
+    /// </summary>
+    private void RenderSilhouette(Entity<SpriteComponent> ent, DrawingHandleWorld handle, ShaderInstance shader,
+        Angle eyeRot, Angle worldRot, Vector2 worldPos)
+    {
+        _swapped.Clear();
+        foreach (var l in ent.Comp.AllLayers)
+        {
+            if (l is SpriteComponent.Layer { Shader: not null } layer)
+            {
+                _swapped.Add((layer, layer.Shader));
+                layer.Shader = shader;
+            }
+        }
+
+        handle.UseShader(shader);
+        try
+        {
+            _sprite.RenderSprite(ent, handle, eyeRot, worldRot, worldPos);
+        }
+        finally
+        {
+            foreach (var (layer, old) in _swapped)
+                layer.Shader = old;
+            _swapped.Clear();
+        }
+    }
 
     /// <summary>Must be 1 or less; alpha can't go above 1.</summary>
     private const float MaxShadowAlpha = 0.95f;
@@ -214,8 +245,7 @@ public sealed partial class DynamicShadowOverlay : Overlay
                     shader.SetParameter("shadowOrigin", new Vector2(originLocal.X, height - originLocal.Y));
                     shader.SetParameter("shadowAxis", new Vector2(axisLocal.X, -axisLocal.Y));
 
-                    handle.UseShader(shader);
-                    _sprite.RenderSprite((draw.Uid, draw.Sprite), handle, eyeRot, draw.WorldRot, draw.WorldPos);
+                    RenderSilhouette((draw.Uid, draw.Sprite), handle, shader, eyeRot, draw.WorldRot, draw.WorldPos);
                 }
 
                 handle.UseShader(null);
@@ -493,8 +523,7 @@ public sealed partial class DynamicShadowOverlay : Overlay
             var shader = GetPooled(_sunPool, SunShaderProto, index++);
             shader.SetParameter("shadowMatrix", matrix * args.WorldToTarget);
 
-            handle.UseShader(shader);
-            _sprite.RenderSprite((uid, sprite), handle, eyeRot, worldRot, worldPos);
+            RenderSilhouette((uid, sprite), handle, shader, eyeRot, worldRot, worldPos);
         }
 
         handle.UseShader(null);
@@ -509,8 +538,9 @@ public sealed partial class DynamicShadowOverlay : Overlay
         if (!_spriteQuery.TryComp(uid, out sprite) || !sprite.Visible || sprite.ContainerOccluded)
             return false;
 
-        return !_container.IsEntityInContainer(uid) && !HasLayerShader(sprite);
+        return !_container.IsEntityInContainer(uid);
     }
+
 
     private static Matrix3x2 BuildShadowMatrix(Vector2 anchor, Vector2 up, Vector2 right, Vector2 dir, float length, float width)
     {
