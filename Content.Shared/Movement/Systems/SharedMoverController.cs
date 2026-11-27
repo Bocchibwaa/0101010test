@@ -85,6 +85,7 @@ public abstract partial class SharedMoverController : VirtualController
     private float _airDamping;
     private float _offGridDamping;
     private float _frictionModifier;
+
     private TimeSpan CurrentTime => PhysicsSystem.EffectiveCurTime ?? Timing.CurTime; // Tile Movement Change
 
     private const LookupFlags _touchingFlags = LookupFlags.Approximate | LookupFlags.Dynamic | LookupFlags.Static;
@@ -188,7 +189,7 @@ public abstract partial class SharedMoverController : VirtualController
         // If we're not the target of a relay then handle lerp data.
         if (relaySource == null)
         {
-            if (TileMovementQuery.HasComponent(uid)) // Goobstation Change
+            if (TileMovementQuery.HasComponent(uid) || HasComp<TileStepComponent>(uid)) // Goobstation Change
                 TryUpdateRelative(uid, mover, xform);
 
             // Update relative movement
@@ -265,6 +266,34 @@ public abstract partial class SharedMoverController : VirtualController
 
         // Get current tile def for things like speed/friction mods
         ContentTileDefinition? tileDef = null;
+        // Tile step movement
+        if (!weightless && !inAirHelpless
+            && TryComp<TileStepComponent>(uid, out var tileStep)
+            && HandleTileStep((uid, mover), tileStep, frameTime))
+        {
+            PhysicsSystem.SetAngularVelocity(uid, 0, body: physicsComponent);
+
+            // Footsteps, copied from the stock code at the bottom of this method.
+            if (physicsComponent.LinearVelocity != Vector2.Zero
+                && MobMoverQuery.TryGetComponent(uid, out var stepMover)
+                && TryGetSound(false, uid, mover, stepMover, xform, out var stepSound, tileDef: tileDef))
+            {
+                var stepVolume = mover.Sprinting
+                    ? InputMoverComponent.SprintingSoundModifier
+                    : InputMoverComponent.WalkingSoundModifier;
+
+                var stepParams = stepSound.Params
+                    .AddVolume(stepSound.Params.Volume + stepVolume)
+                    .WithVariation(stepSound.Params.Variation ?? stepMover.FootstepVariation);
+
+                _audio.PlayPredicted(stepSound, uid, relaySource ?? uid, stepParams);
+
+                var tileStepEv = new FootStepEvent(uid, physicsComponent.LinearVelocity.ToWorldAngle());
+                RaiseLocalEvent(uid, ref tileStepEv);
+            }
+
+            return;
+        }
 
         // Tile Movement Change
         // Try doing tile movement.
