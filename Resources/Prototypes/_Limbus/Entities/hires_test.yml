@@ -94,3 +94,21 @@
 
 
 
+# 128px whole-body test mob, no shader, no filtering
+- type: entity
+  parent: BaseMob
+  id: LimbusHuman128Test
+  name: 128px human test
+  description: 128px whole-body directional test character.
+  components:
+  - type: Sprite
+    sprite: _Limbus/Test/human128_test.rsi
+    layers:
+    - state: body
+    scale: 0.25,0.25   # 128px * 1/4 = 32px = 1 tile
+    noRot: true
+    drawdepth: Mobs
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 3
+    baseSprintSpeed: 4.5
+
